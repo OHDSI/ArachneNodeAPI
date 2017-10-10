@@ -1,0 +1,15 @@
+source("packratRun.r")
+workDir <- getwd()
+pakratPath <- "{{packratPath}}"
+
+packratRun(pakratPath, workDir, function(workDir) {
+  dbms <- Sys.getenv("DBMS_TYPE")
+  connStr <- Sys.getenv("CONNECTION_STRING")
+  user <- Sys.getenv("DBMS_USERNAME")
+  pw <- Sys.getenv("DBMS_PASSWORD")
+  cdmDatabaseSchema <- Sys.getenv("DBMS_SCHEMA")
+  resultsDatabaseSchema <-cdmDatabaseSchema
+
+  source("run_estimation_analysis.R")
+  run_estimation_analysis(file.path(workDir, "{{analysisFile}}"), paste0(workDir, "/results"), file.path(workDir, "{{targetCohort}}"), file.path(workDir, "{{comparatorCohort}}"), file.path(workDir, "{{outcomeCohort}}"), dbms, connStr, user, pw, cdmDatabaseSchema, resultsDatabaseSchema)
+})
