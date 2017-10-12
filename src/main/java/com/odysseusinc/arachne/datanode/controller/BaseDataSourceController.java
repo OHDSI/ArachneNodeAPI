@@ -214,6 +214,7 @@ public abstract class BaseDataSourceController<DTO extends CommonDataSourceDTO> 
         DataSource dataSource = dataSourceService.getById(id);
         commonDataSourceDTO.setId(dataSource.getId());
         commonDataSourceDTO.setUuid(dataSource.getUuid());
+        commonDataSourceDTO.setOrganization("Odysseus");
         JsonResult<CommonDataNodeRegisterResponseDTO> jsonResult = integrationService.sendDataSourceRegistrationRequest(
                 user,
                 dataSource.getDataNode(),

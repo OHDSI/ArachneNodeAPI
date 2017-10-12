@@ -48,17 +48,9 @@ public interface CentralSystemClient {
     @RequestLine("GET /api/v1/data-nodes/entities")
     List<CommonEntityRequestDTO> getEntityRequests();
 
-    @RequestLine("PUT /api/v1/data-nodes/cohorts/{id}")
-    @Headers("Content-Type: application/json")
-    void sendCohortResponse(CommonCohortDTO cohort, @Param("id") String id);
-
-    @RequestLine("PUT /api/v1/data-nodes/estimations/{id}")
-    @Headers("Content-Type: application/json")
-    void sendEstimationResponse(CommonCohortAnalysisDTO estimation, @Param("id") String id);
-
-    @RequestLine("POST /api/v1/data-nodes/estimations/{id}")
+    @RequestLine("POST /api/v1/data-nodes/common-entity/{id}")
     @Headers("Content-Type: multipart/form-data")
-    void sendEstimationResponse(@Param("id") String id, @Param("files") MultipartFile[] files);
+    void sendCommonEntityResponse(@Param("id") String id, @Param("files") MultipartFile[] files);
 
     @RequestLine("POST /api/v1/data-nodes/atlas")
     @Headers("Content-Type: application/json")
