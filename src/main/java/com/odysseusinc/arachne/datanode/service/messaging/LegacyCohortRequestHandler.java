@@ -27,6 +27,7 @@ import static com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType.COHO
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
+import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
@@ -94,7 +95,7 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
                     final CohortExpressionQueryBuilder.BuildExpressionQueryOptions options = new CohortExpressionQueryBuilder.BuildExpressionQueryOptions();
                     String expressionSql = queryBuilder.buildExpressionQuery(expression, options);
                     String content = SqlRender.renderSql(expressionSql, null, null);
-                    return new MockMultipartFile(definition.getName().trim() + ".ohdsi.sql", content.getBytes());
+                    return new MockMultipartFile(definition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT, content.getBytes());
                 } catch (IOException e) {
                     LOGGER.error("Failed to construct cohort", e);
                 }
