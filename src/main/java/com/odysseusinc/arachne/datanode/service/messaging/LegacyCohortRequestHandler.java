@@ -94,7 +94,7 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
                     final CohortExpressionQueryBuilder.BuildExpressionQueryOptions options = new CohortExpressionQueryBuilder.BuildExpressionQueryOptions();
                     String expressionSql = queryBuilder.buildExpressionQuery(expression, options);
                     String content = SqlRender.renderSql(expressionSql, null, null);
-                    return new MockMultipartFile(definition.getName().trim() + ".sql", content.getBytes());
+                    return new MockMultipartFile(definition.getName().trim() + ".ohdsi.sql", content.getBytes());
                 } catch (IOException e) {
                     LOGGER.error("Failed to construct cohort", e);
                 }
