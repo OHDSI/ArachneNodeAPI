@@ -1,0 +1,490 @@
+# Study: ----<!-- ko foreach: $component.cohortComparison().nameMultiLine() -->
+{{#each nameMultiline}}
+# {{data}}
+{{/each}}
+
+# CohortMethod Installation &amp; Load ----
+
+# Uncomment to install CohortMethod
+# install.packages("drat")
+# drat::addRepo(c("OHDSI","cloudyr"))
+# install.packages("CohortMethod")
+# install.packages("EmpiricalCalibration")
+
+# Load the Cohort Method library
+library (CohortMethod)
+library (SqlRender)
+library (EmpiricalCalibration)
+
+# Data extraction ----
+
+# TODO: Insert your connection details here
+connectionDetails <- createConnectionDetails(   dbms = "postgresql",
+                                                server = "localhost/ohdsi",
+                                                user = "joe",
+                                                password = "supersecret")
+cdmDatabaseSchema <- "my_cdm_data"
+resultsDatabaseSchema <- "my_results"
+exposureTable <- "exposure_table"
+outcomeTable <- "outcome_table"
+cdmVersion <- "5"
+outputFolder <- "&lt;insert your directory here&gt;"
+maxCores <- 1
+
+targetCohortId <- {{treatmentId}}
+comparatorCohortId <- {{comparatorId}}
+outcomeCohortId <- {{outcomeId}}
+outcomeList <- c(outcomeCohortId)
+
+# Default Prior &amp; Control settings ----
+defaultPrior <- createPrior("laplace",
+                    exclude = c(0),
+                    useCrossValidation = TRUE)
+
+defaultControl <- createControl(cvType = "auto",
+                    startingVariance = 0.01,
+                    noiseLevel = "quiet",
+                    tolerance  = 2e-07,
+                    cvRepetitions = 10,
+                    threads = 1)
+
+# PLEASE NOTE ----
+# If you want to use your code in a distributed network study
+# you will need to create a temporary cohort table with common cohort IDs.
+# The code below ASSUMES you are only running in your local network
+# where common cohort IDs have already been assigned in the cohort table.
+
+# Get all {{psExclusionCaption}} Concept IDs for exclusion ----
+{{#if psExclusionConceptSetSQL}}
+    sql <- paste("{{psExclusionConceptSetSQL}}")
+    sql <- SqlRender::renderSql(sql, cdm_database_schema = cdmDatabaseSchema)$sql
+    sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+    connection <- connect(connectionDetails)
+    excludedConcepts <- querySql(connection, sql)
+    excludedConcepts <- excludedConcepts$CONCEPT_ID
+{{else}}
+    excludedConcepts <- c()
+{{/if}}
+# Get all {{psInclusionCaption}} Concept IDs for inclusion ----
+{{#if psInclusionConceptSetSQL}}
+    sql <- paste("{{psInclusionConceptSetSQL}}")
+    sql <- SqlRender::renderSql(sql, cdm_database_schema = cdmDatabaseSchema)$sql
+    sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+    connection <- connect(connectionDetails)
+    includedConcepts <- querySql(connection, sql)
+    includedConcepts <- includedConcepts$CONCEPT_ID
+{{else}}
+    includedConcepts <- c()
+{{/if}}
+
+# Get all {{omExclusionCaption}} Concept IDs for exclusion in the outcome model ----
+{{#if omExclusionConceptSetSQL}}
+    sql <- paste("{{omExclusionConceptSetSQL}}")
+    sql <- SqlRender::renderSql(sql, cdm_database_schema = cdmDatabaseSchema)$sql
+    sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+    connection <- connect(connectionDetails)
+    omExcludedConcepts <- querySql(connection, sql)
+    omExcludedConcepts <- omExcludedConcepts$CONCEPT_ID
+{{else}}
+    omExcludedConcepts <- c()
+{{/if}}
+# Get all {{omInclusionCaption}} Concept IDs for inclusion exclusion in the outcome model ----
+{{#if omInclusionConceptSetSQL}}
+    sql <- paste("{{omInclusionConceptSetSQL}}")
+    sql <- SqlRender::renderSql(sql, cdm_database_schema = cdmDatabaseSchema)$sql
+    sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+    connection <- connect(connectionDetails)
+    omIncludedConcepts <- querySql(connection, sql)
+    omIncludedConcepts <- omIncludedConcepts$CONCEPT_ID
+{{else}}
+    omIncludedConcepts <- c()
+{{/if}}
+
+# Get all {{negativeControlCaption}} Concept IDs for empirical calibration ----
+{{#if negativeControlConceptSetSQL}}
+    sql <- paste("{{negativeControlConceptSetSQL}}")
+    sql <- SqlRender::renderSql(sql, cdm_database_schema = cdmDatabaseSchema)$sql
+    sql <- SqlRender::translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+    connection <- connect(connectionDetails)
+    negativeControlConcepts <- querySql(connection, sql)
+    negativeControlConcepts <- negativeControlConcepts$CONCEPT_ID
+{{else}}
+    negativeControlConcepts <- c()
+{{/if}}
+
+# Create drug comparator and outcome arguments by combining target + comparitor + outcome + negative controls ----
+dcos <- createDrugComparatorOutcomes(targetId = targetCohortId,
+                                    comparatorId = comparatorCohortId,
+                                    excludedCovariateConceptIds = excludedConcepts,
+                                    includedCovariateConceptIds = includedConcepts,
+                                    outcomeIds = c(outcomeList, negativeControlConcepts))
+
+drugComparatorOutcomesList <- list(dcos)
+
+
+{{! <div data-bind="if: $component.cohortComparison().psAdjustment() == 1"> }}
+{{#if_eq psAdjustment 1}}
+# Define which types of covariates must be constructed ----
+    covariateSettings <- createCovariateSettings(useCovariateDemographics = {{psDemographics}},
+    useCovariateDemographicsGender = {{psDemographicsGender}},
+    useCovariateDemographicsRace = {{psDemographicsRace}},
+    useCovariateDemographicsEthnicity = {{psDemographicsEthnicity}},
+    useCovariateDemographicsAge = {{psDemographicsAge}},
+    useCovariateDemographicsYear = {{psDemographicsYear}},
+    useCovariateDemographicsMonth = {{psDemographicsMonth}},
+    useCovariateConditionOccurrence = {{psConditionOcc}},
+    useCovariateConditionOccurrence365d = {{psConditionOcc365d}},
+    useCovariateConditionOccurrence30d = {{psConditionOcc30d}},
+    useCovariateConditionOccurrenceInpt180d = {{psConditionOccInpt180d}},
+    useCovariateConditionEra = {{psConditionEra}},
+    useCovariateConditionEraEver = {{psConditionEraEver}},
+    useCovariateConditionEraOverlap = {{psConditionEraOverlap}},
+    useCovariateConditionGroup = {{psConditionGroup}},
+    useCovariateConditionGroupMeddra = {{psConditionGroupMeddra}},
+    useCovariateConditionGroupSnomed = {{psConditionGroupSnomed}},
+    useCovariateDrugExposure = {{psDrugExposure}},
+    useCovariateDrugExposure365d = {{psDrugExposure365d}},
+    useCovariateDrugExposure30d = {{psDrugExposure30d}},
+    useCovariateDrugEra = {{psDrugEra}},
+    useCovariateDrugEra365d = {{psDrugEra365d}},
+    useCovariateDrugEra30d = {{psDrugEra30d}},
+    useCovariateDrugEraOverlap = {{psDrugEraOverlap}},
+    useCovariateDrugEraEver = {{psDrugEraEver}},
+    useCovariateDrugGroup = {{psDrugGroup}},
+    useCovariateProcedureOccurrence = {{psProcedureOcc}},
+    useCovariateProcedureOccurrence365d = {{psProcedureOcc365d}},
+    useCovariateProcedureOccurrence30d = {{psProcedureOcc30d}},
+    useCovariateProcedureGroup = {{psProcedureGroup}},
+    useCovariateObservation = {{psObservation}},
+    useCovariateObservation365d = {{psObservation365d}},
+    useCovariateObservation30d = {{psObservation30d}},
+    useCovariateObservationCount365d = {{psObservationCount365d}},
+    useCovariateMeasurement = {{psMeasurement}},
+    useCovariateMeasurement365d = {{psMeasurement365d}},
+    useCovariateMeasurement30d = {{psMeasurement30d}},
+    useCovariateMeasurementCount365d = {{psMeasurement365d}},
+    useCovariateMeasurementBelow = {{psMeasurementBelow}},
+    useCovariateMeasurementAbove = {{psMeasurementAbove}},
+    useCovariateConceptCounts = {{psConceptCounts}},
+    useCovariateRiskScores = {{psRiskScores}},
+    useCovariateRiskScoresCharlson = {{psRiskScoresCharlson}},
+    useCovariateRiskScoresDCSI = {{psRiskScoresDcsi}},
+    useCovariateRiskScoresCHADS2 = {{psRiskScoresChads2}},
+    useCovariateRiskScoresCHADS2VASc = {{psRiskScoresChads2vasc}},
+    useCovariateInteractionYear = {{psInteractionYear}},
+    useCovariateInteractionMonth = {{psInteractionMonth}},
+    excludedCovariateConceptIds = excludedConcepts,
+    includedCovariateConceptIds = includedConcepts,
+    deleteCovariatesSmallCount = {{delCovariatesSmallCount}})
+{{/if_eq}}
+
+getDbCmDataArgs <- createGetDbCohortMethodDataArgs(washoutPeriod = {{minimumWashoutPeriod}},
+                                firstExposureOnly = FALSE,
+                                removeDuplicateSubjects = {{rmSubjectsInBothCohortsFormatted}},
+                                studyStartDate = "",
+                                studyEndDate = "",
+                                excludeDrugsFromCovariates = FALSE,
+                {{#if_eq psAdjustment 1}}covariateSettings = covariateSettings{{/if_eq}})
+
+createStudyPopArgs <- createCreateStudyPopulationArgs(removeSubjectsWithPriorOutcome = {{rmPriorOutcomesFormatted}},
+                                                    firstExposureOnly = FALSE,
+                                                    washoutPeriod = {{minimumWashoutPeriod}},
+                                                    removeDuplicateSubjects = {{rmSubjectsInBothCohortsFormatted}},
+                                                    minDaysAtRisk = {{minimumDaysAtRisk}},
+                                                    riskWindowStart = {{timeAtRiskStart}},
+                                                    addExposureDaysToStart = FALSE,
+                                                    riskWindowEnd = {{timeAtRiskEnd}},
+                                                    addExposureDaysToEnd = {{addExposureDaysToEndFormatted}})
+
+fitOutcomeModelArgs1 <- createFitOutcomeModelArgs(useCovariates = {{#if omCovariates}}TRUE{{else}}FALSE{{/if}},
+                                            modelType = "{{modelTypeCmArgValue}}",
+                                            {{#if psStratOrMatch}}stratified = TRUE,{{else}}stratified = FALSE,{{/if}}
+                                            includeCovariateIds = omIncludedConcepts,
+                                            excludeCovariateIds = omExcludedConcepts,
+                                            prior = defaultPrior,
+                                            control = defaultControl)
+
+createPsArgs1 <- createCreatePsArgs(control = defaultControl) # Using only defaults
+trimByPsArgs1 <- {{#if_eq psTrim 1}}createTrimByPsArgs(trimFraction = {{psTrimFractionFormatted}}{{/if_eq}}
+{{#if_not_eq psTrim 1}}createTrimByPsArgs() # Using only defaults{{/if_not_eq}}
+trimByPsToEquipoiseArgs1 <- {{#if_eq psTrim 2}}createTrimByPsToEquipoiseArgs(bounds = c("{{psTrimFractionFormatted}}")){{else}}createTrimByPsToEquipoiseArgs() # Using only defaults{{/if_eq}}
+matchOnPsArgs1 <- {{#if_eq psMatch 1}}createMatchOnPsArgs(caliper = 0.25, caliperScale = "standardized", maxRatio = {{psMatchMaxRatio}}){{else}}createMatchOnPsArgs() # Using only defaults{{/if_eq}}
+stratifyByPsArgs1 <- {{#if psStrat}}createStratifyByPsArgs(strataPop, numberOfStrata = {{psStratNumStrata}}){{else}}createStratifyByPsArgs() # Using only defaults{{/if}}
+
+cmAnalysis1 <- createCmAnalysis(analysisId = 1,
+                            description = "{{name}}",
+                            getDbCohortMethodDataArgs = getDbCmDataArgs,
+                            createStudyPopArgs = createStudyPopArgs,
+                            createPs = {{#if_eq psAdjustment 1}}TRUE{{else}}FALSE{{/if_eq}},
+                            createPsArgs = createPsArgs1,
+                            trimByPs = {{#if_eq psTrim 1}}TRUE{{else}}FALSE{{/if_eq}},
+                            trimByPsArgs = trimByPsArgs1,
+                            trimByPsToEquipoise = {{#if_eq psTrim 2 }}TRUE{{else}}FALSE{{/if_eq}},
+                            trimByPsToEquipoiseArgs = trimByPsToEquipoiseArgs1,
+                            matchOnPs = {{#if_eq psMatch 1}}TRUE{{else}}FALSE{{/if_eq}},
+                            matchOnPsArgs = matchOnPsArgs1,
+                            stratifyByPs = {{#if psStrat }}TRUE{{else}}FALSE{{/if}},
+                            stratifyByPsArgs = stratifyByPsArgs1,
+                            computeCovariateBalance = TRUE,
+                            fitOutcomeModel = TRUE,
+                            fitOutcomeModelArgs = fitOutcomeModelArgs1)
+
+
+cmAnalysisList <- list(cmAnalysis1)
+
+# Run the analysis ----
+result <- runCmAnalyses(connectionDetails = connectionDetails,
+                        cdmDatabaseSchema = cdmDatabaseSchema,
+                        exposureDatabaseSchema = resultsDatabaseSchema,
+                        exposureTable = exposureTable,
+                        outcomeDatabaseSchema = resultsDatabaseSchema,
+                        outcomeTable = outcomeTable,
+                        cdmVersion = cdmVersion,
+                        outputFolder = outputFolder,
+                        cmAnalysisList = cmAnalysisList,
+                        drugComparatorOutcomesList = drugComparatorOutcomesList,
+                        getDbCohortMethodDataThreads = 1,
+                        createPsThreads = 1,
+                        psCvThreads = min(16, maxCores),
+                        computeCovarBalThreads = min(3, maxCores),
+                        createStudyPopThreads = min(3, maxCores),
+                        trimMatchStratifyThreads = min(10, maxCores),
+                        fitOutcomeModelThreads = max(1, round(maxCores/4)),
+                        outcomeCvThreads = min(4, maxCores),
+                        outcomeIdsOfInterest = outcomeList,
+                        refitPsForEveryOutcome = FALSE)
+
+## Summarize the results
+analysisSummary <- summarizeAnalyses(result)
+head(analysisSummary)
+
+# Perform Empirical Calibration ----
+newSummary <- data.frame()
+# Calibrate p-values:
+drugComparatorOutcome <- drugComparatorOutcomesList[[1]]
+for (drugComparatorOutcome in drugComparatorOutcomesList) {
+    for (analysisId in unique(analysisSummary$analysisId)) {
+        subset <- analysisSummary[analysisSummary$analysisId == analysisId &
+            analysisSummary$targetId == drugComparatorOutcome$targetId &
+            analysisSummary$comparatorId == drugComparatorOutcome$comparatorId, ]
+
+        negControlSubset <- subset[analysisSummary$outcomeId %in% negativeControlConcepts, ]
+        negControlSubset <- negControlSubset[!is.na(negControlSubset$logRr) & negControlSubset$logRr != 0, ]
+
+        hoiSubset <- subset[!(analysisSummary$outcomeId %in% negativeControlConcepts), ]
+        hoiSubset <- hoiSubset[!is.na(hoiSubset$logRr) & hoiSubset$logRr != 0, ]
+
+        if (nrow(negControlSubset) > 10) {
+            null <- fitMcmcNull(negControlSubset$logRr, negControlSubset$seLogRr)
+
+            # View the empirical calibration plot with only negative controls
+            plotCalibrationEffect(negControlSubset$logRr,
+                negControlSubset$seLogRr)
+
+            # Save the empirical calibration plot with only negative controls
+            plotName <- paste("calEffectNoHois_a", analysisId, "_t", drugComparatorOutcome$targetId, "_c", drugComparatorOutcome$comparatorId, ".png", sep = "")
+            plotCalibrationEffect(negControlSubset$logRr,
+                negControlSubset$seLogRr,
+                fileName = file.path(outputFolder, plotName))
+
+            # View the empirical calibration plot with  negative controls and HOIs plotted
+            plotCalibrationEffect(negControlSubset$logRr,
+                negControlSubset$seLogRr,
+                hoiSubset$logRr,
+                hoiSubset$seLogRr)
+
+            # Save the empirical calibration plot with  negative controls and HOIs plotted
+            plotName <- paste("calEffect_a", analysisId, "_t", drugComparatorOutcome$targetId, "_c", drugComparatorOutcome$comparatorId, ".png", sep = "")
+            plotCalibrationEffect(negControlSubset$logRr,
+                negControlSubset$seLogRr,
+                hoiSubset$logRr,
+                hoiSubset$seLogRr,
+            fileName = file.path(outputFolder, plotName))
+
+            calibratedP <- calibrateP(null, subset$logRr, subset$seLogRr)
+            subset$calibratedP <- calibratedP$p
+            subset$calibratedP_lb95ci <- calibratedP$lb95ci
+            subset$calibratedP_ub95ci <- calibratedP$ub95ci
+            mcmc <- attr(null, "mcmc")
+            subset$null_mean <- mean(mcmc$chain[, 1])
+            subset$null_sd <- 1/sqrt(mean(mcmc$chain[, 2]))
+        } else {
+            subset$calibratedP <- NA
+            subset$calibratedP_lb95ci <- NA
+            subset$calibratedP_ub95ci <- NA
+            subset$null_mean <- NA
+            subset$null_sd <- NA
+        }
+        newSummary <- rbind(newSummary, subset)
+    }
+}
+
+# Results ----
+drugComparatorOutcome <- drugComparatorOutcomesList[[1]]
+for (drugComparatorOutcome in drugComparatorOutcomesList) {
+    for (analysisId in unique(analysisSummary$analysisId)) {
+        currentAnalysisSubset <-analysisSummary[analysisSummary$analysisId == analysisId &
+            analysisSummary$targetId == drugComparatorOutcome$targetId &
+            analysisSummary$comparatorId == drugComparatorOutcome$comparatorId &
+            analysisSummary$outcomeId %in% outcomeList, ]
+
+        for (currentOutcomeId in unique(currentAnalysisSubset$outcomeId)) {
+            outputImageSuffix <- paste0("_a", analysisId, "_t", currentAnalysisSubset$targetId, "_c", currentAnalysisSubset$comparatorId, "_o", currentOutcomeId, ".png")
+
+            cohortMethodFile <- result$cohortMethodDataFolder[result$target == currentAnalysisSubset$targetId &
+                result$comparatorId == currentAnalysisSubset$comparatorId &
+                result$outcomeId == currentOutcomeId &
+                result$analysisId == analysisId]
+
+            cohortMethodData <- loadCohortMethodData(cohortMethodFile)
+
+            studyPopFile <- result$studyPopFile[result$target == currentAnalysisSubset$targetId &
+                result$comparatorId == currentAnalysisSubset$comparatorId &
+                result$outcomeId == currentOutcomeId &
+                result$analysisId == analysisId]
+
+            # Return the attrition table for the study population ----
+            studyPop <- readRDS(studyPopFile)
+            getAttritionTable(studyPop)
+
+            # View the attrition diagram
+            drawAttritionDiagram(studyPop,
+            treatmentLabel = "Target",
+            comparatorLabel = "Comparator")
+
+            # Save the attrition diagram ----
+            plotName <- paste0("attritionDiagram", outputImageSuffix);
+            drawAttritionDiagram(studyPop,
+                treatmentLabel = "Target",
+                comparatorLabel = "Comparator",
+                fileName = file.path(outputFolder, plotName))
+
+
+            psFile <- result$psFile[result$target == currentAnalysisSubset$targetId &
+                result$comparatorId == currentAnalysisSubset$comparatorId &
+                result$outcomeId == currentOutcomeId &
+                result$analysisId == analysisId]
+
+            ps <- readRDS(psFile)
+
+            # Compute the area under the receiver-operator curve (AUC) for the propensity score model ----
+            computePsAuc(ps)
+
+            # Plot the propensity score distribution ----
+            plotPs(ps,
+                scale = "preference")
+
+            # Save the propensity score distribution ----
+            plotName <- paste0("propensityScorePlot", outputImageSuffix);
+            plotPs(ps,
+                scale = "preference",
+                fileName = file.path(outputFolder, plotName))
+
+
+            # Inspect the propensity model ----
+            propensityModel <- getPsModel(ps, cohortMethodData)
+            head(propensityModel)
+
+            strataFile <- result$strataFile[result$target == currentAnalysisSubset$targetId &
+                result$comparatorId == currentAnalysisSubset$comparatorId &
+                result$outcomeId == currentOutcomeId &
+                result$analysisId == analysisId]
+            strataPop <- readRDS(strataFile)
+
+            # View PS With Population Trimmed By Percentile ----
+            plotPs(strataPop,
+                ps,
+                scale = "preference")
+
+            # Save PS With Population Trimmed By Percentile ----
+            plotName <- paste0("propensityScorePlotStrata", outputImageSuffix);
+            plotPs(strataPop,
+                ps,
+                scale = "preference",
+                fileName = file.path(outputFolder, plotName))
+
+            # Get the attrition table and diagram for the strata pop ----
+            getAttritionTable(strataPop)
+
+            # View the attrition diagram for the strata pop ----
+            drawAttritionDiagram(strataPop)
+
+            # Save the attrition diagram for the strata pop ----
+            plotName <- paste0("attritionDiagramStrata", outputImageSuffix);
+            drawAttritionDiagram(strataPop,
+                fileName = file.path(outputFolder, plotName))
+
+
+            # Plot the covariate balance ----
+            balanceFile <- result$covariateBalanceFile[result$target == currentAnalysisSubset$targetId &
+                result$comparatorId == currentAnalysisSubset$comparatorId &
+                result$outcomeId == currentOutcomeId &
+                result$analysisId == analysisId]
+            balance <- readRDS(balanceFile)
+
+            # View the covariate balance scatter plot ----
+            plotCovariateBalanceScatterPlot(balance)
+
+            # Save the covariate balance scatter plot ----
+            plotName <- paste0("covBalScatter", outputImageSuffix);
+            plotCovariateBalanceScatterPlot(balance,
+            fileName = file.path(outputFolder, plotName))
+
+            # View the plot of top variables ----
+            plotCovariateBalanceOfTopVariables(balance)
+
+            # Save the plot of top variables ----
+            plotName <- paste0("covBalTop", outputImageSuffix);
+            plotCovariateBalanceOfTopVariables(balance,
+            fileName = file.path(outputFolder, plotName))
+
+            # Outcome Model ----
+
+            outcomeFile <- result$outcomeModelFile[result$target == currentAnalysisSubset$targetId &
+                result$comparatorId == currentAnalysisSubset$comparatorId &
+                result$outcomeId == currentOutcomeId &
+                result$analysisId == analysisId]
+            outcomeModel <- readRDS(outcomeFile)
+
+            # Calibrated results -----
+            outcomeSummary <- newSummary[newSummary$targetId == currentAnalysisSubset$targetId &
+                newSummary$comparatorId == currentAnalysisSubset$comparatorId &
+                newSummary$outcomeId == currentOutcomeId &
+                newSummary$analysisId == analysisId, ]
+
+            outcomeSummaryOutput <- data.frame(outcomeSummary$rr,
+                outcomeSummary$ci95lb,
+                outcomeSummary$ci95ub,
+                outcomeSummary$logRr,
+                outcomeSummary$seLogRr,
+                outcomeSummary$p,
+                outcomeSummary$calibratedP,
+                outcomeSummary$calibratedP_lb95ci,
+                outcomeSummary$calibratedP_ub95ci,
+                outcomeSummary$null_mean,
+                outcomeSummary$null_sd)
+
+            colnames(outcomeSummaryOutput) <- c("Estimate",
+                "lower .95",
+                "upper .95",
+                "logRr",
+                "seLogRr",
+                "p",
+                "cal p",
+                "cal p - lower .95",
+                "cal p - upper .95",
+                "null mean",
+                "null sd")
+
+            rownames(outcomeSummaryOutput) <- "treatment"
+
+            # View the outcome model -----
+            outcomeModelOutput <- capture.output(outcomeModel)
+            outcomeModelOutput <- head(outcomeModelOutput,n=length(outcomeModelOutput)-2)
+            outcomeSummaryOutput <- capture.output(printCoefmat(outcomeSummaryOutput))
+            outcomeModelOutput <- c(outcomeModelOutput, outcomeSummaryOutput)
+            writeLines(outcomeModelOutput)
+
+        }
+    }
+}

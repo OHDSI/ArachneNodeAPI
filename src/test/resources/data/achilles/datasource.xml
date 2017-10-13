@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dataset>
+    <datasource
+            id="1"
+            sid="998a31b2-6824-4e78-b163-f1bd7894c268"
+            name="ds_test"
+            cdm_schema="public"
+            registred="true"
+            model_type="CDM"
+    />
+</dataset>

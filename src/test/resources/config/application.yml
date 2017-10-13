@@ -1,0 +1,63 @@
+flyway:
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://127.0.0.1:5432/datanode_test
+    username: ohdsi
+    password: ohdsi
+    enabled: false
+spring:
+  jpa:
+    database: POSTGRESQL
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+      connection:
+        CharSet: utf8
+        characterEncoding: utf8
+        useUnicode: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/datanode_test
+    username: ohdsi
+    password: ohdsi
+    driver-class-name: org.postgresql.Driver
+api:
+  loginEnteryPoint: /api/v1/auth/login
+  logoutEntryPoint: /api/v1/auth/logout
+  registerEntryPoint: /api/v1/auth/register
+datanode:
+  app:
+    errorsTokenEnabled: false
+  swagger:
+    enabled: true
+  jwt:
+    header: Arachne-Auth-Token
+    secret: 129DF19C8A91AFD8375A2826A3353
+    expiration: 604800
+  arachneCentral:
+    host: http://127.0.0.1
+    port: 8080
+    authHeader: Arachne-Auth-Token
+docker:
+  dockerHost: unix:///var/run/docker.sock
+  isDockerTlsVerify: false
+  dockerCertPath: /home/user/.docker
+  registryUser: user
+  registryPass: password
+  registryMail: admin@admin.com
+  registryUrl: http://docker.io
+  readTimeout: 10000
+  connectTimeout: 10000
+  maxTotalConnections: 100
+  maxPerRouteConnections: 10
+  containerMountPath: /workdir
+  containerImageName: study
+  containerEntryPoint: MainAnalysis.R
+  containerNetworkMode: host
+  corePoolSize: 5
+  maxPoolSize: 5
+  queueCapacity: 20
+server:
+  port: 8080

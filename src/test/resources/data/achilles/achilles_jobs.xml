@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dataset>
+    <achilles_jobs
+            id="1"
+            datasource_id="1"
+            started="2017-06-13 13:30:00"
+            status="SUCCESSFUL"
+    />
+    <achilles_jobs
+            id="2"
+            datasource_id="1"
+            started="2017-06-13 13:31:00"
+            status="SUCCESSFUL"
+            achilles_log="test_string"
+    />
+</dataset>

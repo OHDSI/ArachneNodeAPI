@@ -1,0 +1,311 @@
+{
+  "modelTypeOptions": [
+    {
+      "cmArgValue": "\"logistic\"",
+      "rate": "odds",
+      "id": 1
+    },
+    {
+      "cmArgValue": "\"poisson\"",
+      "rate": "rate",
+      "id": 2
+    },
+    {
+      "cmArgValue": "\"cox\"",
+      "rate": "hazards",
+      "id": 3
+    }
+  ],
+  "timeAtRiskEndOptions": [
+    {
+      "id": 1
+    },
+    {
+      "id": 0
+    }
+  ],
+  "trimOptions": [
+    {
+      "id": 0
+    },
+    {
+      "id": 1
+    },
+    {
+      "id": 2
+    }
+  ],
+  "matchingOptions": [
+    {
+      "id": 0
+    },
+    {
+      "id": 1
+    },
+    {
+      "id": 2
+    }
+  ],
+  "nameMultiLine": [
+    "Levetiracetam vs phenytoin sodium  "
+  ],
+  "timeAtRiskStart": 0,
+  "timeAtRiskEnd": 0,
+  "addExposureDaysToEnd": 1,
+  "addExposureDaysToEndFormatted": true,
+  "minimumWashoutPeriod": 0,
+  "minimumDaysAtRisk": 0,
+  "rmSubjectsInBothCohorts": "1",
+  "rmSubjectsInBothCohortsFormatted": true,
+  "rmPriorOutcomes": "1",
+  "rmPriorOutcomesFormatted": true,
+  "treatmentId": 59,
+  "treatmentCaption": "New users of levetiracetam (target cohort)",
+  "treatmentCohortDefinition": {
+    "expressionType": "SIMPLE_EXPRESSION",
+    "expression": {
+      "ConceptSets": [],
+      "PrimaryCriteria": {
+        "CriteriaList": [],
+        "ObservationWindow": {
+          "PriorDays": 0,
+          "PostDays": 0
+        },
+        "PrimaryCriteriaLimit": {
+          "Type": "First"
+        }
+      },
+      "QualifiedLimit": {
+        "Type": "First"
+      },
+      "ExpressionLimit": {
+        "Type": "First"
+      },
+      "InclusionRules": [],
+      "CensoringCriteria": []
+    }
+  },
+  "comparatorId": 60,
+  "comparatorCaption": "New users of phenytoin  (comparator cohort)",
+  "comparatorCohortDefinition": {
+    "expressionType": "SIMPLE_EXPRESSION",
+    "expression": {
+      "ConceptSets": [],
+      "PrimaryCriteria": {
+        "CriteriaList": [],
+        "ObservationWindow": {
+          "PriorDays": 0,
+          "PostDays": 0
+        },
+        "PrimaryCriteriaLimit": {
+          "Type": "First"
+        }
+      },
+      "QualifiedLimit": {
+        "Type": "First"
+      },
+      "ExpressionLimit": {
+        "Type": "First"
+      },
+      "InclusionRules": [],
+      "CensoringCriteria": []
+    }
+  },
+  "outcomeId": 61,
+  "outcomeCaption": "Angioedema occurrence (outcome cohort)",
+  "outcomeCohortDefinition": {
+    "expressionType": "SIMPLE_EXPRESSION",
+    "expression": {
+      "ConceptSets": [],
+      "PrimaryCriteria": {
+        "CriteriaList": [],
+        "ObservationWindow": {
+          "PriorDays": 0,
+          "PostDays": 0
+        },
+        "PrimaryCriteriaLimit": {
+          "Type": "First"
+        }
+      },
+      "QualifiedLimit": {
+        "Type": "First"
+      },
+      "ExpressionLimit": {
+        "Type": "First"
+      },
+      "InclusionRules": [],
+      "CensoringCriteria": []
+    }
+  },
+  "psExclusionId": 0,
+  "psExclusionConceptSet": [],
+  "psInclusionId": 0,
+  "psInclusionConceptSet": [],
+  "omExclusionId": 0,
+  "omExclusionConceptSet": [],
+  "omInclusionId": 0,
+  "omInclusionConceptSet": [],
+  "negativeControlId": 16,
+  "negativeControlCaption": "Levetiracetam vs phenytoin sodium negative control",
+  "negativeControlConceptSet": [
+    {
+      "id": 16,
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "85189001",
+              "CONCEPT_ID": 4310400,
+              "CONCEPT_NAME": "Acute appendicitis",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "14669001",
+              "CONCEPT_ID": 197320,
+              "CONCEPT_NAME": "Acute renal failure syndrome",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "249628000",
+              "CONCEPT_ID": 80217,
+              "CONCEPT_NAME": "Anal finding",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "267036007",
+              "CONCEPT_ID": 312437,
+              "CONCEPT_NAME": "Dyspnea",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          }
+        ]
+      }
+    }
+  ],
+  "negativeControlConceptSetSQL": "select distinct I.concept_id FROM\n( \n  select concept_id from @cdm_database_schema.CONCEPT where concept_id in (4310400,197320,80217,312437)and invalid_reason is null\nUNION  select c.concept_id\n  from @cdm_database_schema.CONCEPT c\n  join @cdm_database_schema.CONCEPT_ANCESTOR ca on c.concept_id = ca.descendant_concept_id\n  and ca.ancestor_concept_id in (4310400,197320,80217,312437)\n  and c.invalid_reason is null\n\n) I\n",
+  "modelType": 3,
+  "delCovariatesSmallCount": 100,
+  "psAdjustment": "1",
+  "psTrim": 0,
+  "psTrimFraction": 5,
+  "psMatch": 1,
+  "psMatchMaxRatio": 1,
+  "psStratNumStrata": 5,
+  "psDemographicsGender": true,
+  "psDemographicsRace": true,
+  "psDemographicsEthnicity": true,
+  "psDemographicsAge": true,
+  "psDemographicsYear": true,
+  "psDemographicsMonth": true,
+  "psConditionOcc365d": true,
+  "psConditionOcc30d": true,
+  "psConditionOccInpt180d": true,
+  "psConditionEraEver": true,
+  "psConditionEraOverlap": true,
+  "psConditionGroupMeddra": true,
+  "psConditionGroupSnomed": true,
+  "psDrugInPrior30d": true,
+  "psDrugInPrior365d": true,
+  "psDrugEra": true,
+  "psDrugEraOverlap": true,
+  "psDrugEraEver": true,
+  "psProcedureOcc365d": true,
+  "psProcedureOcc30d": true,
+  "psMeasurement365d": true,
+  "psMeasurement30d": true,
+  "psMeasurementCount365d": true,
+  "psMeasurementBelow": true,
+  "psMeasurementAbove": true,
+  "psRiskScoresCharlson": true,
+  "psRiskScoresDcsi": true,
+  "psRiskScoresChads2": true,
+  "psDemographics": true,
+  "psStratOrMatch": true,
+  "psConditionOcc": true,
+  "psConditionEra": true,
+  "psConditionGroup": true,
+  "psCondition": true,
+  "psDrug": true,
+  "psDrugAggregation": true,
+  "psDrugEra365d": true,
+  "psDrugEra30d": true,
+  "psProcedureOcc": true,
+  "psMeasurement": true,
+  "psRiskScores": true,
+  "omCovariates": "1",
+  "omTrim": 0,
+  "omTrimFraction": 5,
+  "omMatch": 1,
+  "omMatchMaxRatio": 1,
+  "omStratNumStrata": 5,
+  "omDemographicsGender": true,
+  "omDemographicsRace": true,
+  "omDemographicsEthnicity": true,
+  "omDemographicsAge": true,
+  "omDemographicsYear": true,
+  "omDemographicsMonth": true,
+  "omConditionOcc365d": true,
+  "omConditionOcc30d": true,
+  "omConditionOccInpt180d": true,
+  "omConditionEraEver": true,
+  "omConditionGroupMeddra": true,
+  "omConditionGroupSnomed": true,
+  "omDrugEra": true,
+  "omDrugEraOverlap": true,
+  "omDrugEraEver": true,
+  "omProcedureOcc365d": true,
+  "omProcedureOcc30d": true,
+  "omMeasurement365d": true,
+  "omMeasurement30d": true,
+  "omMeasurementCount365d": true,
+  "omMeasurementBelow": true,
+  "omMeasurementAbove": true,
+  "omConceptCounts": true,
+  "omRiskScoresCharlson": true,
+  "omRiskScoresDcsi": true,
+  "omRiskScoresChads2": true,
+  "omDemographics": true,
+  "omConditionOcc": true,
+  "omConditionEra": true,
+  "omConditionGroup": true,
+  "omCondition": true,
+  "omDrug": true,
+  "omDrugAggregation": true,
+  "omProcedureOcc": true,
+  "omMeasurement": true,
+  "omRiskScores": true
+}
