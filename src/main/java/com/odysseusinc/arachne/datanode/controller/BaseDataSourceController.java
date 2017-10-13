@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,16 +42,6 @@ import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import com.odysseusinc.arachne.datanode.service.impl.DataSourceHelperImpl;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import io.swagger.annotations.ApiOperation;
-import java.io.IOException;
-import java.security.Principal;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import javax.jms.JMSException;
-import javax.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
@@ -62,6 +52,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+
+import javax.jms.JMSException;
+import javax.validation.Valid;
+import java.io.IOException;
+import java.security.Principal;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public abstract class BaseDataSourceController<DTO extends CommonDataSourceDTO> extends BaseController{
 

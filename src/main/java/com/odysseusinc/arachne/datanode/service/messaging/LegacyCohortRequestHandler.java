@@ -26,8 +26,8 @@ import static com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType.COHO
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
+import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
@@ -43,11 +43,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @Service
-public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCohortShortDTO, CommonCohortDTO> {
+public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCohortShortDTO, MultipartFile> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LegacyCohortRequestHandler.class);
     private final CentralSystemClient centralClient;
@@ -82,20 +84,18 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
     }
 
     @Override
-    public CommonCohortDTO getAtlasObject(String guid) {
+    public MultipartFile getAtlasObject(String guid) {
 
         return commonEntityService.findByGuid(guid).map(entity -> {
             CohortDefinition definition = atlasClient.getCohortDefinition(entity.getLocalId());
             if (definition != null) {
                 try {
-                    CommonCohortDTO cohort = conversionService.convert(definition, CommonCohortDTO.class);
                     ObjectMapper mapper = new ObjectMapper();
                     CohortExpression expression = mapper.readValue(definition.getExpression(), CohortExpression.class);
                     final CohortExpressionQueryBuilder.BuildExpressionQueryOptions options = new CohortExpressionQueryBuilder.BuildExpressionQueryOptions();
                     String expressionSql = queryBuilder.buildExpressionQuery(expression, options);
-                    cohort.setName(cohort.getName().trim());
-                    cohort.setExpression(SqlRender.renderSql(expressionSql, null, null));
-                    return cohort;
+                    String content = SqlRender.renderSql(expressionSql, null, null);
+                    return new MockMultipartFile(definition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT, content.getBytes());
                 } catch (IOException e) {
                     LOGGER.error("Failed to construct cohort", e);
                 }
@@ -111,8 +111,9 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
     }
 
     @Override
-    public void sendResponse(CommonCohortDTO response, String id) {
+    public void sendResponse(MultipartFile response, String id) {
 
-        centralClient.sendCohortResponse(response, id);
+        MultipartFile[] files = new MultipartFile[]{ response };
+        centralClient.sendCommonEntityResponse(id, files);
     }
 }

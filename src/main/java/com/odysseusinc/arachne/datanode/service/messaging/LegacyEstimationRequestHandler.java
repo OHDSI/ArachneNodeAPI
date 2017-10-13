@@ -145,7 +145,7 @@ public class LegacyEstimationRequestHandler implements AtlasRequestHandler<Commo
     @Override
     public void sendResponse(List<MultipartFile> response, String id) {
 
-        centralClient.sendEstimationResponse(id, response.toArray(new MultipartFile[response.size()]));
+        centralClient.sendCommonEntityResponse(id, response.toArray(new MultipartFile[response.size()]));
     }
 
     private String buildEstimationDesign(ComparativeCohortAnalysisInfo info)
