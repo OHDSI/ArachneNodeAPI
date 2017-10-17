@@ -42,13 +42,6 @@ import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -62,6 +55,14 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSourceDTO> implements BaseCentralIntegrationService<DTO> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CentralIntegrationServiceImpl.class);
@@ -98,7 +99,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
     public DataNode updateDataNodeOnCentral(User user, DataNode dataNode) {
 
         String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataNode.UPDATE;
-        return sendDataNodeRequestEntity(user, dataNode, url, HttpMethod.PUT, dataNode.getSid());
+        return sendDataNodeRequestEntity(user, dataNode, url, HttpMethod.PUT, dataNode.getCentralId().toString());
     }
 
     private DataNode sendDataNodeRequestEntity(User user, DataNode dataNode, String url, HttpMethod method,
@@ -130,6 +131,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
         if (isAnyBlank(nodeUuid, name, description, token)) {
             throw new IllegalStateException("Unable to register data node on central. Topic names is blank or empty response");
         } else {
+            dataNode.setCentralId(commonDataNodeRegisterResponseDTO.getCentralId());
             dataNode.setSid(nodeUuid);
             dataNode.setName(name);
             dataNode.setDescription(description);
@@ -144,8 +146,8 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
             DTO commonCreateDataSourceDTO) {
 
         String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.REGISTRATION;
-        Map<String, String> uriParams = new HashMap<>();
-        uriParams.put("uuid", dataNode.getSid());
+        Map<String, Object> uriParams = new HashMap<>();
+        uriParams.put("id", dataNode.getCentralId());
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
 
         HttpEntity<DTO> requestEntity =
@@ -225,11 +227,11 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
     }
 
     @Override
-    public JsonResult<DTO> getDataSource(User user, String uuid) {
+    public JsonResult<DTO> getDataSource(User user, Long id) {
 
         String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.GET;
-        Map<String, String> uriParams = new HashMap<>();
-        uriParams.put("uuid", uuid);
+        Map<String, Object> uriParams = new HashMap<>();
+        uriParams.put("id", id);
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
 
         HttpEntity request = new HttpEntity<>(centralUtil.getCentralAuthHeader(user.getToken()));
@@ -251,8 +253,8 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
         String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.UPDATE;
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
 
-        Map<String, String> uriParams = new HashMap<>();
-        uriParams.put("uuid", commonCreateDataSourceDTO.getUuid());
+        Map<String, Long> uriParams = new HashMap<>();
+        uriParams.put("id", commonCreateDataSourceDTO.getUuid());
 
         HttpEntity<DTO> request = new HttpEntity<>(
                 commonCreateDataSourceDTO,
@@ -319,7 +321,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
         final CommonLinkUserToDataNodeDTO commonLinkUserToDataNode
                 = conversionService.convert(user, CommonLinkUserToDataNodeDTO.class);
         final HttpEntity<CommonLinkUserToDataNodeDTO> httpEntity = new HttpEntity<>(commonLinkUserToDataNode, headers);
-        linkUnlinkDataNodeUsers(dataNode.getSid(), httpEntity, HttpMethod.POST);
+        linkUnlinkDataNodeUsers(dataNode.getCentralId(), httpEntity, HttpMethod.POST);
     }
 
     @Override
@@ -329,7 +331,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
         final CommonLinkUserToDataNodeDTO commonLinkUserToDataNode
                 = conversionService.convert(user, CommonLinkUserToDataNodeDTO.class);
         final HttpEntity<CommonLinkUserToDataNodeDTO> httpEntity = new HttpEntity<>(commonLinkUserToDataNode, headers);
-        linkUnlinkDataNodeUsers(dataNode.getSid(), httpEntity, HttpMethod.DELETE);
+        linkUnlinkDataNodeUsers(dataNode.getCentralId(), httpEntity, HttpMethod.DELETE);
     }
 
     @Override
@@ -341,10 +343,10 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
                 .collect(Collectors.toList());
         final HttpEntity<List<CommonLinkUserToDataNodeDTO>> httpEntity
                 = new HttpEntity<>(commonLinkUserToDataNodes, headers);
-        linkUnlinkDataNodeUsers(dataNode.getSid(), httpEntity, HttpMethod.PUT);
+        linkUnlinkDataNodeUsers(dataNode.getCentralId(), httpEntity, HttpMethod.PUT);
     }
 
-    private void linkUnlinkDataNodeUsers(String datanodeSid, HttpEntity httpEntity, HttpMethod method) {
+    private void linkUnlinkDataNodeUsers(Long datanodeId, HttpEntity httpEntity, HttpMethod method) {
 
         final String uri = centralUtil.getCentralUrl() + Constants.CentralApi.User.LINK_TO_NODE;
         final ResponseEntity<JsonResult> response = centralRestTemplate.exchange(
@@ -352,7 +354,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
                 method,
                 httpEntity,
                 JsonResult.class,
-                datanodeSid
+                datanodeId
         );
         final JsonResult result = response.getBody();
         if (result.getErrorCode() != 0) {

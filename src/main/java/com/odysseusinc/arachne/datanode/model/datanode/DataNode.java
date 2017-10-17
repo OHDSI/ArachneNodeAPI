@@ -24,7 +24,8 @@ package com.odysseusinc.arachne.datanode.model.datanode;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import java.util.Set;
+import org.hibernate.validator.constraints.NotEmpty;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -37,7 +38,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
-import org.hibernate.validator.constraints.NotEmpty;
+import java.util.Set;
 
 @Entity
 @Table(name = "datanode")
@@ -73,6 +74,9 @@ public class DataNode {
     @NotEmpty
     @Column(name = "token")
     private String token;
+
+    @Column(name = "central_id")
+    private Long centralId;
 
     public Long getId() {
 
@@ -152,5 +156,15 @@ public class DataNode {
     public void setToken(String token) {
 
         this.token = token;
+    }
+
+    public Long getCentralId() {
+
+        return centralId;
+    }
+
+    public void setCentralId(Long centralId) {
+
+        this.centralId = centralId;
     }
 }

@@ -27,6 +27,8 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
+import org.hibernate.validator.constraints.NotBlank;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -39,7 +41,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import org.hibernate.validator.constraints.NotBlank;
 
 @Entity
 @Table(name = "datasource")
@@ -97,6 +98,8 @@ public class DataSource {
 
     @Column
     private String healthStatusDescription;
+
+    private Long centralId;
 
     public Long getId() {
 
@@ -239,12 +242,22 @@ public class DataSource {
         this.healthStatusDescription = healthStatusDescription;
     }
 
+    public Long getCentralId() {
+
+        return centralId;
+    }
+
+    public void setCentralId(Long centralId) {
+
+        this.centralId = centralId;
+    }
+
     @Override
     public String toString() {
 
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
-                .add("uuid", uuid)
+                .add("centralId", centralId)
                 .add("name", name)
                 .add("description", description)
                 .add("type", type)

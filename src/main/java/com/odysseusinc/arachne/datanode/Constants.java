@@ -48,10 +48,10 @@ public interface Constants {
         }
 
         interface DataSource {
-            String REGISTRATION = "/api/v1/data-nodes/{uuid}/data-sources";
-            String GET = "/api/v1/data-sources/{uuid}";
+            String REGISTRATION = "/api/v1/data-nodes/{id}/data-sources";
+            String GET = "/api/v1/data-sources/{id}";
             String GET_METADATA_SCHEMA = "/api/v1/metadata/data-source/attributes";
-            String UPDATE = "/api/v1/data-sources/{uuid}";
+            String UPDATE = "/api/v1/data-sources/{id}";
         }
 
         interface User {

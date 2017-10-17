@@ -23,12 +23,13 @@
 package com.odysseusinc.arachne.datanode.repository;
 
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
 
 public interface DataSourceRepository extends JpaRepository<DataSource, Long> {
 
@@ -37,8 +38,13 @@ public interface DataSourceRepository extends JpaRepository<DataSource, Long> {
     @Query("delete from DataSource ds where ds.uuid = ?1")
     void deleteByUuid(String uuid);
 
+    @Modifying
+    void deleteByCentralId(Long centralId);
+
     @Query("from DataSource ds where ds.uuid = ?1")
     Optional<DataSource> findByUuid(String uuid);
+
+    Optional<DataSource> findByCentralId(Long centralId);
 
     @Query("from DataSource ds where ds.id = ?1")
     Optional<DataSource> findById(Long id);

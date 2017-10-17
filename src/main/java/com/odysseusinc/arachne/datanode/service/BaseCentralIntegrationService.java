@@ -32,6 +32,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.user.User;
+
 import java.util.List;
 import java.util.Set;
 
@@ -55,7 +56,7 @@ public interface BaseCentralIntegrationService<DTO extends  CommonDataSourceDTO>
 
     JsonResult<CommonUserDTO> getRegisterUser(CommonUserRegistrationDTO dto);
 
-    JsonResult<DTO> getDataSource(User user, String uuid);
+    JsonResult<DTO> getDataSource(User user, Long id);
 
     JsonResult<DTO> updateDataSource(User user, DTO commonDataSourceDTO);
 
