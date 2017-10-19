@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface DataSourceRepository extends JpaRepository<DataSource, Long> {
 
@@ -51,4 +52,6 @@ public interface DataSourceRepository extends JpaRepository<DataSource, Long> {
 
     @Query("select ds from DataSource ds where ds.registred = true")
     List<DataSource> findAllRegistered();
+
+    Stream<DataSource> findAllByCentralIdIsNull();
 }

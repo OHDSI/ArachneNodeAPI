@@ -50,7 +50,7 @@ public class DataNode {
     private Long id;
 
     @Size(max = 50)
-    @Column(length = 50, name = "sid", nullable = false, unique = true)
+    @Column(length = 50, name = "sid")
     private String sid;
 
     @NotEmpty

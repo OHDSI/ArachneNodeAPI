@@ -30,6 +30,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface DataNodeRepository extends JpaRepository<DataNode, Long> {
     @Query("from DataNode dn where dn.sid = ?1")
@@ -44,4 +45,6 @@ public interface DataNodeRepository extends JpaRepository<DataNode, Long> {
     void updateHealthStatus(@Param("id") Long id,
                             @Param("healthStatus") CommonHealthStatus healthStatus,
                             @Param("healthStatusDescription") String healthStatusDescription);
+
+    Stream<DataNode> findAllByCentralIdIsNull();
 }

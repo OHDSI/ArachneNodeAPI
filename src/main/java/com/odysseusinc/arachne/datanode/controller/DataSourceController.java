@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.controller;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
+import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
@@ -37,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Api
 @RestController
-public class DataSourceController extends BaseDataSourceController<CommonDataSourceDTO> {
+public class DataSourceController extends BaseDataSourceController<DataSource, CommonDataSourceDTO> {
 
     private static final String CDM_VERSION_FILENAME = "cdm_version.txt";
 

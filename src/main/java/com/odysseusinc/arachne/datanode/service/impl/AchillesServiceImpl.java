@@ -510,7 +510,7 @@ public class AchillesServiceImpl implements AchillesService {
         MultipartFile multipartFile = new MockMultipartFile("file",
                 file.getName(), "text/plain", IOUtils.toByteArray(input));
 
-        centralSystemClient.sendAchillesResults(dataSource.getUuid(), multipartFile);
+        centralSystemClient.sendAchillesResults(dataSource.getCentralId(), multipartFile);
 
         LOGGER.debug("Results successfully sent");
 

@@ -39,6 +39,7 @@ import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
@@ -64,7 +65,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSourceDTO> implements BaseCentralIntegrationService<DTO> {
+public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, DTO extends CommonDataSourceDTO> implements BaseCentralIntegrationService<DS, DTO> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CentralIntegrationServiceImpl.class);
     protected final RestTemplate centralRestTemplate;
     protected final GenericConversionService conversionService;
@@ -141,7 +142,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
     }
 
     @Override
-    public JsonResult<CommonDataNodeRegisterResponseDTO> sendDataSourceRegistrationRequest(
+    public JsonResult<CommonDataSourceDTO> sendDataSourceRegistrationRequest(
             User user, DataNode dataNode,
             DTO commonCreateDataSourceDTO) {
 
@@ -157,7 +158,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
                         uriBuilder.buildAndExpand(uriParams).toUri(),
                         HttpMethod.POST, requestEntity,
                         JsonResult.class);
-        JsonResult<CommonDataNodeRegisterResponseDTO> jsonResult = exchange.getBody();
+        JsonResult<CommonDataSourceDTO> jsonResult = exchange.getBody();
 
         return jsonResult;
     }
@@ -248,13 +249,13 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
     @Override
     public JsonResult<DTO> updateDataSource(
             User user,
-            DTO commonCreateDataSourceDTO) {
+            DS dataSource, DTO commonCreateDataSourceDTO) {
 
         String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.UPDATE;
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
 
         Map<String, Long> uriParams = new HashMap<>();
-        uriParams.put("id", commonCreateDataSourceDTO.getUuid());
+        uriParams.put("id", dataSource.getCentralId());
 
         HttpEntity<DTO> request = new HttpEntity<>(
                 commonCreateDataSourceDTO,
