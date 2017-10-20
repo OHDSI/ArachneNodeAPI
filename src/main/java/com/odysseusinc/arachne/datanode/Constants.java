@@ -73,8 +73,8 @@ public interface Constants {
 
         interface Achilles {
             String LIST_REPORTS = "/api/v1/achilles/reports";
-            String LIST_PERMISSIONS = "/api/v1/achilles/datanode/datasource/{uuid}/permissions";
-            String PERMISSION = "/api/v1/achilles/datanode/datasource/{uuid}/permissions/{id}";
+            String LIST_PERMISSIONS = "/api/v1/achilles/datanode/datasource/{id}/permissions";
+            String PERMISSION = "/api/v1/achilles/datanode/datasource/{dataSourceId}/permissions/{id}";
             String PARAM_DATANODE = "datanode";
         }
     }

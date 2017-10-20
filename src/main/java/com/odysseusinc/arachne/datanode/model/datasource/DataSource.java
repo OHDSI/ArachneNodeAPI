@@ -111,11 +111,13 @@ public class DataSource {
         this.id = id;
     }
 
+    @Deprecated
     public String getUuid() {
 
         return uuid;
     }
 
+    @Deprecated
     public void setUuid(String uuid) {
 
         this.uuid = uuid;

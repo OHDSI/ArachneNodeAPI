@@ -88,11 +88,13 @@ public class DataNode {
         this.id = id;
     }
 
+    @Deprecated
     public String getSid() {
 
         return sid;
     }
 
+    @Deprecated
     public void setSid(String sid) {
 
         this.sid = sid;
