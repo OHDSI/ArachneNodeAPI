@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.service;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
+import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 
-public interface CentralIntegrationService extends BaseCentralIntegrationService<CommonDataSourceDTO> {
+public interface CentralIntegrationService extends BaseCentralIntegrationService<DataSource, CommonDataSourceDTO> {
 }

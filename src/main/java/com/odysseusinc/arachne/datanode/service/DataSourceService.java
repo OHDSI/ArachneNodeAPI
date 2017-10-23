@@ -26,6 +26,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -46,9 +47,9 @@ public interface DataSourceService {
 
     Optional<DataSource> update(User user, DataSource ds);
 
-    DataSource markDataSourceAsRegistered(String uuid);
+    DataSource markDataSourceAsRegistered(Long centralId);
 
-    DataSource markDataSourceAsUnregistered(String uuid);
+    DataSource markDataSourceAsUnregistered(Long centralId);
 
-    void updateHealthStatus(String uuid, CommonHealthStatus status, String description);
+    void updateHealthStatus(Long centralId, CommonHealthStatus status, String description);
 }

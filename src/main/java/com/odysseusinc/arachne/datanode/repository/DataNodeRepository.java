@@ -24,15 +24,19 @@ package com.odysseusinc.arachne.datanode.repository;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+import java.util.stream.Stream;
+
 public interface DataNodeRepository extends JpaRepository<DataNode, Long> {
     @Query("from DataNode dn where dn.sid = ?1")
     Optional<DataNode> findOneBySid(String sid);
+
+    Optional<DataNode> findByCentralId(Long centralId);
 
     @Modifying
     @Query("UPDATE DataNode dn "
@@ -41,4 +45,6 @@ public interface DataNodeRepository extends JpaRepository<DataNode, Long> {
     void updateHealthStatus(@Param("id") Long id,
                             @Param("healthStatus") CommonHealthStatus healthStatus,
                             @Param("healthStatusDescription") String healthStatusDescription);
+
+    Stream<DataNode> findAllByCentralIdIsNull();
 }
