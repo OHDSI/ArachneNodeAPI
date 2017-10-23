@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
+import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class CentralIntegrationServiceImpl extends BaseCentralIntegrationServiceImpl<CommonDataSourceDTO>
+public class CentralIntegrationServiceImpl extends BaseCentralIntegrationServiceImpl<DataSource, CommonDataSourceDTO>
         implements CentralIntegrationService {
 
     @Autowired

@@ -33,13 +33,15 @@ import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -107,6 +109,12 @@ public class DataSourceServiceImpl implements DataSourceService {
         return dataSourceRepository.findByUuid(sid);
     }
 
+    public Optional<DataSource> findByCentralId(Long centralId) {
+
+        Preconditions.checkArgument(Objects.nonNull(centralId), "given data source centralId is null");
+        return dataSourceRepository.findByCentralId(centralId);
+    }
+
     @Override
     public DataSource getById(Long id) {
 
@@ -133,32 +141,32 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     @Transactional
     @Override
-    public DataSource markDataSourceAsRegistered(String uuid) {
+    public DataSource markDataSourceAsRegistered(Long centralId) {
 
-        return setDSRegistered(uuid, true);
+        return setDSRegistered(centralId, true);
     }
 
     @Transactional
     @Override
-    public DataSource markDataSourceAsUnregistered(String uuid) {
+    public DataSource markDataSourceAsUnregistered(Long centralId) {
 
-        return setDSRegistered(uuid, false);
+        return setDSRegistered(centralId, false);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void updateHealthStatus(String uuid, CommonHealthStatus status, String description) {
+    public void updateHealthStatus(Long centralId, CommonHealthStatus status, String description) {
 
-        findBySid(uuid).ifPresent(dataSource -> {
+        findByCentralId(centralId).ifPresent(dataSource -> {
             dataSource.setHealthStatus(status);
             dataSource.setHealthStatusDescription(description);
             dataSourceRepository.save(dataSource);
         });
     }
 
-    private DataSource setDSRegistered(String uuid, boolean registered) {
+    private DataSource setDSRegistered(Long centralId, boolean registered) {
 
-        DataSource forUpdate = dataSourceRepository.findByUuid(uuid)
+        DataSource forUpdate = dataSourceRepository.findByCentralId(centralId)
                 .orElseThrow(() -> new NotExistException(DataSource.class));
         forUpdate.setRegistred(registered);
         dataSourceRepository.save(forUpdate);

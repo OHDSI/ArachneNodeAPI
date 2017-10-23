@@ -48,10 +48,10 @@ public interface Constants {
         }
 
         interface DataSource {
-            String REGISTRATION = "/api/v1/data-nodes/{uuid}/data-sources";
-            String GET = "/api/v1/data-sources/{uuid}";
+            String REGISTRATION = "/api/v1/data-nodes/{id}/data-sources";
+            String GET = "/api/v1/data-sources/{id}";
             String GET_METADATA_SCHEMA = "/api/v1/metadata/data-source/attributes";
-            String UPDATE = "/api/v1/data-sources/{uuid}";
+            String UPDATE = "/api/v1/data-sources/{id}";
         }
 
         interface User {
@@ -73,8 +73,8 @@ public interface Constants {
 
         interface Achilles {
             String LIST_REPORTS = "/api/v1/achilles/reports";
-            String LIST_PERMISSIONS = "/api/v1/achilles/datanode/datasource/{uuid}/permissions";
-            String PERMISSION = "/api/v1/achilles/datanode/datasource/{uuid}/permissions/{id}";
+            String LIST_PERMISSIONS = "/api/v1/achilles/datanode/datasource/{id}/permissions";
+            String PERMISSION = "/api/v1/achilles/datanode/datasource/{dataSourceId}/permissions/{id}";
             String PARAM_DATANODE = "datanode";
         }
     }

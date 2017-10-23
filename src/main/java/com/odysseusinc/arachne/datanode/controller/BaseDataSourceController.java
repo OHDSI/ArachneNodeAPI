@@ -22,7 +22,6 @@
 
 package com.odysseusinc.arachne.datanode.controller;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeRegisterResponseDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
@@ -64,10 +63,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class BaseDataSourceController<DTO extends CommonDataSourceDTO> extends BaseController{
+public abstract class BaseDataSourceController<DS extends DataSource, DTO extends CommonDataSourceDTO> extends BaseController{
 
     protected final DataSourceService dataSourceService;
-    protected final BaseCentralIntegrationService<DTO> integrationService;
+    protected final BaseCentralIntegrationService<DS, DTO> integrationService;
     protected final ModelMapper modelMapper;
     protected final GenericConversionService conversionService;
     protected final JmsTemplate jmsTemplate;
@@ -77,7 +76,7 @@ public abstract class BaseDataSourceController<DTO extends CommonDataSourceDTO> 
 
     protected BaseDataSourceController(UserService userService,
                                        ModelMapper modelMapper,
-                                       BaseCentralIntegrationService<DTO> integrationService,
+                                       BaseCentralIntegrationService<DS, DTO> integrationService,
                                        DataSourceService dataSourceService,
                                        GenericConversionService conversionService,
                                        DataSourceHelperImpl dataSourceHelper,
@@ -205,7 +204,7 @@ public abstract class BaseDataSourceController<DTO extends CommonDataSourceDTO> 
             method = RequestMethod.POST,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public JsonResult<CommonDataNodeRegisterResponseDTO> register(
+    public JsonResult<CommonDataSourceDTO> register(
             Principal principal,
             @PathVariable("id") Long id,
             @RequestBody DTO commonDataSourceDTO
@@ -215,13 +214,14 @@ public abstract class BaseDataSourceController<DTO extends CommonDataSourceDTO> 
         DataSource dataSource = dataSourceService.getById(id);
         commonDataSourceDTO.setId(dataSource.getId());
         commonDataSourceDTO.setUuid(dataSource.getUuid());
-        JsonResult<CommonDataNodeRegisterResponseDTO> jsonResult = integrationService.sendDataSourceRegistrationRequest(
+        JsonResult<CommonDataSourceDTO> jsonResult = integrationService.sendDataSourceRegistrationRequest(
                 user,
                 dataSource.getDataNode(),
                 commonDataSourceDTO
         );
+        dataSource.setCentralId(jsonResult.getResult().getId());
         if (JsonResult.ErrorCode.NO_ERROR.getCode().equals(jsonResult.getErrorCode())) {
-            dataSourceService.markDataSourceAsRegistered(dataSource.getUuid());
+            dataSourceService.markDataSourceAsRegistered(dataSource.getCentralId());
         }
         return jsonResult;
     }
@@ -236,10 +236,10 @@ public abstract class BaseDataSourceController<DTO extends CommonDataSourceDTO> 
             throws SQLException, PermissionDeniedException {
 
         DataSource dataSource = dataSourceService.getById(id);
-        final String nodeSid = dataSource.getDataNode().getSid();
-        final JsonResult result = centralClient.unregisterDataSource(nodeSid, dataSource.getUuid());
+        final Long dataNodeCentralId = dataSource.getDataNode().getCentralId();
+        final JsonResult result = centralClient.unregisterDataSource(dataNodeCentralId, dataSource.getCentralId());
         if (JsonResult.ErrorCode.NO_ERROR.getCode().equals(result.getErrorCode())) {
-            dataSourceService.markDataSourceAsUnregistered(dataSource.getUuid());
+            dataSourceService.markDataSourceAsUnregistered(dataSource.getCentralId());
         }
         return result;
     }
@@ -264,7 +264,7 @@ public abstract class BaseDataSourceController<DTO extends CommonDataSourceDTO> 
         Map<String, Object> commonDataSourceDTO;
         if (dataSource.getRegistred()) {
             commonDataSourceDTO = (Map<String, Object>) this.integrationService
-                    .getDataSource(user, dataSource.getUuid())
+                    .getDataSource(user, dataSource.getCentralId())
                     .getResult();
         } else {
             commonDataSourceDTO = new HashMap<>();
@@ -294,9 +294,9 @@ public abstract class BaseDataSourceController<DTO extends CommonDataSourceDTO> 
     ) throws AuthException, NotExistException, PermissionDeniedException {
 
         final User user = getAdmin(principal);
-        DataSource dataSource = dataSourceService.getById(id);
+        DS dataSource = (DS) dataSourceService.getById(id);
         commonDataSourceDTO.setUuid(dataSource.getUuid());
-        return this.integrationService.updateDataSource(user, commonDataSourceDTO);
+        return this.integrationService.updateDataSource(user, dataSource, commonDataSourceDTO);
     }
 
     @RequestMapping(
@@ -305,7 +305,7 @@ public abstract class BaseDataSourceController<DTO extends CommonDataSourceDTO> 
     )
     public List<OptionDTO> getDBMSTypes() {
 
-        return Arrays.asList(DBMSType.values()).stream()
+        return Arrays.stream(DBMSType.values())
                 .map(dbms -> conversionService.convert(dbms, OptionDTO.class))
                 .collect(Collectors.toList());
     }
