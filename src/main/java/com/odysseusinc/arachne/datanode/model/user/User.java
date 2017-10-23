@@ -22,9 +22,8 @@
 
 package com.odysseusinc.arachne.datanode.model.user;
 
-import java.io.Serializable;
-import java.util.LinkedList;
-import java.util.List;
+import org.hibernate.validator.constraints.Email;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -37,7 +36,9 @@ import javax.persistence.ManyToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
-import org.hibernate.validator.constraints.Email;
+import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -66,6 +67,9 @@ public class User implements Serializable {
 
     @Column
     private String token;
+
+    @Column
+    private Boolean enabled;
 
     @ManyToMany(targetEntity = Role.class, fetch = FetchType.EAGER)
     @JoinTable(name = "users_roles",
@@ -141,5 +145,15 @@ public class User implements Serializable {
     public void setToken(String token) {
 
         this.token = token;
+    }
+
+    public Boolean getEnabled() {
+
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+
+        this.enabled = enabled;
     }
 }

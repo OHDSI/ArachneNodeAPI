@@ -32,6 +32,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.user.User;
+
 import java.util.List;
 import java.util.Set;
 
@@ -67,5 +68,5 @@ public interface BaseCentralIntegrationService<DTO extends  CommonDataSourceDTO>
 
     void unlinkUserToDataNodeOnCentral(DataNode dataNode, User user);
 
-    void relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users);
+    List<User> relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users);
 }

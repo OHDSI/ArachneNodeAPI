@@ -42,13 +42,6 @@ import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -58,10 +51,19 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSourceDTO> implements BaseCentralIntegrationService<DTO> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CentralIntegrationServiceImpl.class);
@@ -69,7 +71,9 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
     protected final GenericConversionService conversionService;
     protected final CentralUtil centralUtil;
 
-    public BaseCentralIntegrationServiceImpl(GenericConversionService conversionService, @Qualifier("centralRestTemplate") RestTemplate centralRestTemplate, CentralUtil centralUtil) {
+    public BaseCentralIntegrationServiceImpl(GenericConversionService conversionService,
+                                             @Qualifier("centralRestTemplate") RestTemplate centralRestTemplate,
+                                             CentralUtil centralUtil) {
 
         this.conversionService = conversionService;
         this.centralRestTemplate = centralRestTemplate;
@@ -333,7 +337,8 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
     }
 
     @Override
-    public void relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users) {
+    @Transactional
+    public List<User> relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users) {
 
         final HttpHeaders headers = centralUtil.getCentralNodeAuthHeader(dataNode.getToken());
         final List<CommonLinkUserToDataNodeDTO> commonLinkUserToDataNodes = users.stream()
@@ -341,23 +346,25 @@ public abstract class BaseCentralIntegrationServiceImpl<DTO extends CommonDataSo
                 .collect(Collectors.toList());
         final HttpEntity<List<CommonLinkUserToDataNodeDTO>> httpEntity
                 = new HttpEntity<>(commonLinkUserToDataNodes, headers);
-        linkUnlinkDataNodeUsers(dataNode.getSid(), httpEntity, HttpMethod.PUT);
+        List<CommonUserDTO> linkedUsers = linkUnlinkDataNodeUsers(dataNode.getSid(), httpEntity, HttpMethod.PUT);
+        return linkedUsers.stream().map(user -> conversionService.convert(user, User.class)).collect(Collectors.toList());
     }
 
-    private void linkUnlinkDataNodeUsers(String datanodeSid, HttpEntity httpEntity, HttpMethod method) {
+    private List<CommonUserDTO> linkUnlinkDataNodeUsers(String datanodeSid, HttpEntity httpEntity, HttpMethod method) {
 
         final String uri = centralUtil.getCentralUrl() + Constants.CentralApi.User.LINK_TO_NODE;
-        final ResponseEntity<JsonResult> response = centralRestTemplate.exchange(
+        final ResponseEntity<JsonResult<List<CommonUserDTO>>> response = centralRestTemplate.exchange(
                 uri,
                 method,
                 httpEntity,
-                JsonResult.class,
+                new ParameterizedTypeReference<JsonResult<List<CommonUserDTO>>>() {},
                 datanodeSid
         );
         final JsonResult result = response.getBody();
         if (result.getErrorCode() != 0) {
             throw new IllegalStateException(result.getErrorMessage());
         }
+        return (List<CommonUserDTO>) result.getResult();
     }
 
     protected void logoutFromCentral(String token) {
