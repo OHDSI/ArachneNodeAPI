@@ -89,7 +89,12 @@ public class UserServiceImpl implements UserService {
                         LOG.info(RELINKING_ALL_USERS_LOG);
                         final List<User> users = userRepository.findAll();
                         List<User> updatedUsers = centralIntegrationService.relinkAllUsersToDataNodeOnCentral(dataNode, users);
-                        userRepository.save(updatedUsers);
+                        List<User> mappedUsers = users.stream().map(user -> {
+                            updatedUsers.stream().filter(u -> u.getEmail().equals(user.getEmail())).findFirst()
+                                    .ifPresent(u -> user.setEnabled(u.getEnabled()));
+                            return user;
+                        }).collect(Collectors.toList());
+                        userRepository.save(mappedUsers);
                     }
             );
         } catch (Exception ex) {
@@ -135,6 +140,7 @@ public class UserServiceImpl implements UserService {
     public void disableUser(String login) {
 
         User user = userRepository.findOneByEmail(login).orElseThrow(IllegalArgumentException::new);
+        user.setEnabled(false);
         userRepository.save(user);
     }
 
@@ -142,6 +148,7 @@ public class UserServiceImpl implements UserService {
     public void enableUser(String login) {
 
         User user = userRepository.findOneByEmail(login).orElseThrow(IllegalArgumentException::new);
+        user.setEnabled(true);
         userRepository.save(user);
     }
 
