@@ -69,7 +69,7 @@ public class UserController {
 
     @ApiOperation(value = "Disable user by given login.")
     @RequestMapping(value = "/disable/{login:" + Constants.LOGIN_REGEX + "}",
-            method = RequestMethod.DELETE,
+            method = RequestMethod.POST,
             produces = MediaType.APPLICATION_JSON_VALUE)
     @Secured(RolesConstants.ROLE_ADMIN)
     public ResponseEntity<Void> disableUser(@PathVariable String login) {

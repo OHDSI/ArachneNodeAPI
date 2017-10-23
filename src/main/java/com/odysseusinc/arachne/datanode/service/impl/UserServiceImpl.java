@@ -139,17 +139,23 @@ public class UserServiceImpl implements UserService {
     @Override
     public void disableUser(String login) {
 
-        User user = userRepository.findOneByEmail(login).orElseThrow(IllegalArgumentException::new);
-        user.setEnabled(false);
-        userRepository.save(user);
+        toggleUser(login, false);
     }
 
     @Override
     public void enableUser(String login) {
 
-        User user = userRepository.findOneByEmail(login).orElseThrow(IllegalArgumentException::new);
-        user.setEnabled(true);
-        userRepository.save(user);
+        toggleUser(login, true);
+    }
+
+    protected void toggleUser(String login, Boolean enabled) {
+
+        dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
+            User user = userRepository.findOneByEmail(login).orElseThrow(IllegalArgumentException::new);
+            user.setEnabled(enabled);
+            centralIntegrationService.linkUserToDataNodeOnCentral(dataNode, user);
+            userRepository.save(user);
+        });
     }
 
     @Override
