@@ -30,6 +30,7 @@ import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClien
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.retry.RetryPolicy;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.AlwaysRetryPolicy;
@@ -45,6 +46,7 @@ import javax.annotation.PostConstruct;
 
 @Component
 @Transactional
+@Profile("!test")
 public class DataSourceUUIDMigration {
 
     private final PlatformTransactionManager transactionManager;
