@@ -129,7 +129,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
         final String name = commonDataNodeRegisterResponseDTO.getName();
         final String description = commonDataNodeRegisterResponseDTO.getDescription();
         final String token = commonDataNodeRegisterResponseDTO.getToken();
-        if (isAnyBlank(nodeUuid, name, description, token)) {
+        if (isAnyBlank(name, description, token)) {
             throw new IllegalStateException("Unable to register data node on central. Topic names is blank or empty response");
         } else {
             dataNode.setCentralId(commonDataNodeRegisterResponseDTO.getCentralId());
