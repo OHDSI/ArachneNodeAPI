@@ -151,14 +151,13 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
 
         HttpEntity<DTO> requestEntity =
                 new HttpEntity<>(commonCreateDataSourceDTO, centralUtil.getCentralAuthHeader(user.getToken()));
-        ResponseEntity<JsonResult> exchange =
+        ResponseEntity<JsonResult<CommonDataSourceDTO>> exchange =
                 centralRestTemplate.exchange(
                         uriBuilder.buildAndExpand(uriParams).toUri(),
                         HttpMethod.POST, requestEntity,
-                        JsonResult.class);
-        JsonResult<CommonDataSourceDTO> jsonResult = exchange.getBody();
+                        new ParameterizedTypeReference<JsonResult<CommonDataSourceDTO>>() {});
 
-        return jsonResult;
+        return exchange.getBody();
     }
 
     @Override
