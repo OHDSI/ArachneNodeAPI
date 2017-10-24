@@ -125,7 +125,6 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                     ? "" : jsonResult.getErrorMessage()));
         }
         final CommonDataNodeRegisterResponseDTO commonDataNodeRegisterResponseDTO = jsonResult.getResult();
-        final String nodeUuid = commonDataNodeRegisterResponseDTO.getDataNodeUuid();
         final String name = commonDataNodeRegisterResponseDTO.getName();
         final String description = commonDataNodeRegisterResponseDTO.getDescription();
         final String token = commonDataNodeRegisterResponseDTO.getToken();
@@ -133,7 +132,6 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             throw new IllegalStateException("Unable to register data node on central. Topic names is blank or empty response");
         } else {
             dataNode.setCentralId(commonDataNodeRegisterResponseDTO.getCentralId());
-            dataNode.setSid(nodeUuid);
             dataNode.setName(name);
             dataNode.setDescription(description);
             dataNode.setToken(token);
