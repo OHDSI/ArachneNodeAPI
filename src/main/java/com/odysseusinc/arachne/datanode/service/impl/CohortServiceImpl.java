@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.ohdsi.sql.SqlRender;
@@ -77,11 +78,14 @@ public class CohortServiceImpl implements CohortService {
     public void init() {
 
         Map<String, AtlasRequestHandler> beans = beanFactory.getBeansOfType(AtlasRequestHandler.class);
-        handlerMap = beans.entrySet()
-                .stream()
-                .filter(entry -> beanFactory.getBeanDefinition(entry.getKey()).isPrimary())
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toMap(AtlasRequestHandler::getAnalysisType, item -> item));
+
+        for (Map.Entry<String, AtlasRequestHandler> entry : beans.entrySet()) {
+            AtlasRequestHandler handler = entry.getValue();
+            AtlasRequestHandler oldHandler = handlerMap.put(handler.getAnalysisType(), handler);
+            if (oldHandler != null && beanFactory.getBeanDefinition(entry.getKey()).isPrimary()) {
+                handlerMap.put(oldHandler.getAnalysisType(), oldHandler);
+            }
+        }
     }
 
     @Override
