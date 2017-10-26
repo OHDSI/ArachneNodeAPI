@@ -41,12 +41,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.ohdsi.sql.SqlRender;
 import org.ohdsi.sql.SqlTranslate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -60,25 +62,38 @@ public class CohortServiceImpl implements CohortService {
     private static final String PROCESS_LIST_REQUEST_FAILURE_LOG = "Process List Requests checking failure, {}";
     private static final String PROCESS_REQUEST_FAILURE_LOG = "Process request checking failure, {}";
     private final CentralSystemClient centralClient;
-    private final ApplicationContext applicationContext;
+    private final ConfigurableListableBeanFactory beanFactory;
     private Map<CommonAnalysisType,
             AtlasRequestHandler<? extends CommonEntityDTO, ? extends CommonEntityDTO>> handlerMap =
             new HashMap<>();
 
     public CohortServiceImpl(CentralSystemClient centralClient,
-                             ApplicationContext applicationContext) {
+                             ConfigurableListableBeanFactory beanFactory) {
 
         this.centralClient = centralClient;
-        this.applicationContext = applicationContext;
+        this.beanFactory = beanFactory;
     }
 
     @PostConstruct
     public void init() {
 
-        Map<String, AtlasRequestHandler> beans = applicationContext.getBeansOfType(AtlasRequestHandler.class);
-        handlerMap = beans.values()
-                .stream()
-                .collect(Collectors.toMap(AtlasRequestHandler::getAnalysisType, item -> item));
+        Map<String, AtlasRequestHandler> beans = beanFactory.getBeansOfType(AtlasRequestHandler.class);
+
+        for (Map.Entry<String, AtlasRequestHandler> entry : beans.entrySet()) {
+            AtlasRequestHandler handler = entry.getValue();
+            if (!checkIfPrimaryBeanAlreadyExists(handler, entry.getKey())) {
+                handlerMap.put(handler.getAnalysisType(), handler);
+            }
+        }
+    }
+
+    private boolean checkIfPrimaryBeanAlreadyExists(AtlasRequestHandler handler, String beanName) {
+
+        boolean alreadyExists = Boolean.FALSE;
+        if (handlerMap.get(handler.getAnalysisType()) != null && beanFactory.getBeanDefinition(beanName).isPrimary()) {
+            alreadyExists = Boolean.TRUE;
+        }
+        return alreadyExists;
     }
 
     @Override
