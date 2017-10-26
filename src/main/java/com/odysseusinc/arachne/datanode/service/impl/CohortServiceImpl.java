@@ -81,11 +81,19 @@ public class CohortServiceImpl implements CohortService {
 
         for (Map.Entry<String, AtlasRequestHandler> entry : beans.entrySet()) {
             AtlasRequestHandler handler = entry.getValue();
-            AtlasRequestHandler oldHandler = handlerMap.put(handler.getAnalysisType(), handler);
-            if (oldHandler != null && beanFactory.getBeanDefinition(entry.getKey()).isPrimary()) {
-                handlerMap.put(oldHandler.getAnalysisType(), oldHandler);
+            if (!checkIfPrimaryBeanAlreadyExists(handler, entry.getKey())) {
+                handlerMap.put(handler.getAnalysisType(), handler);
             }
         }
+    }
+
+    private boolean checkIfPrimaryBeanAlreadyExists(AtlasRequestHandler handler, String beanName) {
+
+        boolean alreadyExists = Boolean.FALSE;
+        if (handlerMap.get(handler.getAnalysisType()) != null && beanFactory.getBeanDefinition(beanName).isPrimary()) {
+            alreadyExists = Boolean.TRUE;
+        }
+        return alreadyExists;
     }
 
     @Override
