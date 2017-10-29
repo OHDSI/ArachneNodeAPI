@@ -23,11 +23,9 @@
 package com.odysseusinc.arachne.datanode.controller.admin;
 
 import com.odysseusinc.arachne.datanode.service.UserService;
-import io.swagger.annotations.Api;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.web.bind.annotation.RestController;
 
-@Api
 @RestController
 public class AdminController extends BaseAdminController {
 

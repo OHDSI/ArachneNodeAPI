@@ -26,7 +26,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
         <jjwt.version>0.6.0</jjwt.version>
-        <springfoxSwagger2Version>2.6.0</springfoxSwagger2Version>
         <postgresql.version>9.1-901-1.jdbc4</postgresql.version>
         <flywayVersion>4.2.0</flywayVersion>
         <javaDockerVersion>3.0.6</javaDockerVersion>
@@ -63,16 +62,6 @@
             <artifactId>arachne-sys-settings</artifactId>
             <groupId>com.odysseusinc.arachne</groupId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>${springfoxSwagger2Version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-            <version>${springfoxSwagger2Version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
