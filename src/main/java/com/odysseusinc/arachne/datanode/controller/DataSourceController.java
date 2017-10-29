@@ -29,14 +29,12 @@ import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import com.odysseusinc.arachne.datanode.service.impl.DataSourceHelperImpl;
-import io.swagger.annotations.Api;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
-@Api
 @RestController
 public class DataSourceController extends BaseDataSourceController<DataSource, CommonDataSourceDTO> {
 

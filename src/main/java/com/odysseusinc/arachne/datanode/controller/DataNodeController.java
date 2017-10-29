@@ -34,7 +34,6 @@ import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
 import java.util.List;
@@ -47,7 +46,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-@Api
 @RestController
 @RequestMapping("api/v1/datanode")
 public class DataNodeController extends BaseController {

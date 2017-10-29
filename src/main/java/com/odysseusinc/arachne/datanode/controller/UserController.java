@@ -26,7 +26,6 @@ import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.security.RolesConstants;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.UserService;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -40,7 +39,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-@Api
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
