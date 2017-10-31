@@ -41,15 +41,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
 import javax.annotation.PostConstruct;
 import org.ohdsi.sql.SqlRender;
 import org.ohdsi.sql.SqlTranslate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -79,21 +77,17 @@ public class CohortServiceImpl implements CohortService {
 
         Map<String, AtlasRequestHandler> beans = beanFactory.getBeansOfType(AtlasRequestHandler.class);
 
-        for (Map.Entry<String, AtlasRequestHandler> entry : beans.entrySet()) {
-            AtlasRequestHandler handler = entry.getValue();
-            if (!checkIfPrimaryBeanAlreadyExists(handler, entry.getKey())) {
-                handlerMap.put(handler.getAnalysisType(), handler);
-            }
-        }
+        putBeans(beans, (v) -> !beanFactory.getBeanDefinition(v.getKey()).isPrimary());
+        putBeans(beans, (v) -> beanFactory.getBeanDefinition(v.getKey()).isPrimary());
+
     }
 
-    private boolean checkIfPrimaryBeanAlreadyExists(AtlasRequestHandler handler, String beanName) {
+    private void putBeans(Map<String, AtlasRequestHandler> beans, Predicate<? super Map.Entry<String, AtlasRequestHandler>> predicate) {
 
-        boolean alreadyExists = Boolean.FALSE;
-        if (handlerMap.get(handler.getAnalysisType()) != null && beanFactory.getBeanDefinition(beanName).isPrimary()) {
-            alreadyExists = Boolean.TRUE;
-        }
-        return alreadyExists;
+        beans.entrySet()
+                .stream()
+                .filter(predicate)
+                .forEach(entry -> handlerMap.put(entry.getValue().getAnalysisType(), entry.getValue()));
     }
 
     @Override
