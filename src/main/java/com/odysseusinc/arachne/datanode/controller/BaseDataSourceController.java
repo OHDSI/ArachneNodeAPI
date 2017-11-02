@@ -62,6 +62,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.web.bind.annotation.RequestParam;
 
 public abstract class BaseDataSourceController<DS extends DataSource, DTO extends CommonDataSourceDTO> extends BaseController{
 
@@ -125,13 +126,17 @@ public abstract class BaseDataSourceController<DS extends DataSource, DTO extend
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public JsonResult<List<DataSourceDTO>> list(Principal principal) {
+    public JsonResult<List<DataSourceDTO>> list(
+            @RequestParam(name = "sortBy", required = false) String sortBy,
+            @RequestParam(name = "sortAsc", required = false) Boolean sortAsc,
+            Principal principal
+    ) {
 
         if (principal == null) {
             throw new AuthException("user not found");
         }
         JsonResult<List<DataSourceDTO>> result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-        List<DataSourceDTO> dtos = dataSourceService.findAll().stream()
+        List<DataSourceDTO> dtos = dataSourceService.findAll(sortBy, sortAsc).stream()
                 .map(dataSource -> modelMapper.map(dataSource, DataSourceDTO.class))
                 .collect(Collectors.toList());
         result.setResult(dtos);

@@ -33,8 +33,12 @@ import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.PostConstruct;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +55,7 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     private final DataSourceRepository dataSourceRepository;
     private final DataNodeService dataNodeService;
+    private final Map<String, String> dsSoftPath = new HashMap<>();
 
     @Autowired
     public DataSourceServiceImpl(DataSourceRepository dataSourceRepository,
@@ -58,6 +63,17 @@ public class DataSourceServiceImpl implements DataSourceService {
 
         this.dataSourceRepository = dataSourceRepository;
         this.dataNodeService = dataNodeService;
+    }
+
+    @PostConstruct
+    private void init() {
+
+        this.dsSoftPath.put("name", "name");
+        this.dsSoftPath.put("dbmsType", "type");
+        this.dsSoftPath.put("connectionString", "connectionString");
+        this.dsSoftPath.put("cdmSchema", "cdmSchema");
+        this.dsSoftPath.put("modelType", "modelType");
+        this.dsSoftPath.put("isRegistered", "registred");
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -80,6 +96,12 @@ public class DataSourceServiceImpl implements DataSourceService {
     public List<DataSource> findAll() {
 
         return dataSourceRepository.findAll();
+    }
+
+    @Override
+    public List<DataSource> findAll(String sortBy, Boolean sortAsc) {
+
+        return dataSourceRepository.findAll(getSort(sortBy, sortAsc));
     }
 
     @Override
@@ -171,5 +193,14 @@ public class DataSourceServiceImpl implements DataSourceService {
         forUpdate.setRegistred(registered);
         dataSourceRepository.save(forUpdate);
         return forUpdate;
+    }
+
+    protected final Sort getSort(String sortBy, Boolean sortAsc) {
+
+        String defaultSort = "name";
+        return new Sort(
+                sortAsc == null || sortAsc ? Sort.Direction.ASC : Sort.Direction.DESC,
+                dsSoftPath.getOrDefault(sortBy, defaultSort)
+        );
     }
 }
