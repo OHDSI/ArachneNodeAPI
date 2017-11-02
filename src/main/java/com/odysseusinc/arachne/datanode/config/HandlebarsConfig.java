@@ -22,7 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.config;
 
-import static com.odysseusinc.arachne.commons.utils.TemplateUtils.*;
+import static com.odysseusinc.arachne.commons.utils.TemplateUtils.loadTemplate;
 
 import com.github.jknack.handlebars.Template;
 import org.springframework.context.annotation.Bean;

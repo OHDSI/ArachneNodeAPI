@@ -30,8 +30,10 @@ import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
+import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,20 +41,23 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler<CommonPredictionDTO, List<MultipartFile>> {
+public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler<CommonPredictionDTO, MultipartFile> {
 
     private final AtlasClient atlasClient;
     private final GenericConversionService conversionService;
     private final CommonEntityService commonEntityService;
+    private final CentralSystemClient centralClient;
 
     @Autowired
     public PatientLevelPredictionRequestHandler(AtlasClient atlasClient,
                                                 GenericConversionService conversionService,
-                                                CommonEntityService commonEntityService) {
+                                                CommonEntityService commonEntityService,
+                                                CentralSystemClient centralClient) {
 
         this.atlasClient = atlasClient;
         this.conversionService = conversionService;
         this.commonEntityService = commonEntityService;
+        this.centralClient = centralClient;
     }
 
     @Override
@@ -65,13 +70,12 @@ public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler
     }
 
     @Override
-    public List<MultipartFile> getAtlasObject(String guid) {
+    public MultipartFile getAtlasObject(String guid) {
 
-        commonEntityService.findByGuid(guid).ifPresent(entity -> {
+        return commonEntityService.findByGuid(guid).map(entity -> {
             PatientLevelPredictionAnalysisInfo info = atlasClient.getPatientLevelPrediction(entity.getLocalId());
-
-        });
-        return null;
+            return new MockMultipartFile("prediction.r", new byte[0]);
+        }).orElse(null);
     }
 
     @Override
@@ -81,7 +85,9 @@ public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler
     }
 
     @Override
-    public void sendResponse(List<MultipartFile> response, String id) {
+    public void sendResponse(MultipartFile response, String id) {
 
+        MultipartFile[] files = new MultipartFile[]{ response };
+        centralClient.sendCommonEntityResponse(id, files);
     }
 }

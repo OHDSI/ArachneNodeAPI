@@ -38,7 +38,11 @@ public class PatientLevelPredictionAnalysisInfo extends PatientLevelPredictionAn
 		private ConceptSetExpression cvInclusionConceptSet;
 		private String cvInclusionConceptSetSql;
 
-		public PatientLevelPredictionAnalysisInfo(PatientLevelPredictionAnalysisInfo analysis) {
+	public PatientLevelPredictionAnalysisInfo() {
+
+	}
+
+	public PatientLevelPredictionAnalysisInfo(PatientLevelPredictionAnalysisInfo analysis) {
 			this.setAddExposureDaysToEnd(analysis.getAddExposureDaysToEnd());
 			this.setAnalysisId(analysis.getAnalysisId());
 			this.setCreated(analysis.getCreated());
