@@ -55,7 +55,7 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     private final DataSourceRepository dataSourceRepository;
     private final DataNodeService dataNodeService;
-    private final Map<String, String> dsSoftPath = new HashMap<>();
+    private final Map<String, String> dsSortPath = new HashMap<>();
 
     @Autowired
     public DataSourceServiceImpl(DataSourceRepository dataSourceRepository,
@@ -68,12 +68,12 @@ public class DataSourceServiceImpl implements DataSourceService {
     @PostConstruct
     private void init() {
 
-        this.dsSoftPath.put("name", "name");
-        this.dsSoftPath.put("dbmsType", "type");
-        this.dsSoftPath.put("connectionString", "connectionString");
-        this.dsSoftPath.put("cdmSchema", "cdmSchema");
-        this.dsSoftPath.put("modelType", "modelType");
-        this.dsSoftPath.put("isRegistered", "registred");
+        this.dsSortPath.put("name", "name");
+        this.dsSortPath.put("dbmsType", "type");
+        this.dsSortPath.put("connectionString", "connectionString");
+        this.dsSortPath.put("cdmSchema", "cdmSchema");
+        this.dsSortPath.put("modelType", "modelType");
+        this.dsSortPath.put("isRegistered", "registred");
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -200,7 +200,7 @@ public class DataSourceServiceImpl implements DataSourceService {
         String defaultSort = "name";
         return new Sort(
                 sortAsc == null || sortAsc ? Sort.Direction.ASC : Sort.Direction.DESC,
-                dsSoftPath.getOrDefault(sortBy, defaultSort)
+                dsSortPath.getOrDefault(sortBy, defaultSort)
         );
     }
 }
