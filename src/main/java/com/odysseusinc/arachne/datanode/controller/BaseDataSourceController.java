@@ -207,7 +207,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, DTO extend
     public JsonResult<CommonDataSourceDTO> register(
             Principal principal,
             @PathVariable("id") Long id,
-            @RequestBody DTO commonDataSourceDTO
+            @Valid @RequestBody DTO commonDataSourceDTO
     ) throws SQLException, PermissionDeniedException {
 
         final User user = getAdmin(principal);
