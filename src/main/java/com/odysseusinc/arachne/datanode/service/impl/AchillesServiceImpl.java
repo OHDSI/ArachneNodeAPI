@@ -545,7 +545,6 @@ public class AchillesServiceImpl implements AchillesService {
                     )
                     .withVolumes(outputVolume)
                     .withBinds(new Bind(workDir.toString(), outputVolume))
-                    .withNetworkMode("host")
                     .exec();
             LOGGER.debug("Container created: {}", container.getId());
             try {
