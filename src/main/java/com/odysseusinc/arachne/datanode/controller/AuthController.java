@@ -130,10 +130,10 @@ public class AuthController {
         try {
             String token = request.getHeader(this.tokenHeader);
             User user = userService.findByUsername(tokenUtils.getUsernameFromToken(token))
-                    .orElse(null);
+                    .orElseThrow(() -> new AuthException("user not registered"));
             Map<String, String> header = new HashMap<>();
             header.put(this.tokenHeader, token);
-            String centralToken = user != null ? centralClient.refreshToken(header).getResult() : null;
+            String centralToken = centralClient.refreshToken(header).getResult();
             if (centralToken == null) {
                 throw new AuthException("central auth error");
             }
