@@ -271,36 +271,18 @@
                 <artifactId>docker-maven-plugin</artifactId>
                 <version>0.4.13</version>
                 <configuration>
-                    <baseImage>hub.arachnenetwork.com/datanode_env</baseImage>
-                    <maintainer>alexandr.ryabokon@odysseusinc.com</maintainer>
-                    <user>root</user>
-                    <volumes>
-                        <volume>/tmp</volume>
-                    </volumes>
                     <imageName>${dockerImagePrefix}/${project.artifactId}</imageName>
+                    <imageTags>
+                        <imageTag>${project.version}</imageTag>
+                        <imageTag>latest${latestSuffix}</imageTag>
+                    </imageTags>
+                    <dockerDirectory>src/main/docker</dockerDirectory>
                     <resources>
                         <resource>
                             <directory>${project.build.directory}</directory>
                             <include>${project.build.finalName}-exec.${project.packaging}</include>
                         </resource>
-                        <resource>
-                            <targetPath>/bin/</targetPath>
-                            <directory>${project.basedir}/src/main/docker/</directory>
-                            <include>run.sh</include>
-                        </resource>
                     </resources>
-                    <runs>
-                        <run>chmod +x /bin/run.sh</run>
-                        <run>mv ${project.build.finalName}-exec.${project.packaging} ${project.build.finalName}.${project.packaging}</run>
-                    </runs>
-                    <exposes>
-                        <expose>8880</expose>
-                    </exposes>
-                    <cmd>["/bin/run.sh"]</cmd>
-                    <imageTags>
-                        <imageTag>${project.version}</imageTag>
-                        <imageTag>latest${latestSuffix}</imageTag>
-                    </imageTags>
                     <serverId>arachne-hub</serverId>
                     <registryUrl>https://hub.arachnenetwork.com/v2/</registryUrl>
                 </configuration>
@@ -377,7 +359,7 @@
             <id>prod</id>
             <properties>
                 <env>prod</env>
-                <latestSuffix></latestSuffix>
+                <latestSuffix>-prod</latestSuffix>
             </properties>
         </profile>
         <profile>
