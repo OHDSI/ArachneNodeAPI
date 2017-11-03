@@ -43,6 +43,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByRoles_name(String roleAdmin, Sort sort);
 
+    int countByRoles_nameAndEnabled(String roleAdmin, Boolean enabled);
+
     @Query(nativeQuery = true, value = "select * from users u "
             + " where (lower(u.first_name) similar to :suggestRequest or\n"
             + "                            lower(u.last_name) similar to :suggestRequest) "
