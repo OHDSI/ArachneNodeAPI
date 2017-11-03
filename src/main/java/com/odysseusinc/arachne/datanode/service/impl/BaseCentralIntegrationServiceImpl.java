@@ -52,6 +52,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -333,7 +334,8 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
-    public void relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users) {
+    @Transactional
+    public List<User> relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users) {
 
         final HttpHeaders headers = centralUtil.getCentralNodeAuthHeader(dataNode.getToken());
         final List<CommonLinkUserToDataNodeDTO> commonLinkUserToDataNodes = users.stream()
@@ -341,23 +343,25 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                 .collect(Collectors.toList());
         final HttpEntity<List<CommonLinkUserToDataNodeDTO>> httpEntity
                 = new HttpEntity<>(commonLinkUserToDataNodes, headers);
-        linkUnlinkDataNodeUsers(dataNode.getCentralId(), httpEntity, HttpMethod.PUT);
+        List<CommonUserDTO> linkedUsers = linkUnlinkDataNodeUsers(dataNode.getCentralId(), httpEntity, HttpMethod.PUT);
+        return linkedUsers.stream().map(user -> conversionService.convert(user, User.class)).collect(Collectors.toList());
     }
 
-    private void linkUnlinkDataNodeUsers(Long datanodeId, HttpEntity httpEntity, HttpMethod method) {
+    private List<CommonUserDTO> linkUnlinkDataNodeUsers(Long datanodeId, HttpEntity httpEntity, HttpMethod method) {
 
         final String uri = centralUtil.getCentralUrl() + Constants.CentralApi.User.LINK_TO_NODE;
-        final ResponseEntity<JsonResult> response = centralRestTemplate.exchange(
+        final ResponseEntity<JsonResult<List<CommonUserDTO>>> response = centralRestTemplate.exchange(
                 uri,
                 method,
                 httpEntity,
-                JsonResult.class,
+                new ParameterizedTypeReference<JsonResult<List<CommonUserDTO>>>() {},
                 datanodeId
         );
         final JsonResult result = response.getBody();
         if (result.getErrorCode() != 0) {
             throw new IllegalStateException(result.getErrorMessage());
         }
+        return (List<CommonUserDTO>) result.getResult();
     }
 
     protected void logoutFromCentral(String token) {
