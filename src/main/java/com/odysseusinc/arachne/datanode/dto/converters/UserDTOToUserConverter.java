@@ -15,8 +15,8 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: April 22, 2017
+ * Authors: Pavel Grafkin, Alexander Saltykov, Vitaly Koulakov, Anton Gackovka, Alexandr Ryabokon, Mikhail Mironov
+ * Created: Nov 3, 2017
  *
  */
 
@@ -24,40 +24,29 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.model.user.User;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 @Component
-public class UserToUserDTOConverter implements Converter<User, UserDTO>, InitializingBean {
+public class UserDTOToUserConverter implements Converter<UserDTO, User>{
 
     @Autowired
-    private GenericConversionService conversionService;
+    public UserDTOToUserConverter(GenericConversionService conversionService){
 
-    @Override
-    public UserDTO convert(User user) {
-
-        UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
-        dto.setFirstname(user.getFirstName());
-        dto.setLastname(user.getLastName());
-        dto.setEmail(user.getEmail());
-        dto.setUsername(user.getEmail());
-        if (user.getRoles() != null) {
-            dto.setRoles(user.getRoles().stream().map(role -> role.getName()).collect(Collectors.toList()));
-        }
-        dto.setEnabled(Objects.nonNull(user.getEnabled()) ? user.getEnabled() : false);
-        return dto;
+        conversionService.addConverter(this);
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public User convert(UserDTO source) {
 
-        conversionService.addConverter(this);
+        User user = new User();
+        user.setId(source.getId());
+        user.setEnabled(source.getEnabled());
+        user.setEmail(source.getEmail());
+        user.setFirstName(source.getFirstname());
+        user.setLastName(source.getLastname());
+        return user;
     }
 }
