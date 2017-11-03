@@ -36,10 +36,6 @@ import com.odysseusinc.arachne.datanode.security.TokenUtils;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import io.swagger.annotations.ApiOperation;
-import java.security.Principal;
-import java.util.Date;
-import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +45,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import java.security.Principal;
+import java.util.Date;
+import java.util.Optional;
 
 //import static com.odysseusinc.arachne.datanode.Constants.Api.Auth.LOGIN_ENTRY_POINT;
 
@@ -65,7 +66,7 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
-    @Value("datanode.jwt.header")
+    @Value("${datanode.jwt.header}")
     private String tokenHeader;
 
     @ApiOperation("Get auth method")
@@ -153,6 +154,29 @@ public class AuthController {
             result = new JsonResult<>(JsonResult.ErrorCode.SYSTEM_ERROR);
             result.setResult(false);
             result.setErrorMessage(ex.getMessage());
+        }
+        return result;
+    }
+
+    @ApiOperation("Refresh session token.")
+    @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
+    public JsonResult<String> refresh(HttpServletRequest request) {
+
+        JsonResult<String> result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+        try {
+            String token = request.getHeader(this.tokenHeader);
+            String username = this.tokenUtils.getUsernameFromToken(token);
+            result.setResult(token);
+            if (username != null) {
+                User user = userService.findByUsername(username).orElseGet(null);
+                if (user != null) {
+                    String refreshedToken = this.tokenUtils.refreshToken(token);
+                    result.setResult(refreshedToken);
+                }
+            }
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            result = new JsonResult<>(JsonResult.ErrorCode.UNAUTHORIZED);
         }
         return result;
     }

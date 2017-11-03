@@ -68,5 +68,5 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     void unlinkUserToDataNodeOnCentral(DataNode dataNode, User user);
 
-    void relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users);
+    List<User> relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users);
 }
