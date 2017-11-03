@@ -133,8 +133,8 @@ public class AuthController {
                     .orElse(null);
             Map<String, String> header = new HashMap<>();
             header.put(this.tokenHeader, token);
-            String centralToken = centralClient.refreshToken(header).getResult();
-            if (centralToken == null || user == null) {
+            String centralToken = user != null ? centralClient.refreshToken(header).getResult() : null;
+            if (centralToken == null) {
                 throw new AuthException("central auth error");
             }
             userService.setToken(user, centralToken);
