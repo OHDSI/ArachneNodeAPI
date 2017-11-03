@@ -30,16 +30,18 @@ import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import java.security.Principal;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 
 public abstract class BaseAdminController {
 
@@ -167,6 +169,16 @@ public abstract class BaseAdminController {
                     result.setResult(conversionService.convert(user, UserDTO.class));
                 });
         return result;
+    }
+
+    @ApiOperation("Update datanode user")
+    @RequestMapping(value = "/api/v1/admin/users/{id}", method = RequestMethod.PUT)
+    public JsonResult updateUser(@PathVariable("id") Long id, @RequestBody UserDTO updatedDTO) throws NotExistException {
+
+        User original = userService.get(id);
+        User updated = conversionService.convert(updatedDTO, User.class);
+        userService.updateUser(original, updated);
+        return new JsonResult(JsonResult.ErrorCode.NO_ERROR);
     }
 
     @ApiOperation("Remove user")
