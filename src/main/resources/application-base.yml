@@ -25,9 +25,7 @@ api:
 
 arachne:
   token:
-    secret: sssshhhh!
     header: Arachne-Auth-Token
-    expiration: 604800
 
 spring:
   jpa:
