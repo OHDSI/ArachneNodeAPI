@@ -199,6 +199,7 @@ public class UserServiceImpl implements UserService {
             User user = new User();
             user.setEmail(email);
             user.setUsername(email);
+            user.setEnabled(true);
             roleRepository.findFirstByName(ROLE_ADMIN).ifPresent(role -> user.getRoles().add(role));
             //TODO: goto cantral get /me info
             result = userRepository.save(user);
