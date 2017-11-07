@@ -27,8 +27,6 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
-import org.hibernate.validator.constraints.NotBlank;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -41,6 +39,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Entity
 @Table(name = "datasource")
@@ -98,6 +97,15 @@ public class DataSource {
 
     @Column
     private String healthStatusDescription;
+
+    @Column
+    private String cohortTargetSchema;
+
+    @Column
+    private String cohortResultSchema;
+
+    @Column
+    private String cohortTargetTable;
 
     private Long centralId;
 
@@ -254,16 +262,58 @@ public class DataSource {
         this.centralId = centralId;
     }
 
+    public String getCohortTargetSchema() {
+
+        return cohortTargetSchema;
+    }
+
+    public void setCohortTargetSchema(String atlasTargetDbSchema) {
+
+        this.cohortTargetSchema = atlasTargetDbSchema;
+    }
+
+    public String getCohortResultSchema() {
+
+        return cohortResultSchema;
+    }
+
+    public void setCohortResultSchema(String cohortResultSchema) {
+
+        this.cohortResultSchema = cohortResultSchema;
+    }
+
+    public String getCohortTargetTable() {
+
+        return cohortTargetTable;
+    }
+
+    public void setCohortTargetTable(String cohortTargetTable) {
+
+        this.cohortTargetTable = cohortTargetTable;
+    }
+
     @Override
     public String toString() {
 
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
-                .add("centralId", centralId)
                 .add("name", name)
                 .add("description", description)
                 .add("type", type)
                 .add("connectionString", connectionString)
+                .add("cdmSchema", cdmSchema)
+                .add("username", username)
+                .add("password", password)
+                .add("dataNode", dataNode)
+                .add("registred", registred)
+                .add("modelType", modelType)
+                .add("healthStatus", healthStatus)
+                .add("healthStatusDescription", healthStatusDescription)
+                .add("cohortTargetSchema", cohortTargetSchema)
+                .add("cohortResultSchema", cohortResultSchema)
+                .add("cohortTargetTable", cohortTargetTable)
+                .add("centralId", centralId)
                 .toString();
     }
+
 }
