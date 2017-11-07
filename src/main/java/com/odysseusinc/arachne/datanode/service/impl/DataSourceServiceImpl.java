@@ -33,15 +33,15 @@ import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -103,12 +103,14 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<DataSource> findBySid(String sid) {
 
         Preconditions.checkArgument(StringUtils.isNotBlank(sid), "given data source surrogate sid is blank ");
         return dataSourceRepository.findByUuid(sid);
     }
-
+    @Override
+    @Transactional(readOnly = true)
     public Optional<DataSource> findByCentralId(Long centralId) {
 
         Preconditions.checkArgument(Objects.nonNull(centralId), "given data source centralId is null");
@@ -125,18 +127,53 @@ public class DataSourceServiceImpl implements DataSourceService {
 
 
     @Override
-    public Optional<DataSource> update(User user, DataSource ds) {
+    @Transactional(rollbackFor = Exception.class)
+    public DataSource update(User user, DataSource dataSource) {
 
-        DataSource forUpdate = dataSourceRepository.findOne(ds.getId());
-        forUpdate.setName(ds.getName());
-        forUpdate.setType(ds.getType());
-        forUpdate.setCdmSchema(ds.getCdmSchema());
-        forUpdate.setConnectionString(ds.getConnectionString());
-        forUpdate.setDescription(ds.getDescription());
-        forUpdate.setPassword(ds.getPassword());
-        forUpdate.setUsername(ds.getUsername());
+        final DataSource exists = dataSourceRepository.findById(dataSource.getId())
+                .orElseThrow(() -> new NotExistException(DataSource.class));
 
-        return Optional.of(dataSourceRepository.save(forUpdate));
+        final String name = dataSource.getName();
+        if (Objects.nonNull(name)) {
+            exists.setName(name);
+        }
+        final DBMSType type = dataSource.getType();
+        if (Objects.nonNull(type)) {
+            exists.setType(type);
+        }
+        final String cdmSchema = dataSource.getCdmSchema();
+        if (Objects.nonNull(cdmSchema)) {
+            exists.setCdmSchema(cdmSchema);
+        }
+        final String connectionString = dataSource.getConnectionString();
+        if (Objects.nonNull(connectionString)) {
+            exists.setConnectionString(connectionString);
+        }
+        final String description = dataSource.getDescription();
+        if (Objects.nonNull(description)) {
+            exists.setDescription(description);
+        }
+        final String password = dataSource.getPassword();
+        if (Objects.nonNull(password)) {
+            exists.setPassword(password);
+        }
+        final String username = dataSource.getUsername();
+        if (Objects.nonNull(username)) {
+            exists.setUsername(username);
+        }
+        final String atlasResultDbSchema = dataSource.getResultSchema();
+        if (Objects.nonNull(atlasResultDbSchema)) {
+            exists.setResultSchema(atlasResultDbSchema);
+        }
+        final String atlasTargetDbSchema = dataSource.getTargetSchema();
+        if (Objects.nonNull(atlasTargetDbSchema)) {
+            exists.setTargetSchema(atlasTargetDbSchema);
+        }
+        final String atlasTargetCohortTable = dataSource.getCohortTargetTable();
+        if (Objects.nonNull(atlasTargetCohortTable)) {
+            exists.setCohortTargetTable(atlasTargetCohortTable);
+        }
+        return dataSourceRepository.save(exists);
     }
 
     @Transactional
