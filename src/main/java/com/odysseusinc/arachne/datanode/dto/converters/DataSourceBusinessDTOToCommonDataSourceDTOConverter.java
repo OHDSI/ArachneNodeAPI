@@ -16,53 +16,47 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: April 20, 2017
+ * Created: December 19, 2016
  *
  */
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
+import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceBusinessDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataSourceToDataSourceDTOConverter implements Converter<DataSource, DataSourceDTO>, InitializingBean {
+public class DataSourceBusinessDTOToCommonDataSourceDTOConverter implements Converter<DataSourceBusinessDTO, CommonDataSourceDTO>, InitializingBean {
 
-    private GenericConversionService conversionService;
+    private final GenericConversionService conversionService;
 
-    @Autowired
-    @SuppressWarnings("SpringJavaAutowiringInspection")
-    public DataSourceToDataSourceDTOConverter(GenericConversionService conversionService) {
+    public DataSourceBusinessDTOToCommonDataSourceDTOConverter(GenericConversionService conversionService) {
 
         this.conversionService = conversionService;
-
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
 
         conversionService.addConverter(this);
-
     }
 
     @Override
-    public DataSourceDTO convert(DataSource source) {
+    public CommonDataSourceDTO convert(DataSourceBusinessDTO source) {
 
-        DataSourceDTO target = new DataSourceDTO();
-        target.setConnectionString(source.getConnectionString());
-        target.setUsername(source.getUsername());
-        target.setPassword(source.getPassword());
-        target.setCdmSchema(source.getCdmSchema());
-        target.setType(DBMSType.valueOf(source.getType().name()));
-        target.setTargetSchema(source.getTargetSchema());
-        target.setResultSchema(source.getResultSchema());
-        target.setCohortTargetTable(source.getCohortTargetTable());
-        return target;
+        final CommonDataSourceDTO commonDataSourceDTO = new CommonDataSourceDTO();
+
+        commonDataSourceDTO.setModelType(source.getModelType());
+        commonDataSourceDTO.setCdmVersion(source.getCdmVersion());
+        commonDataSourceDTO.setId(source.getId());
+        commonDataSourceDTO.setName(source.getName());
+        commonDataSourceDTO.setUuid(source.getUuid());
+        commonDataSourceDTO.setOrganization(source.getOrganization());
+        return commonDataSourceDTO;
     }
 }
