@@ -99,10 +99,10 @@ public class DataSource {
     private String healthStatusDescription;
 
     @Column
-    private String cohortTargetSchema;
+    private String targetSchema;
 
     @Column
-    private String cohortResultSchema;
+    private String resultSchema;
 
     @Column
     private String cohortTargetTable;
@@ -262,24 +262,24 @@ public class DataSource {
         this.centralId = centralId;
     }
 
-    public String getCohortTargetSchema() {
+    public String getTargetSchema() {
 
-        return cohortTargetSchema;
+        return targetSchema;
     }
 
-    public void setCohortTargetSchema(String atlasTargetDbSchema) {
+    public void setTargetSchema(String atlasTargetDbSchema) {
 
-        this.cohortTargetSchema = atlasTargetDbSchema;
+        this.targetSchema = atlasTargetDbSchema;
     }
 
-    public String getCohortResultSchema() {
+    public String getResultSchema() {
 
-        return cohortResultSchema;
+        return resultSchema;
     }
 
-    public void setCohortResultSchema(String cohortResultSchema) {
+    public void setResultSchema(String resultSchema) {
 
-        this.cohortResultSchema = cohortResultSchema;
+        this.resultSchema = resultSchema;
     }
 
     public String getCohortTargetTable() {
@@ -309,8 +309,8 @@ public class DataSource {
                 .add("modelType", modelType)
                 .add("healthStatus", healthStatus)
                 .add("healthStatusDescription", healthStatusDescription)
-                .add("cohortTargetSchema", cohortTargetSchema)
-                .add("cohortResultSchema", cohortResultSchema)
+                .add("targetSchema", targetSchema)
+                .add("resultSchema", resultSchema)
                 .add("cohortTargetTable", cohortTargetTable)
                 .add("centralId", centralId)
                 .toString();

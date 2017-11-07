@@ -161,13 +161,13 @@ public class DataSourceServiceImpl implements DataSourceService {
         if (Objects.nonNull(username)) {
             exists.setUsername(username);
         }
-        final String atlasResultDbSchema = dataSource.getCohortResultSchema();
+        final String atlasResultDbSchema = dataSource.getResultSchema();
         if (Objects.nonNull(atlasResultDbSchema)) {
-            exists.setCohortResultSchema(atlasResultDbSchema);
+            exists.setResultSchema(atlasResultDbSchema);
         }
-        final String atlasTargetDbSchema = dataSource.getCohortTargetSchema();
+        final String atlasTargetDbSchema = dataSource.getTargetSchema();
         if (Objects.nonNull(atlasTargetDbSchema)) {
-            exists.setCohortTargetSchema(atlasTargetDbSchema);
+            exists.setTargetSchema(atlasTargetDbSchema);
         }
         final String atlasTargetCohortTable = dataSource.getCohortTargetTable();
         if (Objects.nonNull(atlasTargetCohortTable)) {

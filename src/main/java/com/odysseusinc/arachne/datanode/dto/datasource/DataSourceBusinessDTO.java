@@ -46,8 +46,8 @@ public class DataSourceBusinessDTO {
     @NotBlank
     private String organization;
     private CommonCDMVersionDTO cdmVersion;
-    private String cohortTargetSchema;
-    private String cohortResultSchema;
+    private String targetSchema;
+    private String resultSchema;
     private String cohortTargetTable;
     private Boolean isRegistered;
 
@@ -107,24 +107,24 @@ public class DataSourceBusinessDTO {
         this.cdmVersion = cdmVersion;
     }
 
-    public String getCohortTargetSchema() {
+    public String getTargetSchema() {
 
-        return cohortTargetSchema;
+        return targetSchema;
     }
 
-    public void setCohortTargetSchema(String cohortTargetSchema) {
+    public void setTargetSchema(String targetSchema) {
 
-        this.cohortTargetSchema = cohortTargetSchema;
+        this.targetSchema = targetSchema;
     }
 
-    public String getCohortResultSchema() {
+    public String getResultSchema() {
 
-        return cohortResultSchema;
+        return resultSchema;
     }
 
-    public void setCohortResultSchema(String cohortResultSchema) {
+    public void setResultSchema(String resultSchema) {
 
-        this.cohortResultSchema = cohortResultSchema;
+        this.resultSchema = resultSchema;
     }
 
     public String getCohortTargetTable() {

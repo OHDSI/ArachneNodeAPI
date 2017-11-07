@@ -62,13 +62,13 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
     }
 
     @Override
-    protected Class getCommonDataSourceDTOClass() {
+    protected Class<CommonDataSourceDTO> getCommonDataSourceDTOClass() {
 
         return CommonDataSourceDTO.class;
     }
 
     @Override
-    protected Class<? extends DataSourceBusinessDTO> getDataSourceBusinessDTOClass() {
+    protected Class<DataSourceBusinessDTO> getDataSourceBusinessDTOClass() {
 
         return DataSourceBusinessDTO.class;
     }

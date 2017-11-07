@@ -308,7 +308,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                 .collect(Collectors.toList());
     }
 
-    protected abstract Class<? extends CommonDTO> getCommonDataSourceDTOClass();
+    protected abstract Class<CommonDTO> getCommonDataSourceDTOClass();
 
-    protected abstract Class<? extends BusinessDTO> getDataSourceBusinessDTOClass();
+    protected abstract Class<BusinessDTO> getDataSourceBusinessDTOClass();
 }
