@@ -34,6 +34,8 @@ public interface DataSourceService {
 
     List<DataSource> findAll();
 
+    List<DataSource> findAll(String sortBy, Boolean sortAsc);
+
     List<DataSource> findAllRegistered();
 
     void delete(Long id);

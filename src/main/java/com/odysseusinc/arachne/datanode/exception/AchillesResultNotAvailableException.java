@@ -15,24 +15,21 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: August 28, 2017
+ * Authors: Pavel Grafkin, Alexander Saltykov, Vitaly Koulakov, Anton Gackovka, Alexandr Ryabokon, Mikhail Mironov
+ * Created: Nov 3, 2017
  *
  */
 
-package com.odysseusinc.arachne.datanode.service.client.portal;
+package com.odysseusinc.arachne.datanode.exception;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
-import feign.HeaderMap;
-import feign.Param;
-import feign.RequestLine;
-import java.util.Map;
+public class AchillesResultNotAvailableException extends RuntimeException {
 
-public interface CentralClient {
+    public AchillesResultNotAvailableException() {
 
-    @RequestLine("DELETE /api/v1/data-nodes/{dataNodeId}/data-sources/{dataSourceId}")
-    JsonResult unregisterDataSource(@Param("dataNodeId") Long dataNodeId, @Param("dataSourceId") Long dataSourceId);
+    }
 
-    @RequestLine("POST /api/v1/auth/refresh")
-    JsonResult<String> refreshToken(@HeaderMap Map<String, String> tokenHeader);
+    public AchillesResultNotAvailableException(String message) {
+
+        super(message);
+    }
 }

@@ -33,6 +33,11 @@ import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.PostConstruct;
+import org.springframework.data.domain.Sort;
+
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import java.util.List;
 import java.util.Objects;
@@ -51,6 +56,7 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     private final DataSourceRepository dataSourceRepository;
     private final DataNodeService dataNodeService;
+    private final Map<String, String> dsSortPath = new HashMap<>();
 
     @Autowired
     public DataSourceServiceImpl(DataSourceRepository dataSourceRepository,
@@ -58,6 +64,17 @@ public class DataSourceServiceImpl implements DataSourceService {
 
         this.dataSourceRepository = dataSourceRepository;
         this.dataNodeService = dataNodeService;
+    }
+
+    @PostConstruct
+    private void init() {
+
+        this.dsSortPath.put("name", "name");
+        this.dsSortPath.put("dbmsType", "type");
+        this.dsSortPath.put("connectionString", "connectionString");
+        this.dsSortPath.put("cdmSchema", "cdmSchema");
+        this.dsSortPath.put("modelType", "modelType");
+        this.dsSortPath.put("isRegistered", "registred");
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -80,6 +97,12 @@ public class DataSourceServiceImpl implements DataSourceService {
     public List<DataSource> findAll() {
 
         return dataSourceRepository.findAll();
+    }
+
+    @Override
+    public List<DataSource> findAll(String sortBy, Boolean sortAsc) {
+
+        return dataSourceRepository.findAll(getSort(sortBy, sortAsc));
     }
 
     @Override
@@ -208,5 +231,14 @@ public class DataSourceServiceImpl implements DataSourceService {
         forUpdate.setRegistred(registered);
         dataSourceRepository.save(forUpdate);
         return forUpdate;
+    }
+
+    protected final Sort getSort(String sortBy, Boolean sortAsc) {
+
+        String defaultSort = "name";
+        return new Sort(
+                sortAsc == null || sortAsc ? Sort.Direction.ASC : Sort.Direction.DESC,
+                dsSortPath.getOrDefault(sortBy, defaultSort)
+        );
     }
 }
