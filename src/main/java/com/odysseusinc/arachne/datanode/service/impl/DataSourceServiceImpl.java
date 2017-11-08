@@ -131,8 +131,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Transactional(rollbackFor = Exception.class)
     public DataSource update(User user, DataSource dataSource) {
 
-        final DataSource exists = dataSourceRepository.findById(dataSource.getId())
-                .orElseThrow(() -> new NotExistException(DataSource.class));
+        final DataSource exists = getById(dataSource.getId());
 
         final String name = dataSource.getName();
         if (Objects.nonNull(name)) {
