@@ -540,7 +540,7 @@ public class AchillesServiceImpl implements AchillesService {
                             env(ACHILLES_DB_URI, dburi(dataSource)),
                             env(ACHILLES_CDM_SCHEMA, dataSource.getCdmSchema()),
                             env(ACHILLES_VOCAB_SCHEMA, dataSource.getCdmSchema()),
-                            env(ACHILLES_RES_SCHEMA, dataSource.getCdmSchema()),
+                            env(ACHILLES_RES_SCHEMA, dataSource.getResultSchema()),
                             env(ACHILLES_CDM_VERSION, Constants.Achilles.DEFAULT_CDM_VERSION)
                     )
                     .withVolumes(outputVolume)
