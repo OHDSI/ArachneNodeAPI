@@ -238,7 +238,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                 uriBuilder.buildAndExpand(uriParams).toUri(),
                 HttpMethod.GET,
                 request,
-                new ParameterizedTypeReference<JsonResult<DTO>>() {}
+                getParameterizedTypeReferenceJsonResultDTO()
         );
         return exchange.getBody();
     }
@@ -263,7 +263,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                 uriBuilder.buildAndExpand(uriParams).toUri(),
                 HttpMethod.PUT,
                 request,
-                new ParameterizedTypeReference<JsonResult<DTO>>() {}
+                getParameterizedTypeReferenceJsonResultDTO()
         );
         return exchange.getBody();
     }
@@ -373,4 +373,6 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             throw new AuthException("unable to logout from central " + ex.getMessage());
         }
     }
+
+    protected abstract ParameterizedTypeReference<JsonResult<DTO>> getParameterizedTypeReferenceJsonResultDTO();
 }
