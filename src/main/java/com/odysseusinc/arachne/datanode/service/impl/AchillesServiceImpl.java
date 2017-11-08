@@ -84,6 +84,7 @@ import com.odysseusinc.arachne.datanode.util.datasource.ResultWriters;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -260,8 +261,10 @@ public class AchillesServiceImpl implements AchillesService {
     public boolean hasAchillesResultTable(DataSource dataSource) {
 
         try {
+            String query = "select count(*) from %s.achilles_results";
+            query = String.format(query, getResultSchema(dataSource));
             Map<String, Integer> result = DataSourceUtils.<Integer>withDataSource(dataSource)
-                    .run(statement("select count(*) from achilles_results"))
+                    .run(statement(query))
                     .collectResults(resultSet -> {
                         Map<String, Integer> data = new HashMap<>();
                         int count = 0;
@@ -393,6 +396,11 @@ public class AchillesServiceImpl implements AchillesService {
             LOGGER.error("Failed to pull achilles results", e);
             updateJob(job, FAILED);
         }
+    }
+
+    private String getResultSchema(DataSource dataSource) {
+
+        return StringUtils.defaultIfEmpty(dataSource.getResultSchema(), dataSource.getCdmSchema());
     }
 
     private Callable<String> achillesTask(String name, Callable<Integer> callable){
@@ -540,7 +548,7 @@ public class AchillesServiceImpl implements AchillesService {
                             env(ACHILLES_DB_URI, dburi(dataSource)),
                             env(ACHILLES_CDM_SCHEMA, dataSource.getCdmSchema()),
                             env(ACHILLES_VOCAB_SCHEMA, dataSource.getCdmSchema()),
-                            env(ACHILLES_RES_SCHEMA, dataSource.getResultSchema()),
+                            env(ACHILLES_RES_SCHEMA, getResultSchema(dataSource)),
                             env(ACHILLES_CDM_VERSION, Constants.Achilles.DEFAULT_CDM_VERSION)
                     )
                     .withVolumes(outputVolume)
