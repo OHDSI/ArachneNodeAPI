@@ -36,6 +36,8 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Objects;
+
 @RestController
 public class DataSourceController extends BaseDataSourceController<DataSource, DataSourceBusinessDTO, CommonDataSourceDTO> {
 
@@ -76,12 +78,13 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
     @Override
     protected DataSourceBusinessDTO enrichBusinessFromCommon(DataSourceBusinessDTO businessDTO, CommonDataSourceDTO commonDataSourceDTO) {
 
-        businessDTO.setId(commonDataSourceDTO.getId());
-        businessDTO.setUuid(commonDataSourceDTO.getUuid());
-        businessDTO.setName(commonDataSourceDTO.getName());
-        businessDTO.setModelType(commonDataSourceDTO.getModelType());
-        businessDTO.setOrganization(commonDataSourceDTO.getOrganization());
-        businessDTO.setCdmVersion(commonDataSourceDTO.getCdmVersion());
+        if (Objects.nonNull(commonDataSourceDTO) && Objects.nonNull(businessDTO)) {
+            businessDTO.setUuid(commonDataSourceDTO.getUuid());
+            businessDTO.setName(commonDataSourceDTO.getName());
+            businessDTO.setModelType(commonDataSourceDTO.getModelType());
+            businessDTO.setOrganization(commonDataSourceDTO.getOrganization());
+            businessDTO.setCdmVersion(commonDataSourceDTO.getCdmVersion());
+        }
         return businessDTO;
     }
 }
