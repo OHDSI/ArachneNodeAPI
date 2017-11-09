@@ -43,6 +43,13 @@ import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -57,14 +64,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, DTO extends CommonDataSourceDTO> implements BaseCentralIntegrationService<DS, DTO> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CentralIntegrationServiceImpl.class);
@@ -235,38 +234,38 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
 
         HttpEntity request = new HttpEntity<>(centralUtil.getCentralAuthHeader(user.getToken()));
 
-        ResponseEntity<JsonResult> exchange = centralRestTemplate.exchange(
+        ResponseEntity<JsonResult<DTO>> exchange = centralRestTemplate.exchange(
                 uriBuilder.buildAndExpand(uriParams).toUri(),
                 HttpMethod.GET,
                 request,
-                JsonResult.class
+                getParameterizedTypeReferenceJsonResultDTO()
         );
-        return (JsonResult<DTO>) exchange.getBody();
+        return exchange.getBody();
     }
 
     @Override
     public JsonResult<DTO> updateDataSource(
             User user,
-            DS dataSource, DTO commonCreateDataSourceDTO) {
+            Long centralId, DTO commonCreateDataSourceDTO) {
 
         String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.UPDATE;
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
 
         Map<String, Long> uriParams = new HashMap<>();
-        uriParams.put("id", dataSource.getCentralId());
+        uriParams.put("id", centralId);
 
         HttpEntity<DTO> request = new HttpEntity<>(
                 commonCreateDataSourceDTO,
                 centralUtil.getCentralAuthHeader(user.getToken())
         );
 
-        ResponseEntity<JsonResult> exchange = centralRestTemplate.exchange(
+        ResponseEntity<JsonResult<DTO>> exchange = centralRestTemplate.exchange(
                 uriBuilder.buildAndExpand(uriParams).toUri(),
                 HttpMethod.PUT,
                 request,
-                JsonResult.class
+                getParameterizedTypeReferenceJsonResultDTO()
         );
-        return (JsonResult<DTO>) exchange.getBody();
+        return exchange.getBody();
     }
 
     @Override
@@ -374,4 +373,6 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             throw new AuthException("unable to logout from central " + ex.getMessage());
         }
     }
+
+    protected abstract ParameterizedTypeReference<JsonResult<DTO>> getParameterizedTypeReferenceJsonResultDTO();
 }
