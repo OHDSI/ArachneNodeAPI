@@ -8,6 +8,9 @@ server:
     key-store-password: odysseus
     key-alias: arachne
     key-password: odysseus
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
 logging:
   level: info
 #  com.odysseusinc.arachne.datanode.service.AchillesService: DEBUG
