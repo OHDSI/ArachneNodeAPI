@@ -28,5 +28,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public interface DataSourceHelper {
-    AnalysisRequestDTO getDataSourceCheckRequest(DataSource dataSource, Path tempDirectory) throws IOException;
+
+    AnalysisRequestDTO getDataSourceModelCheckRequest(DataSource dataSource, Path tempDirectory) throws IOException;
+
+    AnalysisRequestDTO getDataSourceHealthCheckRequest(DataSource dataSource, Path tempDirectory) throws IOException;
 }
