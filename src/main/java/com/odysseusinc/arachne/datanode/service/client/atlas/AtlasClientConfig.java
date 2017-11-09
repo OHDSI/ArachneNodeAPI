@@ -37,15 +37,17 @@ public class AtlasClientConfig {
     private String atlasHost;
     @Value("${atlas.port}")
     private Integer atlasPort;
-    @Value("#{ @environment.getProperty('atlas.auth.schema') ?: T(com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthSchema).NONE}")
+
     private AtlasAuthSchema authSchema;
-    @Value("#{ @environment.getProperty('atlas.auth.username') ?: null}")
+    @Value("${atlas.auth.username}")
     private String username;
-    @Value("#{ @environment.getProperty('atlas.auth.password') ?: null}")
+    @Value("${atlas.auth.password}")
     private String password;
 
     @Bean
-    public AtlasClient atlasClient() {
+    public AtlasClient atlasClient(@Value("${atlas.auth.schema}") String authSchemaParam) {
+
+        this.authSchema = AtlasAuthSchema.valueOf(authSchemaParam);
 
         return Feign.builder()
                 .encoder(new JacksonEncoder())
