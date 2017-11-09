@@ -37,6 +37,12 @@ public class AtlasClientConfig {
     private String atlasHost;
     @Value("${atlas.port}")
     private Integer atlasPort;
+    @Value("#{ @environment.getProperty('atlas.auth.schema') ?: T(com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthSchema).NONE}")
+    private AtlasAuthSchema authSchema;
+    @Value("#{ @environment.getProperty('atlas.auth.username') ?: null}")
+    private String username;
+    @Value("#{ @environment.getProperty('atlas.auth.password') ?: null}")
+    private String password;
 
     @Bean
     public AtlasClient atlasClient() {
@@ -46,6 +52,17 @@ public class AtlasClientConfig {
                 .decoder(new JacksonDecoder())
                 .logger(new Slf4jLogger(AtlasClient.class))
                 .logLevel(feign.Logger.Level.FULL)
+                .requestInterceptor(new AtlasAuthRequestInterceptor(atlasLoginClient(), authSchema, username, password))
                 .target(AtlasClient.class, atlasHost + ":" + atlasPort + "/WebAPI");
+    }
+
+    @Bean
+    public AtlasLoginClient atlasLoginClient() {
+
+        return Feign.builder()
+                .encoder(new JacksonEncoder())
+                .decoder(new TokenDecoder())
+                .logger(new Slf4jLogger(AtlasLoginClient.class))
+                .target(AtlasLoginClient.class, atlasHost + ":" + atlasPort + "/WebAPI");
     }
 }
