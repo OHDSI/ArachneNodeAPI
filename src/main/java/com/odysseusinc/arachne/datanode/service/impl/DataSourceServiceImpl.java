@@ -26,7 +26,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Preconditions;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
@@ -140,10 +139,6 @@ public class DataSourceServiceImpl implements DataSourceService {
         final DBMSType type = dataSource.getType();
         if (Objects.nonNull(type)) {
             exists.setType(type);
-        }
-        final CommonModelType modelType = dataSource.getModelType();
-        if (Objects.nonNull(modelType)) {
-            exists.setModelType(modelType);
         }
         final String cdmSchema = dataSource.getCdmSchema();
         if (Objects.nonNull(cdmSchema)) {

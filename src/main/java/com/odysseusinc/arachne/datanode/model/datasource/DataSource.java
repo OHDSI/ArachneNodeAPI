@@ -88,9 +88,6 @@ public class DataSource {
     @Column
     private Boolean registred;
 
-    @Enumerated(EnumType.STRING)
-    private CommonModelType modelType;
-
     @Column
     @Enumerated(value = EnumType.STRING)
     private CommonHealthStatus healthStatus = CommonHealthStatus.NOT_COLLECTED;
@@ -222,16 +219,6 @@ public class DataSource {
         this.registred = registred;
     }
 
-    public CommonModelType getModelType() {
-
-        return modelType;
-    }
-
-    public void setModelType(CommonModelType modelType) {
-
-        this.modelType = modelType;
-    }
-
     public CommonHealthStatus getHealthStatus() {
 
         return healthStatus;
@@ -306,7 +293,6 @@ public class DataSource {
                 .add("password", password)
                 .add("dataNode", dataNode)
                 .add("registred", registred)
-                .add("modelType", modelType)
                 .add("healthStatus", healthStatus)
                 .add("healthStatusDescription", healthStatusDescription)
                 .add("targetSchema", targetSchema)
