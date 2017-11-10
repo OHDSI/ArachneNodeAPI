@@ -177,16 +177,19 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     @Transactional
     @Override
-    public DataSource markDataSourceAsRegistered(Long centralId) {
+    public DataSource markDataSourceAsRegistered(DataSource dataSource, Long centralId) {
 
-        return setDSRegistered(centralId, true);
+        dataSource.setCentralId(centralId);
+        return setDSRegistered(dataSource, centralId);
     }
 
     @Transactional
     @Override
     public DataSource markDataSourceAsUnregistered(Long centralId) {
 
-        return setDSRegistered(centralId, false);
+        DataSource dataSource = dataSourceRepository.findByCentralId(centralId)
+                .orElseThrow(() -> new NotExistException(DataSource.class));
+        return setDSRegistered(dataSource, null);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -200,12 +203,9 @@ public class DataSourceServiceImpl implements DataSourceService {
         });
     }
 
-    private DataSource setDSRegistered(Long centralId, boolean registered) {
+    private DataSource setDSRegistered(DataSource dataSource, Long centralId) {
 
-        DataSource forUpdate = dataSourceRepository.findByCentralId(centralId)
-                .orElseThrow(() -> new NotExistException(DataSource.class));
-        forUpdate.setRegistred(registered);
-        dataSourceRepository.save(forUpdate);
-        return forUpdate;
+        dataSource.setRegistred(centralId != null);
+        return dataSourceRepository.save(dataSource);
     }
 }
