@@ -119,6 +119,7 @@ public class AchillesProcessors {
 
     private static Map<String, Integer> getResultSetColumns(ResultSetMetaData metaData, List<String> includes) throws SQLException {
 
+        includes = includes.stream().map(String::toUpperCase).collect(Collectors.toList());
         Map<String, Integer> columns = new HashMap<>();
         for (int i = 1; i <= metaData.getColumnCount(); i++) {
             String columnName = metaData.getColumnName(i).toUpperCase();
