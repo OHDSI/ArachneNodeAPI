@@ -285,7 +285,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         final DataSource updatedDataSource = dataSourceService.update(user, dataSource);
 
         final CommonDTO commonDataSourceDTO = conversionService.convert(dataSourceBusinessDTO, getCommonDataSourceDTOClass());
-        processBusinessDTO(dataSource, commonDataSourceDTO);
+        processBusinessDTO(updatedDataSource, commonDataSourceDTO);
 
         final JsonResult<CommonDTO> centralJsonResult = integrationService.updateDataSource(user, updatedDataSource.getCentralId(), commonDataSourceDTO);
 
