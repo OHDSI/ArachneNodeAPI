@@ -211,8 +211,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                 dataSource.getDataNode(),
                 commonDataSourceDTO
         );
-        dataSource.setCentralId(jsonResult.getResult().getId());
         if (NO_ERROR.getCode().equals(jsonResult.getErrorCode())) {
+            dataSource.setCentralId(jsonResult.getResult().getId());
             dataSourceService.markDataSourceAsRegistered(dataSource.getCentralId());
         }
         return jsonResult;
