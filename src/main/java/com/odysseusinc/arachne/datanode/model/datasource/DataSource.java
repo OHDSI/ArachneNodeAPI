@@ -39,10 +39,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import org.hibernate.validator.constraints.NotBlank;
 
 @Entity
 @Table(name = "datasource")
+@Where(clause = "deleted_at IS NULL")
+@SQLDelete(sql = "UPDATE datasource SET deleted_at = current_timestamp WHERE id = ?")
 public class DataSource {
 
     @Id
