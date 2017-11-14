@@ -131,6 +131,10 @@ achilles:
 atlas:
   host: http://localhost
   port: 8088
+  auth:
+    schema: NONE
+    username:
+    password:
   scheduler:
     checkInterval: 60000
 entities:
