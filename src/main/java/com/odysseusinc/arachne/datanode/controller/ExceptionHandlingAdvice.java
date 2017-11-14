@@ -46,14 +46,14 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
-public class ExceptionHandlingController extends BaseController {
+public class ExceptionHandlingAdvice extends BaseController {
 
     private static final String ERROR_MESSAGE = "Please contact system administrator and provide this error token: %s";
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandlingController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandlingAdvice.class);
     @Value("${datanode.app.errorsTokenEnabled}")
     private boolean errorsTokenEnabled;
 
-    public ExceptionHandlingController(UserService userService) {
+    public ExceptionHandlingAdvice(UserService userService) {
 
         super(userService);
     }
