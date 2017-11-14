@@ -41,7 +41,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ConditionEraReport extends BaseReport {
 
-    public static final String CONDITIONERA_REVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export_v5/conditionera/sqlPrevalenceByGenderAgeYear.sql";
+    public static final String CONDITIONERA_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export_v5/conditionera/sqlPrevalenceByGenderAgeYear.sql";
+    public static final String CONDITIONERA_LENGTH_OF_ERA = "classpath:/achilles/data/export_v5/conditionera/sqlLengthOfEra.sql";
     public static final String CONDITIONERA_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export_v5/conditionera/sqlPrevalenceByMonth.sql";
     public static final String CONDITIONERA_AGE_AT_FIRST_DIAGNOSIS_SQL = "classpath:/achilles/data/export_v5/conditionera/sqlAgeAtFirstDiagnosis.sql";
 
@@ -54,23 +55,25 @@ public class ConditionEraReport extends BaseReport {
     @Override
     protected Integer execReport(DataSource dataSource, Path targetDir, List<Integer> concepts) throws IOException, SQLException {
 
-        String prevalenceByGenderAgeQuery = sqlUtils.transformSqlTemplate(dataSource, CONDITIONERA_REVALENCE_BY_GENDER_AGE_YEAR_SQL);
+        String prevalenceByGenderAgeQuery = sqlUtils.transformSqlTemplate(dataSource, CONDITIONERA_PREVALENCE_BY_GENDER_AGE_YEAR_SQL);
         String prevalenceByMonthQuery = sqlUtils.transformSqlTemplate(dataSource, CONDITIONERA_PREVALENCE_BY_MONTH_SQL);
         String ageQuery = sqlUtils.transformSqlTemplate(dataSource, CONDITIONERA_AGE_AT_FIRST_DIAGNOSIS_SQL);
-        String lengthQuery = sqlUtils.transformSqlTemplate(dataSource, "classpath:/achilles/data/export_v5/conditionera/sqlPrevalenceByGenderAgeYear.sql");
+        String lengthQuery = sqlUtils.transformSqlTemplate(dataSource, CONDITIONERA_LENGTH_OF_ERA);
         return DataSourceUtils.<Map<Integer, String>>withDataSource(dataSource)
                 .run(QueryProcessors.statement(prevalenceByGenderAgeQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_GENDER_AGE_YEAR",
-                        plainResultSet("concept_id"))
+                        plainResultSet("concept_id", "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
                 .run(QueryProcessors.statement(prevalenceByMonthQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_MONTH",
-                        plainResultSet("concept_id"))
+                        plainResultSet("concept_id", "x_calendar_month", "y_prevalence_1000pp"))
                 .run(QueryProcessors.statement(ageQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "AGE_AT_FIRST_DIAGNOSIS",
-                        plainResultSet("concept_id"))
+                        plainResultSet("concept_id", "category", "min_value", "p10_value",
+                                "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .run(QueryProcessors.statement(lengthQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "LENGTH_OF_ERA",
-                        plainResultSet("concept_id"))
+                        plainResultSet("concept_id", "category", "min_value", "p10_value",
+                                "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .transform(ResultTransformers.toJsonMap(concepts))
                 .write(ResultWriters.toMultipleFiles(targetDir, "condition_%d.json", concepts))
                 .getResultsCount();
