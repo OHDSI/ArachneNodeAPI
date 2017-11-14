@@ -65,6 +65,7 @@ import com.odysseusinc.arachne.datanode.service.achilles.ConditionEraReport;
 import com.odysseusinc.arachne.datanode.service.achilles.ConditionReport;
 import com.odysseusinc.arachne.datanode.service.achilles.DashboardReport;
 import com.odysseusinc.arachne.datanode.service.achilles.DataDensityReport;
+import com.odysseusinc.arachne.datanode.service.achilles.DeathReport;
 import com.odysseusinc.arachne.datanode.service.achilles.DrugEraReport;
 import com.odysseusinc.arachne.datanode.service.achilles.DrugReport;
 import com.odysseusinc.arachne.datanode.service.achilles.MeasurementReport;
@@ -77,39 +78,11 @@ import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClien
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
 import com.odysseusinc.arachne.datanode.util.DataSourceUtils;
 import com.odysseusinc.arachne.datanode.util.SqlUtils;
-import com.odysseusinc.arachne.datanode.util.ZipUtils;
+import com.odysseusinc.arachne.datanode.util.datasource.ResultSetContainer;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultSetProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultTransformers;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultWriters;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.retry.RetryCallback;
-import org.springframework.retry.support.RetryTemplate;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -139,6 +112,33 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.support.RetryTemplate;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class AchillesServiceImpl implements AchillesService {
@@ -181,6 +181,8 @@ public class AchillesServiceImpl implements AchillesService {
     protected ProcedureReport procedureReport;
     @Autowired
     protected PersonReport personReport;
+    @Autowired
+    protected DeathReport deathReport;
     @Autowired
     protected ObservationPeriodReport observationPeriodReport;
     @Autowired
@@ -278,7 +280,7 @@ public class AchillesServiceImpl implements AchillesService {
                             count = resultSet.getInt(1);
                         }
                         data.put("count", count);
-                        return data;
+                        return new ResultSetContainer<>(data, null);
                     })
                     .getResults();
             return result.getOrDefault("count", 0) > 0;
@@ -349,6 +351,7 @@ public class AchillesServiceImpl implements AchillesService {
                     return result;
                 }));
                 tasks.add(achillesTask("Person", () -> personReport.runReports(dataSource, tempDir.resolve("person.json"), null)));
+                tasks.add(achillesTask("Death", () -> deathReport.runReports(dataSource, tempDir.resolve("death.json"), null)));
                 tasks.add(achillesTask("ObservationPeriod", () -> observationPeriodReport.runReports(dataSource, tempDir.resolve("observationperiod.json"), null)));
                 tasks.add(achillesTask("Dashboard", () -> dashboardReport.runReports(dataSource, tempDir.resolve("dashboard.json"), null)));
                 tasks.add(achillesTask("DataDensity", () -> dataDensityReport.runReports(dataSource, tempDir.resolve("datadensity.json"), null)));

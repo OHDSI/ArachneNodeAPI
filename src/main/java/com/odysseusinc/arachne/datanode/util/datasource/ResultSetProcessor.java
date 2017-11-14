@@ -28,5 +28,5 @@ import java.sql.SQLException;
 @FunctionalInterface
 public interface ResultSetProcessor<R> {
 
-    R process(ResultSet resultSet) throws SQLException;
+    ResultSetContainer<R> process(ResultSet resultSet) throws SQLException;
 }
