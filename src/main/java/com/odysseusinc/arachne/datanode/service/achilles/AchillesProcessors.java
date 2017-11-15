@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,12 +22,14 @@
 
 package com.odysseusinc.arachne.datanode.service.achilles;
 
+import com.odysseusinc.arachne.datanode.util.datasource.ResultSetContainer;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultSetProcessor;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,7 +48,7 @@ public class AchillesProcessors {
         return resultSet -> {
             Map<String, Object> data = new HashMap<>();
             data.put("MESSAGES", resultSet().process(resultSet));
-            return data;
+            return new ResultSetContainer<>(data, null);
         };
     }
 
@@ -73,7 +75,7 @@ public class AchillesProcessors {
                     });
                 });
             }
-            return data;
+            return new ResultSetContainer<>(data, null);
         };
     }
 
@@ -81,7 +83,7 @@ public class AchillesProcessors {
 
         return resultSet -> {
             Map<String, Object> stats = new HashMap<>();
-            if (resultSet.next()){
+            if (resultSet.next()) {
                 int min = resultSet.getInt("min_value");
                 int max = resultSet.getInt("max_value");
                 int size = resultSet.getInt("interval_size");
@@ -90,7 +92,7 @@ public class AchillesProcessors {
                 stats.put("INTERVAL_SIZE", size);
                 stats.put("INTERVALS", (max - min) / size);
             }
-            return stats;
+            return new ResultSetContainer<>(stats, null);
         };
     }
 
@@ -99,7 +101,7 @@ public class AchillesProcessors {
         return resultSet -> {
             Map<String, Object> data = new HashMap<>();
             data.put("DATA", resultSet().process(resultSet));
-            return data;
+            return new ResultSetContainer<>(data, null);
         };
     }
 
@@ -111,14 +113,15 @@ public class AchillesProcessors {
             hist.put("MAX", 100);
             hist.put("INTERVAL_SIZE", 1);
             hist.put("INTERVALS", 100);
-            Map data = resultSet().process(resultSet);
+            Map data = resultSet().process(resultSet).getValues();
             hist.put("DATA", data);
-            return hist;
+            return new ResultSetContainer<>(hist, null);
         };
     }
 
     private static Map<String, Integer> getResultSetColumns(ResultSetMetaData metaData, List<String> includes) throws SQLException {
 
+        includes = includes.stream().map(String::toUpperCase).collect(Collectors.toList());
         Map<String, Integer> columns = new HashMap<>();
         for (int i = 1; i <= metaData.getColumnCount(); i++) {
             String columnName = metaData.getColumnName(i).toUpperCase();
@@ -159,7 +162,9 @@ public class AchillesProcessors {
                     return old;
                 });
             }
-            return data;
+            final Map<String, Object> defaultMap = Arrays.stream(includeColumns)
+                    .collect(HashMap::new, (m, v) -> m.put(v.toUpperCase(), ""), HashMap::putAll);
+            return new ResultSetContainer<>(data, Collections.singletonList(defaultMap));
         };
     }
 

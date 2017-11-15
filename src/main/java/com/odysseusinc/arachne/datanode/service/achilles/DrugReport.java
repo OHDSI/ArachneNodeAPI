@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -66,7 +66,9 @@ public class DrugReport extends BaseReport {
         String frequencyQuery = sqlUtils.transformSqlTemplate(dataSource, DRUG_FREQUENCY_DISTRIBUTION_SQL);
         String quantityQuery = sqlUtils.transformSqlTemplate(dataSource, DRUG_QUANTITY_DISTRIBUTION_SQL);
         String refillsQuery = sqlUtils.transformSqlTemplate(dataSource, DRUG_REFILLS_DISTRIBUTION_SQL);
-        ResultSetProcessor<Map> plainResultSet = plainResultSet("drug_concept_id");
+        final ResultSetProcessor<Map> plainResultSet = plainResultSet("drug_concept_id",
+                "category", "min_value", "p10_value", "p25_value", "median_value", "p75_value",
+                "p90_value", "max_value");
         return DataSourceUtils.<Map<Integer, String>>withDataSource(dataSource)
                 .run(statement(ageQuery))
                 .forMapResults(concepts, "DRUG_CONCEPT_ID", "AGE_AT_FIRST_EXPOSURE",
@@ -79,13 +81,14 @@ public class DrugReport extends BaseReport {
                         plainResultSet("drug_concept_id", "concept_name", "count_value"))
                 .run(statement(prevalenceByGenderQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_GENDER_AGE_YEAR",
-                        plainResultSet("concept_id"))
+                        plainResultSet("concept_id",
+                                "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
                 .run(statement(prevalenceByMonthQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_MONTH",
                         plainResultSet("concept_id", "x_calendar_month", "y_prevalence_1000pp"))
                 .run(statement(frequencyQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "DRUG_FREQUENCY_DISTRIBUTION",
-                        plainResultSet("concept_id"))
+                        plainResultSet("concept_id", "y_num_persons", "x_count"))
                 .run(statement(quantityQuery))
                 .forMapResults(concepts, "DRUG_CONCEPT_ID", "QUANTITY_DISTRIBUTION",
                         plainResultSet)

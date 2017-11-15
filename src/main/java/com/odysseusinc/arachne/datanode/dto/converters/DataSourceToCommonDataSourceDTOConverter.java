@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,7 +60,6 @@ public class DataSourceToCommonDataSourceDTOConverter implements Converter<DataS
         commonDataSourceDTO.setId(dataSource.getId());
         commonDataSourceDTO.setName(dataSource.getName());
         commonDataSourceDTO.setUuid(dataSource.getUuid());
-        commonDataSourceDTO.setModelType(dataSource.getModelType());
         return commonDataSourceDTO;
 
     }

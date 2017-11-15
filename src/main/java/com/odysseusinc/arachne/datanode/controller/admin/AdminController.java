@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,11 +23,9 @@
 package com.odysseusinc.arachne.datanode.controller.admin;
 
 import com.odysseusinc.arachne.datanode.service.UserService;
-import io.swagger.annotations.Api;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.web.bind.annotation.RestController;
 
-@Api
 @RestController
 public class AdminController extends BaseAdminController {
 

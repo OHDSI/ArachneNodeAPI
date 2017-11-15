@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,13 +42,15 @@ public interface DataSourceService {
 
     Optional<DataSource> findBySid(String sid);
 
+    Optional<DataSource> findByCentralId(Long centralId);
+
     DataSource getById(Long id);
 
-    Optional<DataSource> update(User user, DataSource ds);
+    DataSource update(User user, DataSource dataSource);
 
-    DataSource markDataSourceAsRegistered(String uuid);
+    DataSource markDataSourceAsRegistered(DataSource dataSource, Long centralId);
 
-    DataSource markDataSourceAsUnregistered(String uuid);
+    DataSource markDataSourceAsUnregistered(Long centralId);
 
-    void updateHealthStatus(String uuid, CommonHealthStatus status, String description);
+    void updateHealthStatus(Long centralId, CommonHealthStatus status, String description);
 }

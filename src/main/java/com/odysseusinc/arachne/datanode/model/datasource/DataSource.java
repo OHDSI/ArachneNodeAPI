@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,15 +88,23 @@ public class DataSource {
     @Column
     private Boolean registred;
 
-    @Enumerated(EnumType.STRING)
-    private CommonModelType modelType;
-
     @Column
     @Enumerated(value = EnumType.STRING)
     private CommonHealthStatus healthStatus = CommonHealthStatus.NOT_COLLECTED;
 
     @Column
     private String healthStatusDescription;
+
+    @Column
+    private String targetSchema;
+
+    @Column
+    private String resultSchema;
+
+    @Column
+    private String cohortTargetTable;
+
+    private Long centralId;
 
     public Long getId() {
 
@@ -108,11 +116,13 @@ public class DataSource {
         this.id = id;
     }
 
+    @Deprecated
     public String getUuid() {
 
         return uuid;
     }
 
+    @Deprecated
     public void setUuid(String uuid) {
 
         this.uuid = uuid;
@@ -209,16 +219,6 @@ public class DataSource {
         this.registred = registred;
     }
 
-    public CommonModelType getModelType() {
-
-        return modelType;
-    }
-
-    public void setModelType(CommonModelType modelType) {
-
-        this.modelType = modelType;
-    }
-
     public CommonHealthStatus getHealthStatus() {
 
         return healthStatus;
@@ -239,16 +239,67 @@ public class DataSource {
         this.healthStatusDescription = healthStatusDescription;
     }
 
+    public Long getCentralId() {
+
+        return centralId;
+    }
+
+    public void setCentralId(Long centralId) {
+
+        this.centralId = centralId;
+    }
+
+    public String getTargetSchema() {
+
+        return targetSchema;
+    }
+
+    public void setTargetSchema(String atlasTargetDbSchema) {
+
+        this.targetSchema = atlasTargetDbSchema;
+    }
+
+    public String getResultSchema() {
+
+        return resultSchema;
+    }
+
+    public void setResultSchema(String resultSchema) {
+
+        this.resultSchema = resultSchema;
+    }
+
+    public String getCohortTargetTable() {
+
+        return cohortTargetTable;
+    }
+
+    public void setCohortTargetTable(String cohortTargetTable) {
+
+        this.cohortTargetTable = cohortTargetTable;
+    }
+
     @Override
     public String toString() {
 
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
-                .add("uuid", uuid)
                 .add("name", name)
                 .add("description", description)
                 .add("type", type)
                 .add("connectionString", connectionString)
+                .add("cdmSchema", cdmSchema)
+                .add("username", username)
+                .add("password", password)
+                .add("dataNode", dataNode)
+                .add("registred", registred)
+                .add("healthStatus", healthStatus)
+                .add("healthStatusDescription", healthStatusDescription)
+                .add("targetSchema", targetSchema)
+                .add("resultSchema", resultSchema)
+                .add("cohortTargetTable", cohortTargetTable)
+                .add("centralId", centralId)
                 .toString();
     }
+
 }

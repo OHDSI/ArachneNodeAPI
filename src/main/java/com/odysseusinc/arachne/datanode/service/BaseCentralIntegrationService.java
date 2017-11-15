@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,7 @@
 package com.odysseusinc.arachne.datanode.service;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeRegisterResponseDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonBaseDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonProfessionalTypeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
@@ -31,11 +31,12 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import java.util.List;
 import java.util.Set;
 
-public interface BaseCentralIntegrationService<DTO extends  CommonDataSourceDTO> {
+public interface BaseCentralIntegrationService<DS extends DataSource, DTO extends CommonBaseDataSourceDTO> {
 
     JsonResult<CommonAuthMethodDTO> getAuthMethod();
 
@@ -43,7 +44,7 @@ public interface BaseCentralIntegrationService<DTO extends  CommonDataSourceDTO>
 
     DataNode updateDataNodeOnCentral(User user, DataNode dataNode);
 
-    JsonResult<CommonDataNodeRegisterResponseDTO> sendDataSourceRegistrationRequest(
+    JsonResult<CommonDataSourceDTO> sendDataSourceRegistrationRequest(
             User user, DataNode dataNode,
             DTO commonCreateDataSourceDTO);
 
@@ -55,9 +56,9 @@ public interface BaseCentralIntegrationService<DTO extends  CommonDataSourceDTO>
 
     JsonResult<CommonUserDTO> getRegisterUser(CommonUserRegistrationDTO dto);
 
-    JsonResult<DTO> getDataSource(User user, String uuid);
+    JsonResult<DTO> getDataSource(User user, Long id);
 
-    JsonResult<DTO> updateDataSource(User user, DTO commonDataSourceDTO);
+    JsonResult<DTO> updateDataSource(User user, Long centralId, DTO commonDataSourceDTO);
 
     JsonResult<List<CommonUserDTO>> suggestUsersFromCentral(User user, String query, Set<String> emails, int limit);
 

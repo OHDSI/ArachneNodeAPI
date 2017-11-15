@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.service;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
+import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 
-public interface CentralIntegrationService extends BaseCentralIntegrationService<CommonDataSourceDTO> {
+public interface CentralIntegrationService extends BaseCentralIntegrationService<DataSource, CommonDataSourceDTO> {
 }

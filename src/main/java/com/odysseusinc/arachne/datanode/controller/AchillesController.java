@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,6 @@ import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.repository.AchillesJobRepository;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
 import com.odysseusinc.arachne.datanode.service.AchillesService;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.sql.Timestamp;
 import java.util.Optional;
@@ -50,7 +49,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
-@Api
 @RestController
 @RequestMapping("/api/v1/achilles")
 public class AchillesController {

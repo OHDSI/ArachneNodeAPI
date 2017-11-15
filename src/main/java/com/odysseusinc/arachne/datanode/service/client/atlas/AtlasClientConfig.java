@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,14 +38,33 @@ public class AtlasClientConfig {
     @Value("${atlas.port}")
     private Integer atlasPort;
 
+    private AtlasAuthSchema authSchema;
+    @Value("${atlas.auth.username}")
+    private String username;
+    @Value("${atlas.auth.password}")
+    private String password;
+
     @Bean
-    public AtlasClient atlasClient() {
+    public AtlasClient atlasClient(@Value("${atlas.auth.schema}") String authSchemaParam) {
+
+        this.authSchema = AtlasAuthSchema.valueOf(authSchemaParam);
 
         return Feign.builder()
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder())
                 .logger(new Slf4jLogger(AtlasClient.class))
                 .logLevel(feign.Logger.Level.FULL)
+                .requestInterceptor(new AtlasAuthRequestInterceptor(atlasLoginClient(), authSchema, username, password))
                 .target(AtlasClient.class, atlasHost + ":" + atlasPort + "/WebAPI");
+    }
+
+    @Bean
+    public AtlasLoginClient atlasLoginClient() {
+
+        return Feign.builder()
+                .encoder(new JacksonEncoder())
+                .decoder(new TokenDecoder())
+                .logger(new Slf4jLogger(AtlasLoginClient.class))
+                .target(AtlasLoginClient.class, atlasHost + ":" + atlasPort + "/WebAPI");
     }
 }

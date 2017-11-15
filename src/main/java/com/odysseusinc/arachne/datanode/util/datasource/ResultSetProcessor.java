@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,5 +28,5 @@ import java.sql.SQLException;
 @FunctionalInterface
 public interface ResultSetProcessor<R> {
 
-    R process(ResultSet resultSet) throws SQLException;
+    ResultSetContainer<R> process(ResultSet resultSet) throws SQLException;
 }

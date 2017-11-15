@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,16 +59,16 @@ public class DrugEraReport extends BaseReport {
         return DataSourceUtils.<Map<Integer, String>>withDataSource(dataSource)
                 .run(QueryProcessors.statement(ageExposureQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "AGE_AT_FIRST_EXPOSURE",
-                        AchillesProcessors.resultSet())
+                        AchillesProcessors.plainResultSet("concept_id", "category", "min_value", "p10_value", "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .run(QueryProcessors.statement(prevalenceByGenderQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_GENDER_AGE_YEAR",
-                        AchillesProcessors.resultSet())
+                        AchillesProcessors.plainResultSet("concept_id", "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
                 .run(QueryProcessors.statement(prevalenceByMonth))
                 .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_MONTH",
-                        AchillesProcessors.resultSet())
+                        AchillesProcessors.plainResultSet("concept_id", "x_calendar_month", "y_prevalence_1000pp"))
                 .run(QueryProcessors.statement(lengthQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "LENGTH_OF_ERA",
-                        AchillesProcessors.resultSet())
+                        AchillesProcessors.plainResultSet("concept_id", "category", "min_value", "p10_value", "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .transform(ResultTransformers.toJsonMap(concepts))
                 .write(ResultWriters.toMultipleFiles(targetDir, "drug_%d.json", concepts))
                 .getResultsCount();

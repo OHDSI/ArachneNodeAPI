@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,14 +28,11 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
-/**
- * @author vkoulakov
- * @since 4/12/17.
- */
 @Entity
 @Table(name = "studies")
 public class Study {
     @Id
+    @NotNull
     private Long id;
     @NotNull
     @Column(name = "title")

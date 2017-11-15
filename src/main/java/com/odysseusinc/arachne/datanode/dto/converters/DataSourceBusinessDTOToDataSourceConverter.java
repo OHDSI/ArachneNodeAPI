@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,41 +16,42 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: July 11, 2017
+ * Created: December 19, 2016
  *
  */
 
-package com.odysseusinc.arachne.datanode.service.impl;
+package com.odysseusinc.arachne.datanode.dto.converters;
 
+import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceBusinessDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.datanode.service.DataSourceHelper;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import org.apache.commons.io.FileUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
-public class DataSourceHelperImpl implements DataSourceHelper {
+@Component
+public class DataSourceBusinessDTOToDataSourceConverter implements Converter<DataSourceBusinessDTO, DataSource>, InitializingBean {
 
     private final GenericConversionService conversionService;
 
-    @Autowired
-    public DataSourceHelperImpl(GenericConversionService conversionService) {
+    public DataSourceBusinessDTOToDataSourceConverter(GenericConversionService conversionService) {
 
         this.conversionService = conversionService;
     }
 
     @Override
-    public AnalysisRequestDTO getDataSourceCheckRequest(DataSource dataSource, Path tempDirectory) throws IOException {
+    public void afterPropertiesSet() throws Exception {
 
-        AnalysisRequestDTO request = conversionService.convert(dataSource, AnalysisRequestDTO.class);
-        final Path testFile = Paths.get(tempDirectory.toAbsolutePath().toString(), "test.sql");
-        FileUtils.write(testFile.toFile(), "select 1", Charset.defaultCharset());
-        return request;
+        conversionService.addConverter(this);
+    }
+
+    @Override
+    public DataSource convert(DataSourceBusinessDTO source) {
+
+        DataSource dataSource = new DataSource();
+        dataSource.setTargetSchema(source.getTargetSchema());
+        dataSource.setResultSchema(source.getResultSchema());
+        dataSource.setCohortTargetTable(source.getCohortTargetTable());
+        return dataSource;
     }
 }

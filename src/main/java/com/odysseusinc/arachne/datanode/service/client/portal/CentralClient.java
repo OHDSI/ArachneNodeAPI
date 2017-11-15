@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +28,6 @@ import feign.RequestLine;
 
 public interface CentralClient {
 
-    @RequestLine("DELETE /api/v1/data-nodes/{dataNodeUuid}/data-sources/{dataSourceUuid}")
-    JsonResult unregisterDataSource(@Param("dataNodeUuid") String dataNodeUuid, @Param("dataSourceUuid") String dataSourceUuid);
+    @RequestLine("DELETE /api/v1/data-nodes/{dataNodeId}/data-sources/{dataSourceId}")
+    JsonResult unregisterDataSource(@Param("dataNodeId") Long dataNodeId, @Param("dataSourceId") Long dataSourceId);
 }

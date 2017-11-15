@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,6 +65,7 @@ import com.odysseusinc.arachne.datanode.service.achilles.ConditionEraReport;
 import com.odysseusinc.arachne.datanode.service.achilles.ConditionReport;
 import com.odysseusinc.arachne.datanode.service.achilles.DashboardReport;
 import com.odysseusinc.arachne.datanode.service.achilles.DataDensityReport;
+import com.odysseusinc.arachne.datanode.service.achilles.DeathReport;
 import com.odysseusinc.arachne.datanode.service.achilles.DrugEraReport;
 import com.odysseusinc.arachne.datanode.service.achilles.DrugReport;
 import com.odysseusinc.arachne.datanode.service.achilles.MeasurementReport;
@@ -77,7 +78,7 @@ import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClien
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
 import com.odysseusinc.arachne.datanode.util.DataSourceUtils;
 import com.odysseusinc.arachne.datanode.util.SqlUtils;
-import com.odysseusinc.arachne.datanode.util.ZipUtils;
+import com.odysseusinc.arachne.datanode.util.datasource.ResultSetContainer;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultSetProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultTransformers;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultWriters;
@@ -114,6 +115,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -180,6 +182,8 @@ public class AchillesServiceImpl implements AchillesService {
     @Autowired
     protected PersonReport personReport;
     @Autowired
+    protected DeathReport deathReport;
+    @Autowired
     protected ObservationPeriodReport observationPeriodReport;
     @Autowired
     protected DashboardReport dashboardReport;
@@ -229,8 +233,10 @@ public class AchillesServiceImpl implements AchillesService {
 
         LOGGER.info("Starting achilles for: {}", dataSource);
         AchillesJob job = checkAchillesJob(dataSource, AchillesJobSource.GENERATION);
+        Path workDir = null;
         try {
-            Path results = runAchilles(dataSource, job);
+            workDir = Files.createTempDirectory("achilles_");
+            Path results = runAchilles(dataSource, job, workDir);
             retryTemplate.execute((RetryCallback<Void, Exception>) retryContext -> {
 
                 sendResultToCentral(dataSource, results);
@@ -241,6 +247,10 @@ public class AchillesServiceImpl implements AchillesService {
         } catch (Throwable e) {
             LOGGER.error("Achilles failed to execute", e);
             updateJob(job, FAILED);
+        } finally {
+            if (workDir != null) {
+                FileUtils.deleteQuietly(workDir.toFile());
+            }
         }
     }
 
@@ -259,16 +269,18 @@ public class AchillesServiceImpl implements AchillesService {
     public boolean hasAchillesResultTable(DataSource dataSource) {
 
         try {
+            String query = "select count(*) from %s.achilles_results";
+            query = String.format(query, getResultSchema(dataSource));
             Map<String, Integer> result = DataSourceUtils.<Integer>withDataSource(dataSource)
-                    .run(statement("select count(*) from achilles_results"))
+                    .run(statement(query))
                     .collectResults(resultSet -> {
                         Map<String, Integer> data = new HashMap<>();
                         int count = 0;
-                        if (resultSet.next()){
+                        if (resultSet.next()) {
                             count = resultSet.getInt(1);
                         }
                         data.put("count", count);
-                        return data;
+                        return new ResultSetContainer<>(data, null);
                     })
                     .getResults();
             return result.getOrDefault("count", 0) > 0;
@@ -339,6 +351,7 @@ public class AchillesServiceImpl implements AchillesService {
                     return result;
                 }));
                 tasks.add(achillesTask("Person", () -> personReport.runReports(dataSource, tempDir.resolve("person.json"), null)));
+                tasks.add(achillesTask("Death", () -> deathReport.runReports(dataSource, tempDir.resolve("death.json"), null)));
                 tasks.add(achillesTask("ObservationPeriod", () -> observationPeriodReport.runReports(dataSource, tempDir.resolve("observationperiod.json"), null)));
                 tasks.add(achillesTask("Dashboard", () -> dashboardReport.runReports(dataSource, tempDir.resolve("dashboard.json"), null)));
                 tasks.add(achillesTask("DataDensity", () -> dataDensityReport.runReports(dataSource, tempDir.resolve("datadensity.json"), null)));
@@ -394,7 +407,12 @@ public class AchillesServiceImpl implements AchillesService {
         }
     }
 
-    private Callable<String> achillesTask(String name, Callable<Integer> callable){
+    private String getResultSchema(DataSource dataSource) {
+
+        return StringUtils.defaultIfEmpty(dataSource.getResultSchema(), dataSource.getCdmSchema());
+    }
+
+    private Callable<String> achillesTask(String name, Callable<Integer> callable) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("mm:ss.SSS");
         return () -> {
@@ -470,7 +488,7 @@ public class AchillesServiceImpl implements AchillesService {
         HttpEntity requestEntity = new HttpEntity(headers);
         URI uri = UriComponentsBuilder.fromHttpUrl(centralHost + ":" + centralPort
                 + LIST_REPORTS)
-                .queryParam(PARAM_DATANODE, dataNode.getSid())
+                .queryParam(PARAM_DATANODE, dataNode.getCentralId())
                 .build().encode().toUri();
         ResponseEntity<List<CommonAchillesReportDTO>> entity = restTemplate.exchange(
                 uri,
@@ -500,109 +518,103 @@ public class AchillesServiceImpl implements AchillesService {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, headers);
 
+        final File file = results.toFile();
+        final File targetFile = new File("/tmp", "archive" + UUID.randomUUID());
+        try {
+            CommonFileUtils.compressAndSplit(file, targetFile, null);
 
-        File file = results.toFile();
-        File targetFile = new File("/tmp", "archive"+ UUID.randomUUID());
-        CommonFileUtils.compressAndSplit(file, targetFile, null);
+            FileInputStream input = new FileInputStream(targetFile);
+            MultipartFile multipartFile = new MockMultipartFile("file",
+                    file.getName(), "text/plain", IOUtils.toByteArray(input));
 
-        FileInputStream input = new FileInputStream(targetFile);
-        MultipartFile multipartFile = new MockMultipartFile("file",
-                file.getName(), "text/plain", IOUtils.toByteArray(input));
+            centralSystemClient.sendAchillesResults(dataSource.getCentralId(), multipartFile);
 
-        centralSystemClient.sendAchillesResults(dataSource.getUuid(), multipartFile);
-
-        LOGGER.debug("Results successfully sent");
-
-        FileUtils.deleteQuietly(results.toFile());
+            LOGGER.debug("Results successfully sent");
+        } finally {
+            FileUtils.deleteQuietly(targetFile);
+        }
     }
 
-    private Path runAchilles(final DataSource dataSource, AchillesJob job) throws IOException {
+    private Path runAchilles(final DataSource dataSource, AchillesJob job, Path workDir) throws IOException {
 
-        Path workDir = Files.createTempDirectory("achilles_");
         LOGGER.debug("Achilles result directory: {}", workDir);
+        String imageName = properties.getImageName();
+        LOGGER.debug("Pulling image: {}", imageName);
+        AuthConfig authConfig = new AuthConfig()
+                .withRegistryAddress(properties.getAuthConfig().getRegistryAddress())
+                .withUsername(properties.getAuthConfig().getUsername())
+                .withPassword(properties.getAuthConfig().getPassword());
+        dockerClient.pullImageCmd(imageName)
+                .withAuthConfig(authConfig)
+                .exec(new PullImageResultCallback())
+                .awaitSuccess();
+        LOGGER.debug("Creating container: {}", imageName);
+        Volume outputVolume = new Volume("/opt/app/output");
+        CreateContainerResponse container = dockerClient.createContainerCmd(imageName)
+                .withEnv(
+                        env(ACHILLES_SOURCE, dataSource.getName()),
+                        env(ACHILLES_DB_URI, dburi(dataSource)),
+                        env(ACHILLES_CDM_SCHEMA, dataSource.getCdmSchema()),
+                        env(ACHILLES_VOCAB_SCHEMA, dataSource.getCdmSchema()),
+                        env(ACHILLES_RES_SCHEMA, getResultSchema(dataSource)),
+                        env(ACHILLES_CDM_VERSION, Constants.Achilles.DEFAULT_CDM_VERSION)
+                )
+                .withVolumes(outputVolume)
+                .withBinds(new Bind(workDir.toString(), outputVolume))
+                .withNetworkMode("host")
+                .exec();
+        LOGGER.debug("Container created: {}", container.getId());
         try {
-            String imageName = properties.getImageName();
-            LOGGER.debug("Pulling image: {}", imageName);
-            AuthConfig authConfig = new AuthConfig()
-                    .withRegistryAddress(properties.getAuthConfig().getRegistryAddress())
-                    .withUsername(properties.getAuthConfig().getUsername())
-                    .withPassword(properties.getAuthConfig().getPassword());
-            dockerClient.pullImageCmd(imageName)
-                    .withAuthConfig(authConfig)
-                    .exec(new PullImageResultCallback())
-                    .awaitSuccess();
-            LOGGER.debug("Creating container: {}", imageName);
-            Volume outputVolume = new Volume("/opt/app/output");
-            CreateContainerResponse container = dockerClient.createContainerCmd(imageName)
-                    .withEnv(
-                            env(ACHILLES_SOURCE, dataSource.getName()),
-                            env(ACHILLES_DB_URI, dburi(dataSource)),
-                            env(ACHILLES_CDM_SCHEMA, dataSource.getCdmSchema()),
-                            env(ACHILLES_VOCAB_SCHEMA, dataSource.getCdmSchema()),
-                            env(ACHILLES_RES_SCHEMA, dataSource.getCdmSchema()),
-                            env(ACHILLES_CDM_VERSION, Constants.Achilles.DEFAULT_CDM_VERSION)
-                    )
-                    .withVolumes(outputVolume)
-                    .withBinds(new Bind(workDir.toString(), outputVolume))
-                    .withNetworkMode("host")
-                    .exec();
-            LOGGER.debug("Container created: {}", container.getId());
-            try {
-                LOGGER.debug("Starting container: {}", container.getId());
-                dockerClient.startContainerCmd(container.getId()).exec();
-                LOGGER.debug("Container running: {}", container.getId());
-                WaitContainerResultCallback callback = dockerClient.waitContainerCmd(container.getId())
-                        .exec(new WaitContainerResultCallback());
-                List<String> logEntries = new LinkedList<>();
-                LogContainerResultCallback logCallback = new LogContainerResultCallback() {
-                    @Override
-                    public void onNext(Frame item) {
+            LOGGER.debug("Starting container: {}", container.getId());
+            dockerClient.startContainerCmd(container.getId()).exec();
+            LOGGER.debug("Container running: {}", container.getId());
+            WaitContainerResultCallback callback = dockerClient.waitContainerCmd(container.getId())
+                    .exec(new WaitContainerResultCallback());
+            List<String> logEntries = new LinkedList<>();
+            LogContainerResultCallback logCallback = new LogContainerResultCallback() {
+                @Override
+                public void onNext(Frame item) {
 
-                        logEntries.add(item.toString());
-                        LOGGER.debug(item.toString());
-                    }
-                };
-                dockerClient.logContainerCmd(container.getId())
-                        .withStdOut(true)
-                        .withStdErr(true)
-                        .withFollowStream(true)
-                        .withTailAll()
-                        .exec(logCallback);
-                Integer statusCode = callback.awaitStatusCode();
-                try {
-                    logCallback.awaitCompletion(3, TimeUnit.SECONDS);
-                } catch (InterruptedException ignored) {
+                    logEntries.add(item.toString());
+                    LOGGER.debug(item.toString());
                 }
-                LOGGER.debug("Achilles finished with status code: {}", statusCode);
-                job.setAchillesLog(logEntries.stream().collect(Collectors.joining("\n")));
-                achillesJobRepository.save(job);
-                if (statusCode == 0) {
-                    LOGGER.debug("Creating Achilles output results archive");
-                    Path archiveFile = Files.createTempFile("achilles_", ".zip");
-                    Path dataDir = workDir.resolve(dataSource.getName());
-                    Path jsonDir = dataDir;
-                    try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(dataDir)) {
-                        for (Path path : directoryStream) {
-                            if (Files.isDirectory(path)) {
-                                jsonDir = path;
-                            }
+            };
+            dockerClient.logContainerCmd(container.getId())
+                    .withStdOut(true)
+                    .withStdErr(true)
+                    .withFollowStream(true)
+                    .withTailAll()
+                    .exec(logCallback);
+            Integer statusCode = callback.awaitStatusCode();
+            try {
+                logCallback.awaitCompletion(3, TimeUnit.SECONDS);
+            } catch (InterruptedException ignored) {
+            }
+            LOGGER.debug("Achilles finished with status code: {}", statusCode);
+            job.setAchillesLog(logEntries.stream().collect(Collectors.joining("\n")));
+            achillesJobRepository.save(job);
+            if (statusCode == 0) {
+                LOGGER.debug("Creating Achilles output results archive");
+                Path dataDir = workDir.resolve(dataSource.getName());
+                Path jsonDir = dataDir;
+                try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(dataDir)) {
+                    for (Path path : directoryStream) {
+                        if (Files.isDirectory(path)) {
+                            jsonDir = path;
                         }
                     }
-                    ZipUtils.zipDirectory(archiveFile, jsonDir);
-                    LOGGER.info("Achilles results available at: {}", archiveFile);
-                    return archiveFile;
-                } else {
-                    String message = "Achilles exited with errors, lost results";
-                    LOGGER.warn(message);
-                    throw new IOException(message);
                 }
-            } finally {
-                dockerClient.removeContainerCmd(container.getId())
-                        .withRemoveVolumes(true)
-                        .exec();
+                LOGGER.info("Achilles results available at: {}", jsonDir);
+                return jsonDir;
+            } else {
+                String message = "Achilles exited with errors, lost results";
+                LOGGER.warn(message);
+                throw new IOException(message);
             }
         } finally {
-            FileUtils.deleteQuietly(workDir.toFile());
+            dockerClient.removeContainerCmd(container.getId())
+                    .withRemoveVolumes(true)
+                    .exec();
         }
     }
 

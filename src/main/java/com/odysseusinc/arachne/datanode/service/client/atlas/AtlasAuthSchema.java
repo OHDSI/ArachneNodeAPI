@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,18 +15,15 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: July 11, 2017
+ * Authors: Pavel Grafkin, Alexander Saltykov, Vitaly Koulakov, Anton Gackovka, Alexandr Ryabokon, Mikhail Mironov
+ * Created: Nov 8, 2017
  *
  */
 
-package com.odysseusinc.arachne.datanode.service;
+package com.odysseusinc.arachne.datanode.service.client.atlas;
 
-import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
-import java.io.IOException;
-import java.nio.file.Path;
-
-public interface DataSourceHelper {
-    AnalysisRequestDTO getDataSourceCheckRequest(DataSource dataSource, Path tempDirectory) throws IOException;
+public enum AtlasAuthSchema {
+    NONE,
+    DATABASE,
+    LDAP
 }

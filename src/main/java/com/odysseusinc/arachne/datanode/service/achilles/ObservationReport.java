@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -77,7 +77,8 @@ public class ObservationReport extends BaseReport {
                         plainResultSet("concept_id", "concept_name", "count_value"))
                 .run(statement(ageAtFirst))
                 .forMapResults(concepts, "CONCEPT_ID", "AGE_AT_FIRST_OCCURRENCE",
-                        plainResultSet("concept_id"))
+                        plainResultSet("concept_id", "category", "min_value", "p10_value",
+                                "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .transform(toJsonMap(concepts))
                 .write(toMultipleFiles(targetDir, "observation_%d.json", concepts))
                 .getResultsCount();

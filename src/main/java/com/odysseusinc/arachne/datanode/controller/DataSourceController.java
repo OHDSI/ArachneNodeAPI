@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,21 +23,22 @@
 package com.odysseusinc.arachne.datanode.controller;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
+import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceBusinessDTO;
+import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
-import com.odysseusinc.arachne.datanode.service.impl.DataSourceHelperImpl;
-import io.swagger.annotations.Api;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
-@Api
+import java.util.Objects;
+
 @RestController
-public class DataSourceController extends BaseDataSourceController<CommonDataSourceDTO> {
+public class DataSourceController extends BaseDataSourceController<DataSource, DataSourceBusinessDTO, CommonDataSourceDTO> {
 
     private static final String CDM_VERSION_FILENAME = "cdm_version.txt";
 
@@ -48,7 +49,6 @@ public class DataSourceController extends BaseDataSourceController<CommonDataSou
                                 ModelMapper modelMapper,
                                 GenericConversionService conversionService,
                                 JmsTemplate jmsTemplate,
-                                DataSourceHelperImpl dataSourceHelper,
                                 CentralClient centralClient) {
 
         super(userService,
@@ -56,9 +56,32 @@ public class DataSourceController extends BaseDataSourceController<CommonDataSou
                 integrationService,
                 dataSourceService,
                 conversionService,
-                dataSourceHelper,
                 centralClient,
                 jmsTemplate);
     }
 
+    @Override
+    protected Class<CommonDataSourceDTO> getCommonDataSourceDTOClass() {
+
+        return CommonDataSourceDTO.class;
+    }
+
+    @Override
+    protected Class<DataSourceBusinessDTO> getDataSourceBusinessDTOClass() {
+
+        return DataSourceBusinessDTO.class;
+    }
+
+    @Override
+    protected DataSourceBusinessDTO enrichBusinessFromCommon(DataSourceBusinessDTO businessDTO, CommonDataSourceDTO commonDataSourceDTO) {
+
+        if (Objects.nonNull(businessDTO) && Objects.nonNull(commonDataSourceDTO)) {
+            businessDTO.setUuid(commonDataSourceDTO.getUuid());
+            businessDTO.setName(commonDataSourceDTO.getName());
+            businessDTO.setModelType(commonDataSourceDTO.getModelType());
+            businessDTO.setOrganization(commonDataSourceDTO.getOrganization());
+            businessDTO.setCdmVersion(commonDataSourceDTO.getCdmVersion());
+        }
+        return businessDTO;
+    }
 }
