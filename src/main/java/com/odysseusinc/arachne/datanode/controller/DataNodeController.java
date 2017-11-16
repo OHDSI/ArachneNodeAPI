@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,11 +34,11 @@ import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.http.MediaType;
@@ -47,7 +47,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-@Api
 @RestController
 @RequestMapping("api/v1/datanode")
 public class DataNodeController extends BaseController {
@@ -86,7 +85,7 @@ public class DataNodeController extends BaseController {
     @RequestMapping(method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE,
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonResult<DataNodeInfoDTO> createDataNode(
-            @RequestBody CreateDataNodeDTO createDataNodeDTO,
+            @RequestBody @Valid CreateDataNodeDTO createDataNodeDTO,
             Principal principal
     ) throws AlreadyExistsException, PermissionDeniedException {
 
@@ -104,7 +103,7 @@ public class DataNodeController extends BaseController {
     @RequestMapping(method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE,
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonResult<DataNodeInfoDTO> updateDataNode(
-            @RequestBody CreateDataNodeDTO createDataNodeDTO,
+            @RequestBody @Valid CreateDataNodeDTO createDataNodeDTO,
             Principal principal
     ) throws NotExistException, PermissionDeniedException {
 

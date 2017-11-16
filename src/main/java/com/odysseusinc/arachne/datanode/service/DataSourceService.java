@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,6 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +33,8 @@ public interface DataSourceService {
     Optional<DataSource> create(User owner, DataSource dataSource) throws NotExistException;
 
     List<DataSource> findAll();
+
+    List<DataSource> findAll(String sortBy, Boolean sortAsc);
 
     List<DataSource> findAllRegistered();
 
@@ -43,9 +44,11 @@ public interface DataSourceService {
 
     Optional<DataSource> findBySid(String sid);
 
+    Optional<DataSource> findByCentralId(Long centralId);
+
     DataSource getById(Long id);
 
-    Optional<DataSource> update(User user, DataSource ds);
+    DataSource update(User user, DataSource dataSource);
 
     DataSource markDataSourceAsRegistered(Long centralId);
 

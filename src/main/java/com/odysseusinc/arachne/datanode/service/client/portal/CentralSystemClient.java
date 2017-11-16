@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,6 +64,9 @@ public interface CentralSystemClient {
     @RequestLine("GET /api/v1/data-sources/byuuid/{uuid}")
     JsonResult<CommonDataSourceDTO> getDataSource(@Param("uuid") String dataSourceUuid);
 
-    @RequestLine("GET /api/v1/data-nodes/{uuid}")
+    @RequestLine("GET /api/v1/data-nodes/byuuid/{uuid}")
     JsonResult<CommonDataNodeRegisterResponseDTO> getDataNode(@Param("uuid") String dataNodeUuid);
+
+    @RequestLine("GET /api/v1/data-nodes/{id}")
+    JsonResult<CommonDataNodeRegisterResponseDTO> getDataNode(@Param("id") Long centralId);
 }

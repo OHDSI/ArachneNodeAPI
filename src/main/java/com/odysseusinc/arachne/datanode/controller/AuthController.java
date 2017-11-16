@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,10 +35,12 @@ import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.security.TokenUtils;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.UserService;
-import io.swagger.annotations.Api;
+import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -53,7 +55,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 //import static com.odysseusinc.arachne.datanode.Constants.Api.Auth.LOGIN_ENTRY_POINT;
 
-@Api
 @RestController
 public class AuthController {
     protected Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -67,7 +68,10 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
-    @Value("datanode.jwt.header")
+    @Autowired
+    private CentralClient centralClient;
+
+    @Value("${datanode.jwt.header}")
     private String tokenHeader;
 
     @ApiOperation("Get auth method")
@@ -116,6 +120,35 @@ public class AuthController {
         }
         // Return the token
         return jsonResult;
+    }
+
+    @ApiOperation("Refresh session token.")
+    @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
+    public JsonResult<String> refresh(HttpServletRequest request) {
+
+        JsonResult<String> result;
+        try {
+            String token = request.getHeader(this.tokenHeader);
+            User user = userService.findByUsername(tokenUtils.getUsernameFromToken(token))
+                    .orElseThrow(() -> new AuthException("user not registered"));
+            Map<String, String> header = new HashMap<>();
+            header.put(this.tokenHeader, token);
+            String centralToken = centralClient.refreshToken(header).getResult();
+            if (centralToken == null) {
+                throw new AuthException("central auth error");
+            }
+            userService.setToken(user, centralToken);
+            String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
+            Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
+            token = tokenUtils.generateToken(user, createdDateFromToken);
+
+            result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+            result.setResult(token);
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            result = new JsonResult<>(JsonResult.ErrorCode.UNAUTHORIZED);
+        }
+        return result;
     }
 
     @ApiOperation("Get current principal")

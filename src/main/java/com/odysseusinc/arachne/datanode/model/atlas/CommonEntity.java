@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,9 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -37,7 +39,8 @@ import javax.validation.constraints.NotNull;
 @Table(name = "common_entity")
 public class CommonEntity {
     @Id
-    @GeneratedValue
+    @SequenceGenerator(name = "common_entity_id_seq_generator", sequenceName = "common_entity_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "common_entity_id_seq_generator")
     private Long id;
     @Column(name = "guid")
     @NotNull

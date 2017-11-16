@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,10 +26,11 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.user.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface UserService extends UserDetailsService {
 
@@ -67,4 +68,6 @@ public interface UserService extends UserDetailsService {
     User addUserFromCentral(User user, Long centralId);
 
     User getUser(Principal principal) throws PermissionDeniedException;
+
+    void updateUser(User original, User updated);
 }

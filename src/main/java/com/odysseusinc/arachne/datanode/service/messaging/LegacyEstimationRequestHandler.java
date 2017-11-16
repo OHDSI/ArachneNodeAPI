@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -170,16 +170,21 @@ public class LegacyEstimationRequestHandler implements AtlasRequestHandler<Commo
 
     private String buildRunner(String analysisName) throws IOException {
 
+        Map<String, Object> parameters = getRunnerParams(analysisName);
+
+        return runnerTemplate.apply(parameters);
+    }
+
+    protected Map<String, Object> getRunnerParams(String analysisName) {
+
         Map<String, Object> parameters = new HashMap<>();
 
         parameters.put("analysisFile", getEstimationFilename(analysisName));
         parameters.put("targetCohort", getTargetCohortFilename(analysisName));
         parameters.put("comparatorCohort", getComparatorCohortFilename(analysisName));
         parameters.put("outcomeCohort", getOutcomeCohortFilename(analysisName));
-        // Should be inserted at Central side
-        parameters.put("packratPath", "{{packratPath}}");
 
-        return runnerTemplate.apply(parameters);
+        return parameters;
     }
 
     private String getEstimationFilename(String analysisName) {

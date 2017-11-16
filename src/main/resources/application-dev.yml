@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/datanode
+build:
+  number: no_build_number
+  id: no_build_id
+datanode:
+  arachneCentral:
+    host: https://localhost
+    port: 8080
+swagger:
+  enabled: true
+  title: Arachne Data Node
+  description: Arachne Data Node API
+  version: 1.0.1
+  basePackage: com.odysseusinc.arachne.datanode.controller
+docker:
+  host: unix:///var/run/docker.sock
+atlas:
+  scheduler:
+    checkInterval: 10000
+entities:
+  scheduler:
+    checkListRequestsInterval: 1000
+    checkRequestInterval: 1000

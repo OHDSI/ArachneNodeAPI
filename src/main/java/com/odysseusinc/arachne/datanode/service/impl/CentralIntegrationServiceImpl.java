@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,11 +23,13 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -43,5 +45,11 @@ public class CentralIntegrationServiceImpl extends BaseCentralIntegrationService
             CentralUtil centralUtil) {
 
         super(conversionService, centralRestTemplate, centralUtil);
+    }
+
+    @Override
+    protected ParameterizedTypeReference<JsonResult<CommonDataSourceDTO>> getParameterizedTypeReferenceJsonResultDTO() {
+
+        return new ParameterizedTypeReference<JsonResult<CommonDataSourceDTO>>(){};
     }
 }

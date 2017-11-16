@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,6 +32,7 @@ public class UserDTO {
     private String email;
     private String username;
     private List<String> roles;
+    private Boolean enabled;
 
     public Long getId() {
 
@@ -101,5 +102,15 @@ public class UserDTO {
     public void setRoles(List<String> roles) {
 
         this.roles = roles;
+    }
+
+    public Boolean getEnabled() {
+
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+
+        this.enabled = enabled;
     }
 }

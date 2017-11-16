@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,6 +33,7 @@ import org.apache.commons.io.IOUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 public class SqlUtils {
@@ -52,8 +53,17 @@ public class SqlUtils {
         String sql = readSql(name);
         final DBMSType target = dataSource.getType();
         final String cdmSchema = dataSource.getCdmSchema();
+        final String targetSchema = dataSource.getTargetSchema();
+        final String resultSchema = dataSource.getResultSchema();
+        final String cohortTargetTable = dataSource.getCohortTargetTable();
         final CohortServiceImpl.TranslateOptions options = new CohortServiceImpl.TranslateOptions(
-                cdmSchema, cdmSchema, cdmSchema, cdmSchema, "", 0);
+                cdmSchema,
+                !StringUtils.isEmpty(targetSchema) ? targetSchema : cdmSchema,
+                !StringUtils.isEmpty(resultSchema) ? resultSchema : cdmSchema,
+                cdmSchema,
+                !StringUtils.isEmpty(cohortTargetTable) ? cohortTargetTable : "cohort",
+                0
+        );
         final String nativeStatement
                 = cohortService.translateSQL(sql, null, target, options);
         return nativeStatement;

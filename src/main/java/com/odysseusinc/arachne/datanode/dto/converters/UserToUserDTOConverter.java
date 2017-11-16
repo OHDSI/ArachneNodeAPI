@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,12 +24,14 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.model.user.User;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
+
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
 public class UserToUserDTOConverter implements Converter<User, UserDTO>, InitializingBean {
@@ -49,6 +51,7 @@ public class UserToUserDTOConverter implements Converter<User, UserDTO>, Initial
         if (user.getRoles() != null) {
             dto.setRoles(user.getRoles().stream().map(role -> role.getName()).collect(Collectors.toList()));
         }
+        dto.setEnabled(Objects.nonNull(user.getEnabled()) ? user.getEnabled() : false);
         return dto;
     }
 

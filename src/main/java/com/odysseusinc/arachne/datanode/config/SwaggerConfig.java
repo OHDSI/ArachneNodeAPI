@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,18 +22,13 @@
 
 package com.odysseusinc.arachne.datanode.config;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.odysseusinc.arachne.commons.config.DocketWrapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import springfox.documentation.builders.ApiInfoBuilder;
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiKey;
-import springfox.documentation.service.SecurityScheme;
-import springfox.documentation.spi.DocumentationType;
+import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
@@ -41,7 +36,6 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 @ConditionalOnProperty(prefix = "swagger", name = "enabled")
 public class SwaggerConfig {
-
 
     @Value("${swagger.title}")
     private String swaggerTitle;
@@ -53,30 +47,30 @@ public class SwaggerConfig {
     private String swaggerVersion;
 
     @Value("${swagger.basePackage}")
-    private String swaggerBasePackage;
+    private String[] swaggerBasePackages;
 
     @Value("${datanode.jwt.header}")
     private String authHeader;
 
+    @Autowired
+    private DocketWrapper docketWrapper;
+
     @Bean
-    public Docket petApi() {
+    public Docket api() {
 
-        List<SecurityScheme> securitySchemes = new ArrayList<>();
-        securitySchemes.add(new ApiKey(authHeader, "api_key", "header"));
+        return docketWrapper.getDocket();
+    }
 
-        return new Docket(DocumentationType.SWAGGER_2)
-                .select()
-                .apis(RequestHandlerSelectors.basePackage(swaggerBasePackage))
-                .paths(PathSelectors.any())
-                .build()
-                .apiInfo(new ApiInfoBuilder()
-                        .title(swaggerTitle)
-                        .description(swaggerDescription)
-                        .version(swaggerVersion)
-                        .build()
-                )
-                .securitySchemes(securitySchemes)
-                .pathMapping("/")
-                .useDefaultResponseMessages(false);
+    @Bean
+    public DocketWrapper docketWrapper() {
+
+        return new DocketWrapper(swaggerTitle,
+                swaggerDescription,
+                swaggerVersion,
+                "",
+                authHeader,
+                RestController.class,
+                swaggerBasePackages
+        );
     }
 }

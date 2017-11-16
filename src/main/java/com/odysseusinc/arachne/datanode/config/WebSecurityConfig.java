@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -98,6 +98,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/auth/logout**").permitAll()
                 .antMatchers("/api/v1/auth/login**").permitAll()
                 .antMatchers("/api/v1/auth/register**").permitAll()
+                .antMatchers("/api/v1/auth/refresh**").permitAll()
                 .antMatchers("/api/v1/auth/method**").permitAll()
                 .antMatchers("/api/v1/user-management/professional-types**").permitAll()
                 .antMatchers("/api/v1/auth/registration**").permitAll()

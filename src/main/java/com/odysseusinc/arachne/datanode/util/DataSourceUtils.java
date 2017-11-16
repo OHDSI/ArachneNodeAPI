@@ -1,4 +1,4 @@
-/**
+/*
  *
  * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,8 +27,10 @@ import com.odysseusinc.arachne.datanode.util.datasource.QueryProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultSetProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultTransformer;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultWriter;
+
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -41,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class DataSourceUtils<T> {
 
@@ -60,16 +63,35 @@ public class DataSourceUtils<T> {
         return new DataSourceUtils<>(dataSource);
     }
 
+    public DataSourceUtils<T> ifTableNotExists(String tableName, Function<String, RuntimeException> handler) throws SQLException {
+
+        Objects.requireNonNull(handler, "Handler function is required");
+        createConnection();
+        DatabaseMetaData metaData = c.getMetaData();
+        ResultSet resultSet = metaData.getTables(null, dataSource.getCdmSchema(), tableName, null);
+        if (!resultSet.next()){
+            throw handler.apply(tableName);
+        }
+        return this;
+    }
+
     public DataSourceUtils<T> run(QueryProcessor queryProcessor) throws SQLException {
 
         Objects.requireNonNull(queryProcessor, "queryProcessor is required");
-        String user = dataSource.getUsername();
-        String password = dataSource.getPassword();
-        String url = dataSource.getConnectionString();
-        c = DriverManager.getConnection(url, user, password);
-        c.setAutoCommit(false);
+        createConnection();
         resultSet = queryProcessor.process(c);
         return this;
+    }
+
+    private void createConnection() throws SQLException {
+
+        if (c == null || c.isClosed()) {
+            String user = dataSource.getUsername();
+            String password = dataSource.getPassword();
+            String url = dataSource.getConnectionString();
+            c = DriverManager.getConnection(url, user, password);
+            c.setAutoCommit(false);
+        }
     }
 
     public DataSourceUtils<T> collectResults(ResultSetProcessor<Map> processor) throws SQLException {
