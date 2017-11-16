@@ -50,7 +50,7 @@ public interface DataSourceService {
 
     DataSource update(User user, DataSource dataSource);
 
-    DataSource markDataSourceAsRegistered(Long centralId);
+    DataSource markDataSourceAsRegistered(DataSource dataSource, Long centralId);
 
     DataSource markDataSourceAsUnregistered(Long centralId);
 

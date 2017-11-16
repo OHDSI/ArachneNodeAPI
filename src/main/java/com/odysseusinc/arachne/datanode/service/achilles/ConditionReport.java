@@ -43,6 +43,8 @@ public class ConditionReport extends BaseReport {
 
     public static final String CONDITION_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export_v5/condition/sqlPrevalenceByGenderAgeYear.sql";
     public static final String CONDITION_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export_v5/condition/sqlPrevalenceByMonth.sql";
+    public static final String CONDITION_CONDITIONS_BY_TYPE_SQL = "classpath:/achilles/data/export_v5/condition/sqlConditionsByType.sql";
+    public static final String CONDITION_AGE_AT_FIRST_DIAGNOSIS_SQL = "classpath:/achilles/data/export_v5/condition/sqlAgeAtFirstDiagnosis.sql";
 
     @Autowired
     public ConditionReport(SqlUtils sqlUtils) {
@@ -55,8 +57,8 @@ public class ConditionReport extends BaseReport {
 
         String prevalenceByGenderAgeQuery = sqlUtils.transformSqlTemplate(dataSource, CONDITION_PREVALENCE_BY_GENDER_AGE_YEAR_SQL);
         String prevalenceByMonthQuery = sqlUtils.transformSqlTemplate(dataSource, CONDITION_PREVALENCE_BY_MONTH_SQL);
-        String conditionByTypeQuery = sqlUtils.transformSqlTemplate(dataSource, "classpath:/achilles/data/export_v5/condition/sqlConditionsByType.sql");
-        String ageQuery = sqlUtils.transformSqlTemplate(dataSource, "classpath:/achilles/data/export_v5/condition/sqlAgeAtFirstDiagnosis.sql");
+        String conditionByTypeQuery = sqlUtils.transformSqlTemplate(dataSource, CONDITION_CONDITIONS_BY_TYPE_SQL);
+        String ageQuery = sqlUtils.transformSqlTemplate(dataSource, CONDITION_AGE_AT_FIRST_DIAGNOSIS_SQL);
         return DataSourceUtils.<Map<Integer, String>>withDataSource(dataSource)
                 .run(QueryProcessors.statement(prevalenceByGenderAgeQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_GENDER_AGE_YEAR",
@@ -65,8 +67,8 @@ public class ConditionReport extends BaseReport {
                 .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_MONTH",
                         plainResultSet("concept_id", "x_calendar_month", "y_prevalence_1000pp"))
                 .run(QueryProcessors.statement(conditionByTypeQuery))
-                .forMapResults(concepts, "CONCEPT_ID", "CONDITIONS_BY_TYPE",
-                        plainResultSet("concept_id", "concept_name", "count_value"))
+                .forMapResults(concepts, "CONDITION_CONCEPT_ID", "CONDITIONS_BY_TYPE",
+                        plainResultSet("condition_concept_id", "concept_name", "count_value"))
                 .run(QueryProcessors.statement(ageQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "AGE_AT_FIRST_DIAGNOSIS",
                         plainResultSet("concept_id", "category", "min_value", "p10_value",

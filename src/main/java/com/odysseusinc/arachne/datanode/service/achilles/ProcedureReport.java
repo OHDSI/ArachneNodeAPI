@@ -77,7 +77,8 @@ public class ProcedureReport extends BaseReport {
                         plainResultSet("procedure_concept_id", "concept_name", "count_value"))
                 .run(statement(ageQuery))
                 .forMapResults(concepts, "CONCEPT_ID", "AGE_AT_FIRST_OCCURRENCE",
-                        plainResultSet("concept_id"))
+                        plainResultSet("concept_id", "category", "min_value", "p10_value",
+                                "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .transform(ResultTransformers.toJsonMap(concepts))
                 .write(ResultWriters.toMultipleFiles(targetDir, "procedure_%d.json", concepts))
                 .getResultsCount();

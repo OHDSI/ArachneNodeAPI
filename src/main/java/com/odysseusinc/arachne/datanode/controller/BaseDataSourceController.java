@@ -41,7 +41,6 @@ import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
-import com.odysseusinc.arachne.datanode.service.impl.DataSourceHelperImpl;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import io.swagger.annotations.ApiOperation;
 import java.io.IOException;
@@ -72,7 +71,6 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     protected final GenericConversionService conversionService;
     protected final JmsTemplate jmsTemplate;
     protected final DestinationResolver destinationResolver;
-    protected final DataSourceHelperImpl dataSourceHelper;
     protected final CentralClient centralClient;
 
     protected BaseDataSourceController(UserService userService,
@@ -80,7 +78,6 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                                        BaseCentralIntegrationService<DS, CommonDTO> integrationService,
                                        DataSourceService dataSourceService,
                                        GenericConversionService conversionService,
-                                       DataSourceHelperImpl dataSourceHelper,
                                        CentralClient centralClient,
                                        JmsTemplate jmsTemplate) {
 
@@ -90,7 +87,6 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         this.integrationService = integrationService;
         this.dataSourceService = dataSourceService;
         this.conversionService = conversionService;
-        this.dataSourceHelper = dataSourceHelper;
         this.centralClient = centralClient;
         this.jmsTemplate = jmsTemplate;
     }
@@ -106,13 +102,16 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
-        final DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
-        final CommonModelType modelType = checkDataSource(dataSource);
-        dataSource.setModelType(modelType);
+        final DataSource dataSource = convert(dataSourceDTO);
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
         dataSourceService.create(user, dataSource)
                 .ifPresent(ds -> result.setResult(modelMapper.map(ds, DataSourceDTO.class)));
         return result;
+    }
+
+    protected DataSource convert(CreateDataSourceDTO dataSourceDTO) {
+
+        return conversionService.convert(dataSourceDTO, DataSource.class);
     }
 
     protected CommonModelType checkDataSource(DataSource dataSource) {
@@ -191,9 +190,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
-        final DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
-        final CommonModelType modelType = checkDataSource(dataSource);
-        dataSource.setModelType(modelType);
+        final DataSource dataSource = convert(dataSourceDTO);
         dataSource.setId(id);
         final DataSource savedDataSource = dataSourceService.update(user, dataSource);
         return new JsonResult<>(NO_ERROR, modelMapper.map(savedDataSource, DataSourceDTO.class));
@@ -213,18 +210,22 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
         final User user = getAdmin(principal);
         DataSource dataSource = dataSourceService.getById(id);
-        commonDataSourceDTO.setId(dataSource.getId());
-        commonDataSourceDTO.setUuid(dataSource.getUuid());
+        processBusinessDTO(dataSource, commonDataSourceDTO);
         JsonResult<CommonDataSourceDTO> jsonResult = integrationService.sendDataSourceRegistrationRequest(
                 user,
                 dataSource.getDataNode(),
                 commonDataSourceDTO
         );
-        dataSource.setCentralId(jsonResult.getResult().getId());
         if (NO_ERROR.getCode().equals(jsonResult.getErrorCode())) {
-            dataSourceService.markDataSourceAsRegistered(dataSource.getCentralId());
+            dataSourceService.markDataSourceAsRegistered(dataSource, jsonResult.getResult().getId());
         }
         return jsonResult;
+    }
+
+    protected void processBusinessDTO(DataSource dataSource, CommonDTO commonDataSourceDTO) {
+
+        commonDataSourceDTO.setId(dataSource.getId());
+        commonDataSourceDTO.setUuid(dataSource.getUuid());
     }
 
     @ApiOperation(value = "Unregister datasource on arachne central")
@@ -285,10 +286,11 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
         final DataSource dataSource = conversionService.convert(dataSourceBusinessDTO, DataSource.class);
         dataSource.setId(id);
-
         final DataSource updatedDataSource = dataSourceService.update(user, dataSource);
-        dataSourceBusinessDTO.setUuid(updatedDataSource.getUuid());
+
         final CommonDTO commonDataSourceDTO = conversionService.convert(dataSourceBusinessDTO, getCommonDataSourceDTOClass());
+        processBusinessDTO(updatedDataSource, commonDataSourceDTO);
+
         final JsonResult<CommonDTO> centralJsonResult = integrationService.updateDataSource(user, updatedDataSource.getCentralId(), commonDataSourceDTO);
 
         final BusinessDTO updatedDataSourceBusinessDTO = conversionService.convert(updatedDataSource, getDataSourceBusinessDTOClass());

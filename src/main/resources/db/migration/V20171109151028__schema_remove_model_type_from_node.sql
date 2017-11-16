@@ -1,0 +1,1 @@
+ALTER TABLE datasource DROP COLUMN model_type;
