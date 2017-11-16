@@ -116,7 +116,7 @@ docker:
     username: user
     password:
 achilles:
-  image-name: hub.arachnenetwork.com/achilles:latest
+  image-name: hub.arachnenetwork.com/achilles:1.0.0
   auth-config:
     registry-address: hub.arachnenetwork.com
     username: user
