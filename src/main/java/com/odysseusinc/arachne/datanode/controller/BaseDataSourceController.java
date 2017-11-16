@@ -61,6 +61,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 public abstract class BaseDataSourceController<DS extends DataSource, BusinessDTO extends DataSourceBusinessDTO, CommonDTO extends CommonDataSourceDTO> extends BaseController {
 
@@ -124,13 +125,17 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public JsonResult<List<DataSourceDTO>> list(Principal principal) {
+    public JsonResult<List<DataSourceDTO>> list(
+            @RequestParam(name = "sortBy", required = false) String sortBy,
+            @RequestParam(name = "sortAsc", required = false) Boolean sortAsc,
+            Principal principal
+    ) {
 
         if (principal == null) {
             throw new AuthException("user not found");
         }
         JsonResult<List<DataSourceDTO>> result = new JsonResult<>(NO_ERROR);
-        List<DataSourceDTO> dtos = dataSourceService.findAll().stream()
+        List<DataSourceDTO> dtos = dataSourceService.findAll(sortBy, sortAsc).stream()
                 .map(dataSource -> modelMapper.map(dataSource, DataSourceDTO.class))
                 .collect(Collectors.toList());
         result.setResult(dtos);
@@ -200,7 +205,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     public JsonResult<CommonDataSourceDTO> register(
             Principal principal,
             @PathVariable("id") Long id,
-            @RequestBody CommonDTO commonDataSourceDTO
+            @Valid @RequestBody CommonDTO commonDataSourceDTO
     ) throws SQLException, PermissionDeniedException {
 
         final User user = getAdmin(principal);

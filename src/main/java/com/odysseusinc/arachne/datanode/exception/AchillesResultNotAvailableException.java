@@ -16,20 +16,20 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexander Saltykov, Vitaly Koulakov, Anton Gackovka, Alexandr Ryabokon, Mikhail Mironov
- * Created: Nov 7, 2017
+ * Created: Nov 3, 2017
  *
  */
 
-package com.odysseusinc.arachne.datanode.service.client.atlas;
+package com.odysseusinc.arachne.datanode.exception;
 
-import feign.Param;
-import feign.RequestLine;
+public class AchillesResultNotAvailableException extends RuntimeException {
 
-public interface AtlasLoginClient {
+    public AchillesResultNotAvailableException() {
 
-    @RequestLine("GET /user/login/db?login={login}&password={password}")
-    String loginDatabase(@Param("login") String username, @Param("password") String password);
+    }
 
-    @RequestLine("GET /user/login/ldap?login={login}&password={password}")
-    String loginLdap(@Param("login") String username, @Param("password") String password);
+    public AchillesResultNotAvailableException(String message) {
+
+        super(message);
+    }
 }

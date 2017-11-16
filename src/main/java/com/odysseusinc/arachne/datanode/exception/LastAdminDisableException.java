@@ -16,20 +16,19 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexander Saltykov, Vitaly Koulakov, Anton Gackovka, Alexandr Ryabokon, Mikhail Mironov
- * Created: Nov 7, 2017
+ * Created: Nov 3, 2017
  *
  */
 
-package com.odysseusinc.arachne.datanode.service.client.atlas;
+package com.odysseusinc.arachne.datanode.exception;
 
-import feign.Param;
-import feign.RequestLine;
+public class LastAdminDisableException extends RuntimeException {
+    public LastAdminDisableException() {
 
-public interface AtlasLoginClient {
+    }
 
-    @RequestLine("GET /user/login/db?login={login}&password={password}")
-    String loginDatabase(@Param("login") String username, @Param("password") String password);
+    public LastAdminDisableException(String message) {
 
-    @RequestLine("GET /user/login/ldap?login={login}&password={password}")
-    String loginLdap(@Param("login") String username, @Param("password") String password);
+        super(message);
+    }
 }
