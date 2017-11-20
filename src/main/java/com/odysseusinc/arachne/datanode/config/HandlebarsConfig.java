@@ -40,4 +40,10 @@ public class HandlebarsConfig {
 
         return loadTemplate(ESTIMATION_RUNNER_TEMPLATE);
     }
+
+    @Bean
+    public Template patientLevelPredictionRunnerTemplate() {
+
+        return loadTemplate("plp/main.r");
+    }
 }
