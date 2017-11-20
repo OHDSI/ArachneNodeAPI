@@ -1,0 +1,1 @@
+INSERT INTO system_settings (group_id, label, name, value, type) VALUES((SELECT id FROM system_settings_groups WHERE name = 'atlas'), 'Url context', 'atlas.urlContext', null, 'text');
