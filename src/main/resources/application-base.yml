@@ -62,9 +62,9 @@ spring:
           auth: true
 #          socks.host=
 #          socks.port=
-        starttls:
-          enable: true
-          required: true
+          starttls:
+            enable: true
+            required: true
   http:
     multipart:
       max-file-size: 256MB
