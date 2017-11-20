@@ -33,6 +33,9 @@ import java.util.Collection;
 import java.util.Objects;
 
 public class TokenDecoder implements Decoder {
+
+    public static final String AUTH_RESPONSE_HEADER = "bearer";
+
     @Override
     public Object decode(Response response, Type type) throws IOException, DecodeException, FeignException {
 
@@ -41,7 +44,7 @@ public class TokenDecoder implements Decoder {
         } else if (response.status() == 404) {
             return null;
         }
-        Collection<String> authHeader = response.headers().get("bearer");
+        Collection<String> authHeader = response.headers().get(AUTH_RESPONSE_HEADER);
         return Objects.nonNull(authHeader) ? authHeader.iterator().next() : null;
     }
 }

@@ -29,6 +29,8 @@ import java.util.Objects;
 
 public class AtlasAuthRequestInterceptor implements RequestInterceptor {
 
+    public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final String BEARER_PREFIX = "Bearer ";
     private final AtlasLoginClient loginClient;
     private final AtlasAuthSchema authSchema;
     private final String username;
@@ -45,9 +47,11 @@ public class AtlasAuthRequestInterceptor implements RequestInterceptor {
     @Override
     public void apply(RequestTemplate template) {
 
-        String token = authenticate();
-        if (Objects.nonNull(token)) {
-            template.header("Authorization", "Bearer " + token);
+        if (!Objects.equals(AtlasAuthSchema.NONE, authSchema)) {
+            String token = authenticate();
+            if (Objects.nonNull(token)) {
+                template.header(AUTHORIZATION_HEADER, BEARER_PREFIX + token);
+            }
         }
     }
 

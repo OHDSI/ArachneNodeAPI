@@ -87,19 +87,23 @@ public class MeasurementReport extends BaseReport {
                         plainResultSet("measurement_concept_id", "concept_name", "count_value"))
                 .run(statement(ageAtFirst))
                 .forMapResults(concepts, "CONCEPT_ID", "AGE_AT_FIRST_OCCURRENCE",
-                        plainResultSet("concept_id"))
+                        plainResultSet("concept_id", "category", "min_value", "p10_value",
+                                "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .run(statement(recordByUnit))
                 .forMapResults(concepts, "MEASUREMENT_CONCEPT_ID", "RECORDS_BY_UNIT",
                         plainResultSet("measurement_concept_id", "concept_name", "count_value"))
                 .run(statement(valueDist))
                 .forMapResults(concepts, "CONCEPT_ID", "MEASUREMENT_VALUE_DISTRIBUTION",
-                        plainResultSet("concept_id"))
+                        plainResultSet("concept_id","category", "min_value", "p10_value",
+                                "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .run(statement(lowerLimit))
                 .forMapResults(concepts, "CONCEPT_ID", "LOWER_LIMIT_DISTRIBUTION",
-                        plainResultSet("concept_id"))
+                        plainResultSet("concept_id","category", "min_value", "p10_value",
+                                "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .run(statement(upperLimit))
                 .forMapResults(concepts, "CONCEPT_ID", "UPPER_LIMIT_DISTRIBUTION",
-                        plainResultSet("concept_id"))
+                        plainResultSet("concept_id","category", "min_value", "p10_value",
+                                "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .run(statement(valuesRelative))
                 .forMapResults(concepts, "MEASUREMENT_CONCEPT_ID", "VALUES_RELATIVE_TO_NORM",
                         plainResultSet("measurement_concept_id", "concept_name", "count_value"))

@@ -30,10 +30,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 @Component
 public class SqlUtils {
@@ -58,10 +58,10 @@ public class SqlUtils {
         final String cohortTargetTable = dataSource.getCohortTargetTable();
         final CohortServiceImpl.TranslateOptions options = new CohortServiceImpl.TranslateOptions(
                 cdmSchema,
-                !StringUtils.isEmpty(targetSchema) ? targetSchema : cdmSchema,
-                !StringUtils.isEmpty(resultSchema) ? resultSchema : cdmSchema,
+                StringUtils.defaultIfEmpty(targetSchema, cdmSchema),
+                StringUtils.defaultIfEmpty(resultSchema, cdmSchema),
                 cdmSchema,
-                !StringUtils.isEmpty(cohortTargetTable) ? cohortTargetTable : "cohort",
+                StringUtils.defaultIfEmpty(cohortTargetTable, "cohort"),
                 0
         );
         final String nativeStatement

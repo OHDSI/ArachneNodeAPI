@@ -51,7 +51,6 @@ public class DataSourceToDataSourceBusinessDTO implements Converter<DataSource, 
         final DataSourceBusinessDTO dataSourceBusinessDTO = new DataSourceBusinessDTO();
         dataSourceBusinessDTO.setId(source.getId());
         dataSourceBusinessDTO.setIsRegistered(source.getRegistred());
-        dataSourceBusinessDTO.setModelType(source.getModelType());
         dataSourceBusinessDTO.setTargetSchema(source.getTargetSchema());
         dataSourceBusinessDTO.setResultSchema(source.getResultSchema());
         dataSourceBusinessDTO.setCohortTargetTable(source.getCohortTargetTable());

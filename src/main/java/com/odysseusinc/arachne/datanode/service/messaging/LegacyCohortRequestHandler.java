@@ -46,7 +46,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 @Service
-public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCohortShortDTO, MultipartFile> {
+public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCohortShortDTO, MultipartFile[]> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LegacyCohortRequestHandler.class);
     private final CentralSystemClient centralClient;
@@ -81,14 +81,17 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
     }
 
     @Override
-    public MultipartFile getAtlasObject(String guid) {
+    public MultipartFile[] getAtlasObject(String guid) {
 
         return commonEntityService.findByGuid(guid).map(entity -> {
             CohortDefinition definition = atlasClient.getCohortDefinition(entity.getLocalId());
             if (Objects.nonNull(definition)) {
                 String content = sqlRenderService.renderSql(definition);
                 if (Objects.nonNull(content)) {
-                    return new MockMultipartFile(definition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT, content.getBytes());
+                    return new MockMultipartFile[]{
+                            new MockMultipartFile(definition.getName().trim() + CommonFileUtils.OHDSI_JSON_EXT, definition.getExpression().getBytes()),
+                            new MockMultipartFile(definition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT, content.getBytes())
+                    };
                 } else {
                     return null;
                 }
@@ -104,9 +107,8 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
     }
 
     @Override
-    public void sendResponse(MultipartFile response, String id) {
+    public void sendResponse(MultipartFile[] files, String id) {
 
-        MultipartFile[] files = new MultipartFile[]{ response };
         centralClient.sendCommonEntityResponse(id, files);
     }
 }
