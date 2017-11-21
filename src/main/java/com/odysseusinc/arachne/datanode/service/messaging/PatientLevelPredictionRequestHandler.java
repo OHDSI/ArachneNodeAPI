@@ -66,7 +66,6 @@ public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler
     public static final String PACKRAT_RUN_R = "packratRun.r";
     public static final String PACKRAT_RUN_R_LOCATION = PLP_FOLDER + PACKRAT_RUN_R;
     public static final String PACKRAT_ARCHIVE = "PatientLevelPredictionAnalysis.tar.gz";
-    public static final String PACKRAT_ARCHIVE_LOCATION = PLP_FOLDER + PACKRAT_ARCHIVE;
 
     private final AtlasClient atlasClient;
     private final GenericConversionService conversionService;
@@ -113,7 +112,6 @@ public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler
 
                 files.add(getAnalysisDescription(info));
                 files.add(getResourceFile(PACKRAT_RUN_R, PACKRAT_RUN_R_LOCATION));
-                files.add(getResourceFile(PACKRAT_ARCHIVE, PACKRAT_ARCHIVE_LOCATION));
                 files.add(getCohortFile(info.getTreatmentId(), initialName));
                 files.add(getCohortFile(info.getOutcomeId(), outcomeName));
                 files.add(getRunner(initialName, outcomeName));
