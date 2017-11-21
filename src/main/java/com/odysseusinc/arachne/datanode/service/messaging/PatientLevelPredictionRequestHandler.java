@@ -28,7 +28,6 @@ import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonPredictionDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
-import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionAnalysisInfo;
 import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
@@ -104,16 +103,16 @@ public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler
     public List<MultipartFile> getAtlasObject(String guid) {
 
         return commonEntityService.findByGuid(guid).map(entity -> {
-            PatientLevelPredictionAnalysisInfo info = atlasClient.getPatientLevelPrediction(entity.getLocalId());
+            Map<String, Object> info = atlasClient.getPatientLevelPrediction(entity.getLocalId());
             List<MultipartFile> files = new ArrayList<>(6);
             try {
-                String initialName = info.getName() + INITIAL_SUFFIX;
-                String outcomeName = info.getName() + OUTCOME_SUFFIX;
+                String initialName = info.get("name") + INITIAL_SUFFIX;
+                String outcomeName = info.get("name") + OUTCOME_SUFFIX;
 
                 files.add(getAnalysisDescription(info));
                 files.add(getResourceFile(PACKRAT_RUN_R, PACKRAT_RUN_R_LOCATION));
-                files.add(getCohortFile(info.getTreatmentId(), initialName));
-                files.add(getCohortFile(info.getOutcomeId(), outcomeName));
+                files.add(getCohortFile((Integer) info.get("treatmentId"), initialName));
+                files.add(getCohortFile((Integer) info.get("outcomeId"), outcomeName));
                 files.add(getRunner(initialName, outcomeName));
             }catch (IOException e){
                 logger.error("Failed to build PLP data", e);
@@ -143,7 +142,7 @@ public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler
          return null;
     }
 
-    private MultipartFile getAnalysisDescription(PatientLevelPredictionAnalysisInfo info) throws IOException {
+    private MultipartFile getAnalysisDescription(Map<String, Object> info) throws IOException {
 
         ObjectMapper mapper = new ObjectMapper();
         String result = mapper.writeValueAsString(info);
