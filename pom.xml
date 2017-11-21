@@ -179,7 +179,7 @@
         <dependency>
             <groupId>org.ohdsi.sql</groupId>
             <artifactId>SqlRender</artifactId>
-            <version>1.4.6-SNAPSHOT</version>
+            <version>1.4.7-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.ohdsi</groupId>
