@@ -15,18 +15,20 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: September 19, 2017
+ * Authors: Pavel Grafkin, Alexander Saltykov, Vitaly Koulakov, Anton Gackovka, Alexandr Ryabokon, Mikhail Mironov
+ * Created: Nov 3, 2017
  *
  */
 
-package com.odysseusinc.arachne.datanode.util.datasource;
+package com.odysseusinc.arachne.datanode.exception;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+public class LastAdminDisableException extends RuntimeException {
+    public LastAdminDisableException() {
 
-@FunctionalInterface
-public interface ResultSetProcessor<R> {
+    }
 
-    ResultSetContainer<R> process(ResultSet resultSet) throws SQLException;
+    public LastAdminDisableException(String message) {
+
+        super(message);
+    }
 }
