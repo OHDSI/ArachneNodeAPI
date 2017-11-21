@@ -35,22 +35,18 @@ import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -110,7 +106,6 @@ public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler
                 String outcomeName = info.get("name") + OUTCOME_SUFFIX;
 
                 files.add(getAnalysisDescription(info));
-                files.add(getResourceFile(PACKRAT_RUN_R, PACKRAT_RUN_R_LOCATION));
                 files.add(getCohortFile((Integer) info.get("treatmentId"), initialName));
                 files.add(getCohortFile((Integer) info.get("outcomeId"), outcomeName));
                 files.add(getRunner(initialName, outcomeName));
@@ -147,14 +142,6 @@ public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler
         ObjectMapper mapper = new ObjectMapper();
         String result = mapper.writeValueAsString(info);
         return new MockMultipartFile("analysisDescription.json", result.getBytes());
-    }
-
-    private MultipartFile getResourceFile(String name, String path) throws IOException {
-
-        Resource file = new ClassPathResource(path);
-        try(InputStream in = file.getInputStream()) {
-            return new MockMultipartFile(name, IOUtils.toByteArray(in));
-        }
     }
 
     @Override
