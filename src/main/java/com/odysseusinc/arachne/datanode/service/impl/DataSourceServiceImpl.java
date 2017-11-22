@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Preconditions;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
+import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
@@ -115,6 +116,12 @@ public class DataSourceServiceImpl implements DataSourceService {
     public void delete(Long id) {
 
         checkNotNull(id, "given data source surrogate id is blank ");
+        final DataSource dataSource = getById(id);
+        if (dataSource.getRegistred()) {
+            final String message
+                    = String.format("Can not delete registered DataSource with id='%s'. Unregister it first", id);
+            throw new IllegalOperationException(message);
+        }
         dataSourceRepository.delete(id);
     }
 
