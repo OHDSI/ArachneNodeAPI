@@ -28,6 +28,7 @@ import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCo
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
+import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.ValidationException;
@@ -142,6 +143,15 @@ public class ExceptionHandlingAdvice extends BaseController {
     public ResponseEntity<JsonResult> exceptionHandler(NotExistException ex) {
         LOGGER.error(ex.getMessage());
         JsonResult result = new JsonResult<>(SYSTEM_ERROR);
+        result.setErrorMessage(ex.getMessage());
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @ExceptionHandler(IllegalOperationException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(IllegalOperationException ex) {
+
+        LOGGER.error(ex.getMessage());
+        final JsonResult result = new JsonResult(SYSTEM_ERROR);
         result.setErrorMessage(ex.getMessage());
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
