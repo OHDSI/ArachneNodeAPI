@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.service.client.atlas;
 
 import feign.Feign;
+import feign.codec.Encoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
@@ -59,7 +60,7 @@ public class AtlasClientConfig {
     public AtlasLoginClient loginClient() {
 
         return Feign.builder()
-                .encoder(new JacksonEncoder())
+                .encoder(new Encoder.Default())
                 .decoder(new TokenDecoder())
                 .logger(new Slf4jLogger(AtlasLoginClient.class))
                 .target(AtlasLoginClient.class, atlasHost + ":" + atlasPort + "/WebAPI");
