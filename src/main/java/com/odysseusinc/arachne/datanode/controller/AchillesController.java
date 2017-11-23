@@ -86,7 +86,10 @@ public class AchillesController {
     public JsonResult pull(@PathVariable("datasourceId") Long datasourceId) throws NotExistException {
 
         DataSource dataSource = checkDataSource(datasourceId);
-        achillesService.pullAchillesData(dataSource);
+        AchillesJob job = achillesService.createAchillesImportJob(dataSource);
+        if (job !=null){
+            achillesService.pullAchillesData(job);
+        }
         return new JsonResult(NO_ERROR);
     }
 
