@@ -16,13 +16,12 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexander Saltykov, Vitaly Koulakov, Anton Gackovka, Alexandr Ryabokon, Mikhail Mironov
- * Created: Nov 7, 2017
+ * Created: Nov 8, 2017
  *
  */
 
 package com.odysseusinc.arachne.datanode.service.client.atlas;
 
-import feign.Body;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -31,11 +30,9 @@ public interface AtlasLoginClient {
 
     @RequestLine("POST /user/login/db")
     @Headers("Content-Type: application/x-www-form-urlencoded")
-    @Body("login={login}&password={password}")
     String loginDatabase(@Param("login") String username, @Param("password") String password);
 
     @RequestLine("POST /user/login/ldap")
     @Headers("Content-Type: application/x-www-form-urlencoded")
-    @Body("login={login}&password={password}")
     String loginLdap(@Param("login") String username, @Param("password") String password);
 }
