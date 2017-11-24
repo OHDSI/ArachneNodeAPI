@@ -2,7 +2,7 @@
 server:
   port: 8880
   ssl:
-    enabled: true
+    enabled: true # Resolvable hostname is required on production, use SSL by IP only in development
     strictMode: false
     key-store: classpath:keystore.jks
     key-store-password: odysseus
