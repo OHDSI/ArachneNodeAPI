@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.datanode.config;
 import feign.Client;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -151,7 +152,9 @@ public class IntegrationConfig {
                     }
                 }
 
-                SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sc, (s, sslSession) -> true);
+                HostnameVerifier nonStrictVerifier = (s, sslSession) -> true;
+                HttpsURLConnection.setDefaultHostnameVerifier(nonStrictVerifier);
+                SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sc, nonStrictVerifier);
 
                 closeableHttpClient = httpClientBuilder.setSSLSocketFactory(csf).build();
             } catch (KeyManagementException | NoSuchAlgorithmException ex) {
