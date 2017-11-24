@@ -279,7 +279,7 @@ public class AchillesServiceImpl implements AchillesService {
             Map<String, Integer> result = DataSourceUtils.<Integer>withDataSource(dataSource)
                     .run(statement(query))
                     .ifTableNotExists("achilles_results",
-                            table ->  new AchillesResultNotAvailableException(String.format(ACHILLES_RESULTS_EXCEPTION, table)))
+                            table -> new AchillesResultNotAvailableException(String.format(ACHILLES_RESULTS_EXCEPTION, table)))
                     .run(statement("select count(*) from achilles_results"))
                     .collectResults(resultSet -> {
                         Map<String, Integer> data = new HashMap<>();
@@ -301,14 +301,20 @@ public class AchillesServiceImpl implements AchillesService {
         }
     }
 
+    @Override
+    public AchillesJob createAchillesImportJob(DataSource dataSource) {
+
+        return checkAchillesJob(dataSource, AchillesJobSource.IMPORT);
+    }
+
     @Async
     @Override
-    public void pullAchillesData(DataSource dataSource) {
+    public void pullAchillesData(AchillesJob job) {
 
+        DataSource dataSource = job.getDataSource();
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Start pulling Achilles data for {}", dataSource);
         }
-        AchillesJob job = checkAchillesJob(dataSource, AchillesJobSource.IMPORT);
         try {
             Path tempDir = Files.createTempDirectory("achilles_");
             ThreadFactory threadFactory = new ThreadFactoryBuilder()
