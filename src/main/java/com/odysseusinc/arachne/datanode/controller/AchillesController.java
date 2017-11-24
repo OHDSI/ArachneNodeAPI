@@ -87,7 +87,7 @@ public class AchillesController {
 
         DataSource dataSource = checkDataSource(datasourceId);
         AchillesJob job = achillesService.createAchillesImportJob(dataSource);
-        if (job !=null){
+        if (job != null) {
             achillesService.pullAchillesData(job);
         }
         return new JsonResult(NO_ERROR);
@@ -95,7 +95,7 @@ public class AchillesController {
 
     @ApiOperation("Checks achilles_result availability")
     @RequestMapping(value = "{datasourceId}/pull", method = GET)
-    public JsonResult<Boolean> hasAchillesResults(@PathVariable("datasourceId") Long datasourceId) throws NotExistException{
+    public JsonResult<Boolean> hasAchillesResults(@PathVariable("datasourceId") Long datasourceId) throws NotExistException {
 
         DataSource dataSource = checkDataSource(datasourceId);
         Boolean result = achillesService.hasAchillesResultTable(dataSource);
