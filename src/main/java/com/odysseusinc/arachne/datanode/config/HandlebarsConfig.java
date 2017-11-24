@@ -34,7 +34,7 @@ import org.springframework.context.annotation.Configuration;
 public class HandlebarsConfig {
 
     private static final String ESTIMATION_RUNNER_TEMPLATE = "estimation/runner.mustache";
-    private static final String COHORT_CHARACTERIZATION_RUNNER_TEMPLATE = "estimation/ccr_runner.mustache";
+    private static final String COHORT_CHARACTERIZATION_RUNNER_TEMPLATE = "ccr/ccr_runner.mustache";
 
     @Bean
     public Template estimationRunnerTemplate() {
@@ -49,14 +49,9 @@ public class HandlebarsConfig {
     }
 
     @Bean
-    public Template  cohortCharacterizationTemplate() {
+    public Template cohortCharacterizationRunnerTemplate() {
 
         return loadTemplate(COHORT_CHARACTERIZATION_RUNNER_TEMPLATE);
     }
 
-    @Bean
-    public Template cohortCharacterizationRunnerTemplate() {
-
-        return loadTemplate("ccr/main.r");
-    }
 }
