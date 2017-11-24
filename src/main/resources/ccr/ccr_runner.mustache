@@ -6,6 +6,6 @@ connStr <- Sys.getenv("CONNECTION_STRING")
 user <- Sys.getenv("DBMS_USERNAME")
 pw <- Sys.getenv("DBMS_PASSWORD")
 cdmDatabaseSchema <- Sys.getenv("DBMS_SCHEMA")
-resultsDatabaseSchema <- "results"
+resultsDatabaseSchema <- Sys.getenv("RESULT_SCHEMA")
 
 run_cohort_characterization(file.path(workDir, "{{initialFileName}}"), file.path(workDir, "output"), dbms, connStr, user, pw, cdmDatabaseSchema, resultsDatabaseSchema)
