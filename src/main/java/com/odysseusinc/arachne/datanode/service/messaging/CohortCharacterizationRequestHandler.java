@@ -99,7 +99,7 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
             if (Objects.nonNull(definition)) {
                 String content = sqlRenderService.renderSql(definition);
                 if (Objects.nonNull(content)) {
-                    String cohortSqlFileName = definition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT;
+                    String cohortSqlFileName = definition.getName().trim() + CommonFileUtils.SQL_EXT;
                     files.add(new MockMultipartFile(cohortSqlFileName, content.getBytes()));
                     try {
                         files.add(getRunner(cohortSqlFileName));
