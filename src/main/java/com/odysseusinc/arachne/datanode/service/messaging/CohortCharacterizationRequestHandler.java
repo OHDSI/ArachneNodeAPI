@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
+import com.odysseusinc.arachne.datanode.service.CohortService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
@@ -99,8 +100,9 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
             if (Objects.nonNull(definition)) {
                 String content = sqlRenderService.renderSql(definition);
                 if (Objects.nonNull(content)) {
-                    String cohortSqlFileName = definition.getName().trim() + CommonFileUtils.SQL_EXT;
-                    files.add(new MockMultipartFile(cohortSqlFileName, content.getBytes()));
+                    String cohortSqlFileName = definition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT;
+                    String cohortSql = CohortService.IGNORE_PREPROCESSING_MARK + "\r\n" + content;
+                    files.add(new MockMultipartFile(cohortSqlFileName, cohortSql.getBytes()));
                     try {
                         files.add(getRunner(cohortSqlFileName));
                     } catch (IOException e) {

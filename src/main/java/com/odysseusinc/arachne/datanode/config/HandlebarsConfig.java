@@ -35,7 +35,7 @@ public class HandlebarsConfig {
 
     private static final String ESTIMATION_RUNNER_TEMPLATE = "estimation/runner.mustache";
     private static final String PATIENT_LEVEL_PREDICTION_RUNNER_TEMPLATE = "plp/main.r";
-    private static final String COHORT_CHARACTERIZATION_RUNNER_TEMPLATE = "cc/cc_runner.mustache";
+    private static final String COHORT_CHARACTERIZATION_RUNNER_TEMPLATE = "cc/main.r";
 
     @Bean
     public Template estimationRunnerTemplate() {
