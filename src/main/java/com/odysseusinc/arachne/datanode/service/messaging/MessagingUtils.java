@@ -22,6 +22,8 @@
 
 package com.odysseusinc.arachne.datanode.service.messaging;
 
+import com.odysseusinc.arachne.datanode.service.CohortService;
+
 public class MessagingUtils {
 
     public static class DataSource {
@@ -33,4 +35,10 @@ public class MessagingUtils {
             return BASE + suffix;
         }
     }
+
+    public static String ignorePreprocessingMark(String content) {
+
+        return CohortService.IGNORE_PREPROCESSING_MARK + "\r\n" + content;
+    }
+
 }

@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.service.messaging;
 
 import static com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType.ESTIMATION;
+import static com.odysseusinc.arachne.datanode.service.messaging.MessagingUtils.ignorePreprocessingMark;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Template;
@@ -33,7 +34,6 @@ import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysisInfo;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
-import com.odysseusinc.arachne.datanode.service.CohortService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
@@ -224,8 +224,6 @@ public class LegacyEstimationRequestHandler implements AtlasRequestHandler<Commo
         CohortExpression expression = mapper.readValue(definition.getExpression(), CohortExpression.class);
         final CohortExpressionQueryBuilder.BuildExpressionQueryOptions options
                 = new CohortExpressionQueryBuilder.BuildExpressionQueryOptions();
-        return CohortService.IGNORE_PREPROCESSING_MARK
-                + "\r\n"
-                + queryBuilder.buildExpressionQuery(expression, options);
+        return ignorePreprocessingMark(queryBuilder.buildExpressionQuery(expression, options));
     }
 }
