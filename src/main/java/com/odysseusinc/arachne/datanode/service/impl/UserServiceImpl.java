@@ -210,18 +210,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> suggestNotAdmin(User user, final String query, Integer limit) {
 
-        Set<String> emails = userRepository.findAll().stream().map(User::getEmail).collect(Collectors.toSet());
+        final Set<String> adminsEmails = userRepository
+                .findByRoles_name(ROLE_ADMIN, new Sort(Sort.Direction.ASC, "email")).stream()
+                .map(User::getEmail)
+                .collect(Collectors.toSet());
         JsonResult<List<CommonUserDTO>> result =
-                centralIntegrationService.suggestUsersFromCentral(user, query, emails, limit);
-        List<User> suggestedUsers = result
+                centralIntegrationService.suggestUsersFromCentral(user, query, adminsEmails, limit);
+        return result
                 .getResult()
                 .stream()
                 .map(dto -> conversionService.convert(dto, User.class))
-                .collect(Collectors.toList());
-        List<User> adminUsers = userRepository.findByRoles_name(ROLE_ADMIN, new Sort(Sort.Direction.ASC, "email"));
-        return suggestedUsers
-                .stream()
-                .filter(u -> adminUsers.stream().noneMatch(adminUser -> adminUser.getEmail().equals(u.getEmail())))
                 .collect(Collectors.toList());
     }
 
@@ -293,14 +291,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void remove(Long id) throws NotExistException {
 
         LOG.info(REMOVING_USER_LOG, id);
         final User user = get(id);
+        userRepository.delete(id);
         dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
                 centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
         );
-        userRepository.delete(id);
     }
 
     @Override
