@@ -29,7 +29,6 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonProfessionalTypeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
-import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.dto.user.UserInfoDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.model.user.User;
@@ -92,21 +91,12 @@ public class AuthController {
         try {
             final String token;
             String username = authenticationRequest.getUsername();
-            Optional<User> byUsername = userService.findByUsername(username);
             String centralToken = integrationService.loginToCentral(username, authenticationRequest.getPassword());
             if (centralToken == null) {
                 throw new AuthException("central auth error");
             }
-            UserDTO centralUserDTO = integrationService.getUserInfoFromCentral(centralToken);
-            User user;
-            if (!byUsername.isPresent()) {
-                user = userService.createIfFirst(centralUserDTO);
-                if (user == null) {
-                    throw new AuthException("user not registered");
-                }
-            } else {
-                user = byUsername.get();
-            }
+            User centralUser = integrationService.getUserInfoFromCentral(centralToken);
+            User user = userService.findByUsername(username).orElse(userService.createIfFirst(centralUser));
             userService.setToken(user, centralToken);
             String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
             Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);

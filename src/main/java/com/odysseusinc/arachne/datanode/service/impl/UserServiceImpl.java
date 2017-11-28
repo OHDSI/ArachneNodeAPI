@@ -27,7 +27,7 @@ import static com.odysseusinc.arachne.datanode.security.RolesConstants.ROLE_ADMI
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.converters.CommonUserDTOToUserConverter;
-import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
+import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
 import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.LastAdminDisableException;
@@ -192,23 +192,23 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User createIfFirst(UserDTO centralUserDto) {
+    public User createIfFirst(User centralUser) throws AlreadyExistsException {
 
-        User result = null;
         long count = userRepository.count();
         if (count == 0) {
             User user = new User();
-            user.setId(centralUserDto.getId());
-            user.setEmail(centralUserDto.getEmail());
-            user.setUsername(centralUserDto.getEmail());
-            user.setFirstName(centralUserDto.getFirstname());
-            user.setLastName(centralUserDto.getLastname());
+            user.setId(centralUser.getId());
+            user.setEmail(centralUser.getEmail());
+            user.setUsername(centralUser.getEmail());
+            user.setFirstName(centralUser.getFirstName());
+            user.setLastName(centralUser.getLastName());
             user.setEnabled(true);
             roleRepository.findFirstByName(ROLE_ADMIN).ifPresent(role -> user.getRoles().add(role));
-            //TODO: goto cantral get /me info
-            result = userRepository.save(user);
+            return userRepository.save(user);
         }
-        return result;
+        else {
+            throw new AlreadyExistsException("user not registered");
+        }
     }
 
     @Override

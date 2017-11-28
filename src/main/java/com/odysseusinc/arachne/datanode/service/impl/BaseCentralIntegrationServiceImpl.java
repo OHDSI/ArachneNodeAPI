@@ -206,7 +206,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
-    public UserDTO getUserInfoFromCentral(String centralToken) {
+    public User getUserInfoFromCentral(String centralToken) {
 
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
         headers.add(authHeader, centralToken);
@@ -215,7 +215,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
         ResponseEntity<JsonResult<UserDTO>> exchange =
                 centralRestTemplate.exchange(url, HttpMethod.GET, request,
                         new ParameterizedTypeReference<JsonResult<UserDTO>>() {});
-        return exchange.getBody().getResult();
+        return conversionService.convert(exchange.getBody().getResult(), User.class);
     }
 
     @Override
