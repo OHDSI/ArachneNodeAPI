@@ -30,6 +30,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
+import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
@@ -51,6 +52,8 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
     void registerUserOnCentral(CentralRegisterUserDTO registerUserDTO);
 
     String loginToCentral(String username, String password);
+
+    UserDTO getUserInfoFromCentral(String centralToken);
 
     JsonResult<CommonProfessionalTypeDTO> getProfessionalTypes();
 

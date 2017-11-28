@@ -36,6 +36,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
+import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
@@ -53,6 +54,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.HttpEntity;
@@ -70,6 +72,9 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     protected final RestTemplate centralRestTemplate;
     protected final GenericConversionService conversionService;
     protected final CentralUtil centralUtil;
+
+    @Value("${arachne.token.header}")
+    private String authHeader;
 
     public BaseCentralIntegrationServiceImpl(GenericConversionService conversionService, @Qualifier("centralRestTemplate") RestTemplate centralRestTemplate, CentralUtil centralUtil) {
 
@@ -198,6 +203,19 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
         }
 
         return ((Map) result.getResult()).get("token").toString();
+    }
+
+    @Override
+    public UserDTO getUserInfoFromCentral(String centralToken) {
+
+        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        headers.add(authHeader, centralToken);
+        HttpEntity request = new HttpEntity(headers);
+        String url = centralUtil.getCentralUrl() + Constants.CentralApi.User.USER_INFO;
+        ResponseEntity<JsonResult<UserDTO>> exchange =
+                centralRestTemplate.exchange(url, HttpMethod.GET, request,
+                        new ParameterizedTypeReference<JsonResult<UserDTO>>() {});
+        return exchange.getBody().getResult();
     }
 
     @Override

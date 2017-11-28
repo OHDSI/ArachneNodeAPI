@@ -74,9 +74,9 @@ public class AchillesController {
 
     @ApiOperation("Start Achilles for datasource")
     @RequestMapping(value = "{datasourceId}/jobs", method = POST)
-    public JsonResult start(@PathVariable("datasourceId") Long datsourceId) throws NotExistException {
+    public JsonResult start(@PathVariable("datasourceId") Long datasourceId) throws NotExistException {
 
-        DataSource dataSource = checkDataSource(datsourceId);
+        DataSource dataSource = checkDataSource(datasourceId);
         achillesService.executeAchilles(dataSource);
         return new JsonResult(NO_ERROR);
     }

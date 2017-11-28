@@ -27,6 +27,7 @@ import static com.odysseusinc.arachne.datanode.security.RolesConstants.ROLE_ADMI
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.converters.CommonUserDTOToUserConverter;
+import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.LastAdminDisableException;
@@ -191,14 +192,17 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User createIfFirst(String email) {
+    public User createIfFirst(UserDTO centralUserDto) {
 
         User result = null;
         long count = userRepository.count();
         if (count == 0) {
             User user = new User();
-            user.setEmail(email);
-            user.setUsername(email);
+            user.setId(centralUserDto.getId());
+            user.setEmail(centralUserDto.getEmail());
+            user.setUsername(centralUserDto.getEmail());
+            user.setFirstName(centralUserDto.getFirstname());
+            user.setLastName(centralUserDto.getLastname());
             user.setEnabled(true);
             roleRepository.findFirstByName(ROLE_ADMIN).ifPresent(role -> user.getRoles().add(role));
             //TODO: goto cantral get /me info
