@@ -131,6 +131,7 @@ achilles:
 atlas:
   host: http://localhost
   port: 8088
+  urlContext: WebAPI
   auth:
     schema: NONE
     username:
