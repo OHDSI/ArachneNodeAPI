@@ -52,6 +52,8 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     String loginToCentral(String username, String password);
 
+    User getUserInfoFromCentral(String centralToken);
+
     JsonResult<CommonProfessionalTypeDTO> getProfessionalTypes();
 
     JsonResult<CommonUserDTO> getRegisterUser(CommonUserRegistrationDTO dto);

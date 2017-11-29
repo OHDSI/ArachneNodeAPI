@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.service;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
+import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.user.User;
@@ -49,7 +50,7 @@ public interface UserService extends UserDetailsService {
 
     void setToken(User user, String token);
 
-    User createIfFirst(String email);
+    User createIfFirst(User centralUserDto) throws AlreadyExistsException;
 
     List<User> suggestNotAdmin(User user, String query, Integer limit);
 

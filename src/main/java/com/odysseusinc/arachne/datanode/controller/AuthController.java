@@ -91,20 +91,12 @@ public class AuthController {
         try {
             final String token;
             String username = authenticationRequest.getUsername();
-            Optional<User> byUsername = userService.findByUsername(username);
-            User user;
-            if (!byUsername.isPresent()) {
-                user = userService.createIfFirst(username);
-                if (user == null) {
-                    throw new AuthException("user not registered");
-                }
-            } else {
-                user = byUsername.get();
-            }
             String centralToken = integrationService.loginToCentral(username, authenticationRequest.getPassword());
             if (centralToken == null) {
                 throw new AuthException("central auth error");
             }
+            User centralUser = integrationService.getUserInfoFromCentral(centralToken);
+            User user = userService.findByUsername(username).orElse(userService.createIfFirst(centralUser));
             userService.setToken(user, centralToken);
             String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
             Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
