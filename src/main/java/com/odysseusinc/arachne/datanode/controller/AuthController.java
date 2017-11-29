@@ -96,7 +96,7 @@ public class AuthController {
                 throw new AuthException("central auth error");
             }
             User centralUser = integrationService.getUserInfoFromCentral(centralToken);
-            User user = userService.findByUsername(username).orElse(userService.createIfFirst(centralUser));
+            User user = userService.findByUsername(username).orElseGet(() -> userService.createIfFirst(centralUser));
             userService.setToken(user, centralToken);
             String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
             Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
