@@ -66,8 +66,7 @@ public class AtlasAuthRequestInterceptor implements RequestInterceptor {
         if (Objects.nonNull(authSchema)) {
             switch (authSchema) {
                 case DATABASE:
-                    result = loginClient.loginDatabase(URLEncoder.encode(username, "UTF-8"),
-                            password);
+                    result = loginClient.loginDatabase(username, password);
                     break;
                 case LDAP:
                     result = loginClient.loginLdap(username, password);
