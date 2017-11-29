@@ -38,7 +38,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findOneById(Long userId);
 
-    List<User> findByRoles_name(String roleAdmin, Sort sort);
+    List<User> findByRoles_name(String roleName, Sort sort);
 
     @Query(nativeQuery = true, value = "select * from users u "
             + " where (lower(u.first_name) similar to :suggestRequest or\n"
