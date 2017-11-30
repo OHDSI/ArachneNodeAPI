@@ -17,8 +17,6 @@ swagger:
 docker:
   host: unix:///var/run/docker.sock
 atlas:
-  host: https://testatlas.arachnenetwork.com
-  port: 443
   auth:
     schema: DATABASE
     username: admin@odysseusinc.com
