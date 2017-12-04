@@ -145,6 +145,7 @@ entities:
 jasypt:
   encryptor:
     password:
+    algorithm: PBEWITHSHA256AND256BITAES-CBC-BC
 migration:
   retry:
     timeout: 10000
