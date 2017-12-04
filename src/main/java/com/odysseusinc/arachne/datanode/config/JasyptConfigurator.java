@@ -44,6 +44,7 @@ public class JasyptConfigurator {
 
         StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
         encryptor.setProvider(new BouncyCastleProvider());
+        encryptor.setProviderName("BC");
         encryptor.setAlgorithm(algorythm);
         encryptor.setKeyObtentionIterations(1000);
         encryptor.setPassword(password);
