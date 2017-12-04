@@ -24,7 +24,6 @@ package com.odysseusinc.arachne.datanode.model.datasource;
 
 import com.google.common.base.MoreObjects;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import javax.persistence.Column;
@@ -40,6 +39,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Where;
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -84,6 +84,7 @@ public class DataSource {
 
 
     @Column(name = "dbms_password", nullable = true)
+    @Type(type = "encryptedString")
     private String password;
 
     @ManyToOne(fetch = FetchType.EAGER)
