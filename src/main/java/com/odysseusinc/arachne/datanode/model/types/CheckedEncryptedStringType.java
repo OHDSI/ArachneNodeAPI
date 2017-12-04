@@ -59,6 +59,9 @@ public class CheckedEncryptedStringType extends AbstractEncryptedAsStringType {
         } else {
             final String message = rs.getString(names[0]);
             Object result;
+            if (Objects.isNull(message)) {
+                return null;
+            }
             if (message.startsWith("ENC(")) {
                 String password = message.substring(4, message.length());
                 result = convertToObject(encryptor.decrypt(password));
