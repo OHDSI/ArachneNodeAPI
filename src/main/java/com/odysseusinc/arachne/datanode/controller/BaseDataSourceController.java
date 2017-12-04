@@ -266,6 +266,9 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                     = integrationService.getDataSource(user, dataSource.getCentralId()).getResult();
             enrichBusinessFromCommon(dataSourceBusinessDTO, commonDataSourceDTO);
         }
+        else {
+            dataSourceBusinessDTO.setModelType(checkDataSource(dataSource));
+        }
         return new JsonResult<>(NO_ERROR, dataSourceBusinessDTO);
     }
 
