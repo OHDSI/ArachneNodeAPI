@@ -71,6 +71,6 @@ atlas:
 jasypt:
   encryptor:
     password:
-    algorythm: PBEWITHMD5ANDTRIPLEDES
+    algorythm: PBEWITHMD5ANDDES
 server:
   port: 8080
