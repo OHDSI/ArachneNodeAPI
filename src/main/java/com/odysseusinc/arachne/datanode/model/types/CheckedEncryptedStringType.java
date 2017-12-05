@@ -32,6 +32,10 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.jasypt.hibernate4.type.AbstractEncryptedAsStringType;
 
 public class CheckedEncryptedStringType extends AbstractEncryptedAsStringType {
+
+    public static final String ENCODED_PREFIX = "ENC(";
+    public static final String ENCODED_SUFFIX = ")";
+
     @Override
     protected Object convertToObject(String value) {
 
@@ -44,7 +48,7 @@ public class CheckedEncryptedStringType extends AbstractEncryptedAsStringType {
         checkInitialization();
         if (Objects.nonNull(value)){
             String encrypted = this.encryptor.encrypt(convertToString(value));
-            st.setString(index, "ENC(" + encrypted + ")");
+            st.setString(index, ENCODED_PREFIX + encrypted + ENCODED_SUFFIX);
         } else {
             st.setNull(index, Types.VARCHAR);
         }
@@ -62,8 +66,8 @@ public class CheckedEncryptedStringType extends AbstractEncryptedAsStringType {
             if (Objects.isNull(message)) {
                 return null;
             }
-            if (message.startsWith("ENC(")) {
-                String password = message.substring(4, message.length());
+            if (message.startsWith(ENCODED_PREFIX)) {
+                String password = message.substring(4, message.length() - ENCODED_SUFFIX.length());
                 result = convertToObject(encryptor.decrypt(password));
             } else {
                 result = message;
