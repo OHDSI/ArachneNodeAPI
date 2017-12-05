@@ -61,6 +61,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 public abstract class BaseDataSourceController<DS extends DataSource, BusinessDTO extends DataSourceBusinessDTO, CommonDTO extends CommonDataSourceDTO> extends BaseController {
 
@@ -95,7 +96,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     public JsonResult<DataSourceDTO> add(Principal principal,
                                          @Valid @RequestBody CreateDataSourceDTO dataSourceDTO,
                                          BindingResult bindingResult
-    ) throws NotExistException, PermissionDeniedException, IOException, JMSException {
+    ) throws NotExistException, PermissionDeniedException {
 
         if (bindingResult.hasErrors()) {
             return setValidationErrors(bindingResult);
@@ -124,13 +125,17 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public JsonResult<List<DataSourceDTO>> list(Principal principal) {
+    public JsonResult<List<DataSourceDTO>> list(
+            @RequestParam(name = "sortBy", required = false) String sortBy,
+            @RequestParam(name = "sortAsc", required = false) Boolean sortAsc,
+            Principal principal
+    ) {
 
         if (principal == null) {
             throw new AuthException("user not found");
         }
         JsonResult<List<DataSourceDTO>> result = new JsonResult<>(NO_ERROR);
-        List<DataSourceDTO> dtos = dataSourceService.findAll().stream()
+        List<DataSourceDTO> dtos = dataSourceService.findAll(sortBy, sortAsc).stream()
                 .map(dataSource -> modelMapper.map(dataSource, DataSourceDTO.class))
                 .collect(Collectors.toList());
         result.setResult(dtos);
@@ -179,7 +184,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                                             @Valid @RequestBody CreateDataSourceDTO dataSourceDTO,
                                             @PathVariable("id") Long id,
                                             BindingResult bindingResult)
-            throws PermissionDeniedException, IOException, JMSException {
+            throws PermissionDeniedException {
 
         if (bindingResult.hasErrors()) {
             return setValidationErrors(bindingResult);
@@ -200,8 +205,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     public JsonResult<CommonDataSourceDTO> register(
             Principal principal,
             @PathVariable("id") Long id,
-            @RequestBody CommonDTO commonDataSourceDTO
-    ) throws SQLException, PermissionDeniedException {
+            @Valid @RequestBody CommonDTO commonDataSourceDTO
+    ) throws PermissionDeniedException {
 
         final User user = getAdmin(principal);
         DataSource dataSource = dataSourceService.getById(id);
@@ -219,7 +224,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
     protected void processBusinessDTO(DataSource dataSource, CommonDTO commonDataSourceDTO) {
 
-        commonDataSourceDTO.setId(dataSource.getId());
+        commonDataSourceDTO.setId(dataSource.getCentralId());
         commonDataSourceDTO.setUuid(dataSource.getUuid());
     }
 
@@ -229,8 +234,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             method = RequestMethod.DELETE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public JsonResult unregister(@PathVariable("id") Long id)
-            throws SQLException, PermissionDeniedException {
+    public JsonResult unregister(@PathVariable("id") Long id) {
 
         DataSource dataSource = dataSourceService.getById(id);
         final Long dataNodeCentralId = dataSource.getDataNode().getCentralId();
@@ -261,6 +265,9 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             final CommonDTO commonDataSourceDTO
                     = integrationService.getDataSource(user, dataSource.getCentralId()).getResult();
             enrichBusinessFromCommon(dataSourceBusinessDTO, commonDataSourceDTO);
+        }
+        else {
+            dataSourceBusinessDTO.setModelType(checkDataSource(dataSource));
         }
         return new JsonResult<>(NO_ERROR, dataSourceBusinessDTO);
     }

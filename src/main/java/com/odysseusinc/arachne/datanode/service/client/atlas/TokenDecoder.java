@@ -26,7 +26,6 @@ import feign.FeignException;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -34,7 +33,7 @@ import java.util.Objects;
 
 public class TokenDecoder implements Decoder {
 
-    public static final String AUTH_RESPONSE_HEADER = "bearer";
+    public static final String AUTH_RESPONSE_HEADER = "Bearer";
 
     @Override
     public Object decode(Response response, Type type) throws IOException, DecodeException, FeignException {

@@ -50,6 +50,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonAchillesReportDTO;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.config.properties.AchillesProperties;
 import com.odysseusinc.arachne.datanode.exception.AchillesJobInProgressException;
+import com.odysseusinc.arachne.datanode.exception.AchillesResultNotAvailableException;
 import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.achilles.AchillesJob;
@@ -153,6 +154,7 @@ public class AchillesServiceImpl implements AchillesService {
     public static final String OBSERVATION_TREEMAP_SQL = "classpath:/achilles/data/export_v5/observation/sqlObservationTreemap.sql";
     protected static final Logger LOGGER = LoggerFactory.getLogger(AchillesService.class);
     protected static final String DATA_NODE_NOT_EXISTS_EXCEPTION = "DataNode is not registered, please register";
+    public static final String ACHILLES_RESULTS_EXCEPTION = "Achilles results is not available, table %s was not found";
     protected final DockerClient dockerClient;
     protected final AchillesProperties properties;
     protected final RestTemplate restTemplate;
@@ -256,13 +258,16 @@ public class AchillesServiceImpl implements AchillesService {
 
     private AchillesJob checkAchillesJob(DataSource dataSource, AchillesJobSource source) {
 
-        Optional<AchillesJob> achillesJob = achillesJobRepository
-                .findTopByDataSourceAndStatusOrderByStarted(dataSource, IN_PROGRESS);
-        achillesJob.ifPresent(job -> {
-            LOGGER.warn("Achilles is in progress for datasource: {}", dataSource);
-            throw new AchillesJobInProgressException();
-        });
-        return createJob(dataSource, source);
+        if (hasAchillesResultTable(dataSource)) {
+            Optional<AchillesJob> achillesJob = achillesJobRepository
+                    .findTopByDataSourceAndStatusOrderByStarted(dataSource, IN_PROGRESS);
+            achillesJob.ifPresent(job -> {
+                LOGGER.warn("Achilles is in progress for datasource: {}", dataSource);
+                throw new AchillesJobInProgressException();
+            });
+            return createJob(dataSource, source);
+        }
+        return null;
     }
 
     @Override
@@ -273,6 +278,9 @@ public class AchillesServiceImpl implements AchillesService {
             query = String.format(query, getResultSchema(dataSource));
             Map<String, Integer> result = DataSourceUtils.<Integer>withDataSource(dataSource)
                     .run(statement(query))
+                    .ifTableNotExists("achilles_results",
+                            table -> new AchillesResultNotAvailableException(String.format(ACHILLES_RESULTS_EXCEPTION, table)))
+                    .run(statement("select count(*) from achilles_results"))
                     .collectResults(resultSet -> {
                         Map<String, Integer> data = new HashMap<>();
                         int count = 0;
@@ -287,17 +295,26 @@ public class AchillesServiceImpl implements AchillesService {
         } catch (SQLException e) {
             LOGGER.warn("Failed to check achilles results", e);
             return false;
+        } catch (AchillesResultNotAvailableException e) {
+            LOGGER.warn(e.getMessage());
+            return false;
         }
+    }
+
+    @Override
+    public AchillesJob createAchillesImportJob(DataSource dataSource) {
+
+        return checkAchillesJob(dataSource, AchillesJobSource.IMPORT);
     }
 
     @Async
     @Override
-    public void pullAchillesData(DataSource dataSource) {
+    public void pullAchillesData(AchillesJob job) {
 
+        DataSource dataSource = job.getDataSource();
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Start pulling Achilles data for {}", dataSource);
         }
-        AchillesJob job = checkAchillesJob(dataSource, AchillesJobSource.IMPORT);
         try {
             Path tempDir = Files.createTempDirectory("achilles_");
             ThreadFactory threadFactory = new ThreadFactoryBuilder()

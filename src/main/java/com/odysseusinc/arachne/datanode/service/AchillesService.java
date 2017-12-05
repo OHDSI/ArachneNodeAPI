@@ -24,6 +24,7 @@ package com.odysseusinc.arachne.datanode.service;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAchillesReportDTO;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
+import com.odysseusinc.arachne.datanode.model.achilles.AchillesJob;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import java.util.List;
 
@@ -33,7 +34,9 @@ public interface AchillesService {
 
     boolean hasAchillesResultTable(DataSource dataSource);
 
-    void pullAchillesData(DataSource dataSource);
+    AchillesJob createAchillesImportJob(DataSource dataSource);
+
+    void pullAchillesData(AchillesJob job);
 
     List<CommonAchillesReportDTO> getAchillesReports() throws NotExistException;
 }

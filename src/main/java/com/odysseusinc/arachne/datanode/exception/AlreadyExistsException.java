@@ -22,7 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.exception;
 
-public class AlreadyExistsException extends Exception {
+public class AlreadyExistsException extends RuntimeException {
 
     public AlreadyExistsException(String message) {
 

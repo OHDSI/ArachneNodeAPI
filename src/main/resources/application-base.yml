@@ -1,0 +1,151 @@
+# suppress inspection "SpringBootApplicationProperties" for whole file
+server:
+  port: 8880
+  ssl:
+    enabled: true # Resolvable hostname is required on production, use SSL by IP only in development
+    strictMode: false
+    key-store: classpath:keystore.jks
+    key-store-password: odysseus
+    key-alias: arachne
+    key-password: odysseus
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+logging:
+  level: info
+#  com.odysseusinc.arachne.datanode.service.AchillesService: DEBUG
+flyway:
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: ${spring.datasource.url}
+    username: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+  out-of-order: true
+api:
+  loginEnteryPoint: /api/v1/auth/login
+  logoutEntryPoint: /api/v1/auth/logout
+  registerEntryPoint: /api/v1/auth/register
+
+arachne:
+  token:
+    header: Arachne-Auth-Token
+
+spring:
+  jpa:
+    database: POSTGRESQL
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+      connection:
+        CharSet: utf8
+        characterEncoding: utf8
+        useUnicode: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5433/datanode
+    username: ohdsi
+    password: ENC(0Lpfvg9UPAyaaZpSIqwaDg==)
+    driver-class-name: org.postgresql.Driver
+    connection-test-query: select 1
+    max-active: 400
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: odysseusinc.notifier
+    password:
+    properties:
+      mail:
+#        debug=true
+        smtp:
+          auth: true
+#          socks.host=
+#          socks.port=
+          starttls:
+            enable: true
+            required: true
+  http:
+    multipart:
+      max-file-size: 256MB
+      max-request-size: 256MB
+  mvc:
+    view:
+      prefix: /
+      suffix: .html
+  activemq:
+    packages:
+      trust-all: true
+build:
+  number: @build.number@
+  id: @build.id@
+project:
+  version: @project.version@
+#ms
+files:
+  store:
+    path: /var/arachne/files
+datanode:
+  app:
+    errorsTokenEnabled: false
+  jwt:
+    header: Arachne-Auth-Token
+    secret: 129DF19C8A91AFD8375A2826A3353
+    expiration: 604800
+  arachneCentral:
+    admin.email:
+    host: https://community.arachnenetwork.com
+    port: 443
+    authHeader: Arachne-Auth-Token
+    nodeAuthHeader: Arachne-System-Token
+swagger:
+  enabled: false
+proxy:
+  enabled: false
+  host:
+  port:
+  auth:
+    enabled: false
+    username:
+    password:
+docker:
+  host: tcp://localhost:2375
+  tls-verify: false
+  registry:
+    host: hub.arachnenetwork.com
+    username: user
+    password:
+achilles:
+  image-name: hub.arachnenetwork.com/achilles:1.0.0
+  auth-config:
+    registry-address: hub.arachnenetwork.com
+    username: user
+    password:
+  retry:
+    max-attempts: 5
+    backoff:
+      max-interval: 50000
+  scheduler:
+    enabled: false
+    cron: 0 0 12 1/5 * ?
+atlas:
+  host: http://localhost
+  port: 8088
+  urlContext: WebAPI
+  auth:
+    schema: NONE
+    username:
+    password:
+  scheduler:
+    checkInterval: 60000
+entities:
+  scheduler:
+    checkListRequestsInterval: 10000
+    checkRequestInterval: 10000
+jasypt:
+  encryptor:
+    password:
+    algorithm: PBEWITHMD5ANDDES
+migration:
+  retry:
+    timeout: 10000
