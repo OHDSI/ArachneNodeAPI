@@ -26,16 +26,17 @@ import com.odysseusinc.arachne.datanode.model.user.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 
 @Component
 public class TokenUtils {
@@ -194,14 +195,13 @@ public class TokenUtils {
 
         String refreshedToken = null;
 
-        //TODO: do it
-        //try {
-        //final Claims claims = getClaimsFromToken(token);
-        //claims.put("created", generateCurrentDate());
-        //refreshedToken = generateToken(claims);
-        //} catch (Exception e) {
-        //refreshedToken = null;
-        //}
+        try {
+            final Claims claims = getClaimsFromToken(token);
+            claims.put("created", generateCurrentDate());
+            refreshedToken = generateToken(claims);
+        } catch (Exception e) {
+            refreshedToken = null;
+        }
         return refreshedToken;
     }
 

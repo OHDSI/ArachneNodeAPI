@@ -26,8 +26,11 @@ import static com.odysseusinc.arachne.datanode.security.RolesConstants.ROLE_ADMI
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
+import com.odysseusinc.arachne.datanode.dto.converters.CommonUserDTOToUserConverter;
+import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
 import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
+import com.odysseusinc.arachne.datanode.exception.LastAdminDisableException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.user.Role;
@@ -37,13 +40,6 @@ import com.odysseusinc.arachne.datanode.repository.UserRepository;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
-import java.security.Principal;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +50,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.PostConstruct;
+import java.security.Principal;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -76,6 +81,8 @@ public class UserServiceImpl implements UserService {
     private BaseCentralIntegrationService centralIntegrationService;
     @Autowired
     private DataNodeService dataNodeService;
+    @Autowired
+    private CommonUserDTOToUserConverter commonUserDTOToUserConverter;
 
     @PostConstruct
     public void syncUsers() {
@@ -84,7 +91,13 @@ public class UserServiceImpl implements UserService {
             dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
                         LOG.info(RELINKING_ALL_USERS_LOG);
                         final List<User> users = userRepository.findAll();
-                        centralIntegrationService.relinkAllUsersToDataNodeOnCentral(dataNode, users);
+                        List<User> updatedUsers = centralIntegrationService.relinkAllUsersToDataNodeOnCentral(dataNode, users);
+                        List<User> mappedUsers = users.stream().map(user -> {
+                            updatedUsers.stream().filter(u -> u.getEmail().equals(user.getEmail())).findFirst()
+                                    .ifPresent(u -> user.setEnabled(u.getEnabled()));
+                            return user;
+                        }).collect(Collectors.toList());
+                        userRepository.save(mappedUsers);
                     }
             );
         } catch (Exception ex) {
@@ -129,15 +142,22 @@ public class UserServiceImpl implements UserService {
     @Override
     public void disableUser(String login) {
 
-        User user = userRepository.findOneByEmail(login).orElseThrow(IllegalArgumentException::new);
-        userRepository.save(user);
+        toggleUser(login, false);
     }
 
     @Override
     public void enableUser(String login) {
 
-        User user = userRepository.findOneByEmail(login).orElseThrow(IllegalArgumentException::new);
-        userRepository.save(user);
+        toggleUser(login, true);
+    }
+
+    protected void toggleUser(String login, Boolean enabled) {
+
+        dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
+            User user = userRepository.findOneByEmail(login).orElseThrow(IllegalArgumentException::new);
+            user.setEnabled(enabled);
+            userRepository.save(user);
+        });
     }
 
     @Override
@@ -152,7 +172,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        return userRepository.findOneByEmail(username).map(
+        return userRepository.findOneByEmailAndEnabled(username, true).map(
                 user ->
                         new org.springframework.security.core.userdetails.User(
                                 user.getEmail(), "",
@@ -172,36 +192,38 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User createIfFirst(String email) {
+    public User createIfFirst(User centralUser) throws AlreadyExistsException {
 
-        User result = null;
         long count = userRepository.count();
         if (count == 0) {
             User user = new User();
-            user.setEmail(email);
-            user.setUsername(email);
+            user.setId(centralUser.getId());
+            user.setEmail(centralUser.getEmail());
+            user.setUsername(centralUser.getEmail());
+            user.setFirstName(centralUser.getFirstName());
+            user.setLastName(centralUser.getLastName());
+            user.setEnabled(true);
             roleRepository.findFirstByName(ROLE_ADMIN).ifPresent(role -> user.getRoles().add(role));
-            //TODO: goto cantral get /me info
-            result = userRepository.save(user);
+            return userRepository.save(user);
         }
-        return result;
+        else {
+            throw new AlreadyExistsException("user not registered");
+        }
     }
 
     @Override
     public List<User> suggestNotAdmin(User user, final String query, Integer limit) {
 
-        Set<String> emails = userRepository.findAll().stream().map(User::getEmail).collect(Collectors.toSet());
+        final Set<String> adminsEmails = userRepository
+                .findByRoles_name(ROLE_ADMIN, new Sort(Sort.Direction.ASC, "email")).stream()
+                .map(User::getEmail)
+                .collect(Collectors.toSet());
         JsonResult<List<CommonUserDTO>> result =
-                centralIntegrationService.suggestUsersFromCentral(user, query, emails, limit);
-        List<User> suggestedUsers = result
+                centralIntegrationService.suggestUsersFromCentral(user, query, adminsEmails, limit);
+        return result
                 .getResult()
                 .stream()
                 .map(dto -> conversionService.convert(dto, User.class))
-                .collect(Collectors.toList());
-        List<User> adminUsers = userRepository.findByRoles_name(ROLE_ADMIN, new Sort(Sort.Direction.ASC, "email"));
-        return suggestedUsers
-                .stream()
-                .filter(u -> adminUsers.stream().noneMatch(adminUser -> adminUser.getEmail().equals(u.getEmail())))
                 .collect(Collectors.toList());
     }
 
@@ -273,14 +295,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void remove(Long id) throws NotExistException {
 
         LOG.info(REMOVING_USER_LOG, id);
         final User user = get(id);
+        userRepository.delete(id);
         dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
                 centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
         );
-        userRepository.delete(id);
     }
 
     @Override
@@ -323,5 +346,27 @@ public class UserServiceImpl implements UserService {
             throw new PermissionDeniedException();
         }
         return findByUsername(principal.getName()).orElseThrow(PermissionDeniedException::new);
+    }
+
+    @Override
+    public void updateUser(User original, User updated) {
+
+        if (!Objects.equals(original.getEnabled(), updated.getEnabled())) {
+            Optional<Role> roleByName = roleRepository.findFirstByName(ROLE_ADMIN);
+            //Prevent to disable single admin user
+            if (roleByName.isPresent()) {
+                Role adminRole = roleByName.get();
+                if (original.getRoles()
+                        .stream()
+                        .anyMatch(r -> Objects.equals(r.getName(), adminRole.getName()))){
+                   int adminsCount = userRepository.countByRoles_nameAndEnabled(ROLE_ADMIN, true);
+                   if (adminsCount < 2 && !Objects.equals(updated.getEnabled(), Boolean.TRUE)) {
+                       throw new LastAdminDisableException();
+                   }
+                }
+            }
+            original.setEnabled(updated.getEnabled());
+            userRepository.save(original);
+        }
     }
 }

@@ -30,10 +30,11 @@ import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysisInfo;
 import com.odysseusinc.arachne.datanode.dto.atlas.IRAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.IRAnalysisInfo;
+import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
 import feign.Param;
 import feign.RequestLine;
-
 import java.util.List;
+import java.util.Map;
 
 public interface AtlasClient {
 
@@ -63,6 +64,12 @@ public interface AtlasClient {
 
     @RequestLine("GET /comparativecohortanalysis/{id}")
     ComparativeCohortAnalysisInfo getComparativeCohortAnalysisInfo(@Param("id") Integer id);
+
+    @RequestLine("GET /plp")
+    List<PatientLevelPredictionInfo> getPatientLevelPredictions();
+
+    @RequestLine("GET /plp/{id}")
+    Map<String, Object> getPatientLevelPrediction(@Param("id") Integer id);
 
     @RequestLine("GET /ir")
     List<IRAnalysis> getIncidenceRates();

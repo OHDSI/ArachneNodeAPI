@@ -63,7 +63,8 @@ public interface Constants {
             String REGISTRATION = "/api/v1/auth/registration";
             String SUGGEST = "/api/v1/user-management/users/suggests-user";
             String GET_USER = "/api/v1/user-management/users/{id}";
-            String LINK_TO_NODE = "/api/v1/user-management/datanodes/{datanodeSid}/users";
+            String LINK_TO_NODE = "/api/v1/user-management/datanodes/{datanodeId}/users";
+            String USER_INFO = "/api/v1/auth/me";
         }
 
         interface Submission {

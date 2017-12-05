@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.service;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonBaseDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonProfessionalTypeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
@@ -32,11 +33,10 @@ import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
-
 import java.util.List;
 import java.util.Set;
 
-public interface BaseCentralIntegrationService<DS extends DataSource, DTO extends  CommonDataSourceDTO> {
+public interface BaseCentralIntegrationService<DS extends DataSource, DTO extends CommonBaseDataSourceDTO> {
 
     JsonResult<CommonAuthMethodDTO> getAuthMethod();
 
@@ -52,13 +52,15 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     String loginToCentral(String username, String password);
 
+    User getUserInfoFromCentral(String centralToken);
+
     JsonResult<CommonProfessionalTypeDTO> getProfessionalTypes();
 
     JsonResult<CommonUserDTO> getRegisterUser(CommonUserRegistrationDTO dto);
 
     JsonResult<DTO> getDataSource(User user, Long id);
 
-    JsonResult<DTO> updateDataSource(User user, DS dataSource, DTO commonDataSourceDTO);
+    JsonResult<DTO> updateDataSource(User user, Long centralId, DTO commonDataSourceDTO);
 
     JsonResult<List<CommonUserDTO>> suggestUsersFromCentral(User user, String query, Set<String> emails, int limit);
 
@@ -68,5 +70,5 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     void unlinkUserToDataNodeOnCentral(DataNode dataNode, User user);
 
-    void relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users);
+    List<User> relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users);
 }

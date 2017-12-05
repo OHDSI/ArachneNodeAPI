@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -52,8 +53,17 @@ public class SqlUtils {
         String sql = readSql(name);
         final DBMSType target = dataSource.getType();
         final String cdmSchema = dataSource.getCdmSchema();
+        final String targetSchema = dataSource.getTargetSchema();
+        final String resultSchema = dataSource.getResultSchema();
+        final String cohortTargetTable = dataSource.getCohortTargetTable();
         final CohortServiceImpl.TranslateOptions options = new CohortServiceImpl.TranslateOptions(
-                cdmSchema, cdmSchema, cdmSchema, cdmSchema, "", 0);
+                cdmSchema,
+                StringUtils.defaultIfEmpty(targetSchema, cdmSchema),
+                StringUtils.defaultIfEmpty(resultSchema, cdmSchema),
+                cdmSchema,
+                StringUtils.defaultIfEmpty(cohortTargetTable, "cohort"),
+                0
+        );
         final String nativeStatement
                 = cohortService.translateSQL(sql, null, target, options);
         return nativeStatement;

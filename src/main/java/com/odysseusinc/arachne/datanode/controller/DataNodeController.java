@@ -38,6 +38,7 @@ import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.http.MediaType;
@@ -84,7 +85,7 @@ public class DataNodeController extends BaseController {
     @RequestMapping(method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE,
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonResult<DataNodeInfoDTO> createDataNode(
-            @RequestBody CreateDataNodeDTO createDataNodeDTO,
+            @RequestBody @Valid CreateDataNodeDTO createDataNodeDTO,
             Principal principal
     ) throws AlreadyExistsException, PermissionDeniedException {
 
@@ -102,7 +103,7 @@ public class DataNodeController extends BaseController {
     @RequestMapping(method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE,
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonResult<DataNodeInfoDTO> updateDataNode(
-            @RequestBody CreateDataNodeDTO createDataNodeDTO,
+            @RequestBody @Valid CreateDataNodeDTO createDataNodeDTO,
             Principal principal
     ) throws NotExistException, PermissionDeniedException {
 

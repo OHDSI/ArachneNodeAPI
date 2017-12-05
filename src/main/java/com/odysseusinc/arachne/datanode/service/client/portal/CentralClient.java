@@ -23,11 +23,16 @@
 package com.odysseusinc.arachne.datanode.service.client.portal;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
+import feign.HeaderMap;
 import feign.Param;
 import feign.RequestLine;
+import java.util.Map;
 
 public interface CentralClient {
 
     @RequestLine("DELETE /api/v1/data-nodes/{dataNodeId}/data-sources/{dataSourceId}")
     JsonResult unregisterDataSource(@Param("dataNodeId") Long dataNodeId, @Param("dataSourceId") Long dataSourceId);
+
+    @RequestLine("POST /api/v1/auth/refresh")
+    JsonResult<String> refreshToken(@HeaderMap Map<String, String> tokenHeader);
 }

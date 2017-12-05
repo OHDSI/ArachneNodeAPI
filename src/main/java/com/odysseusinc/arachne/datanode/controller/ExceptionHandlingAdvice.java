@@ -20,16 +20,17 @@
  *
  */
 
-package com.odysseusinc.arachne.datanode.config;
+package com.odysseusinc.arachne.datanode.controller;
 
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.SYSTEM_ERROR;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.UNAUTHORIZED;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
-import com.odysseusinc.arachne.datanode.controller.BaseController;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
+import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
+import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import java.io.IOException;
@@ -44,9 +45,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
 @ControllerAdvice
 public class ExceptionHandlingAdvice extends BaseController {
 
@@ -136,6 +135,23 @@ public class ExceptionHandlingAdvice extends BaseController {
 
         LOGGER.error(ex.getMessage(), ex);
         JsonResult result = new JsonResult<>(VALIDATION_ERROR);
+        result.setErrorMessage(ex.getMessage());
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @ExceptionHandler(NotExistException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(NotExistException ex) {
+        LOGGER.error(ex.getMessage());
+        JsonResult result = new JsonResult<>(SYSTEM_ERROR);
+        result.setErrorMessage(ex.getMessage());
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @ExceptionHandler(IllegalOperationException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(IllegalOperationException ex) {
+
+        LOGGER.error(ex.getMessage());
+        final JsonResult result = new JsonResult(SYSTEM_ERROR);
         result.setErrorMessage(ex.getMessage());
         return new ResponseEntity<>(result, HttpStatus.OK);
     }

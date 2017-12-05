@@ -23,12 +23,14 @@
 package com.odysseusinc.arachne.datanode.service.client.atlas;
 
 import feign.Feign;
+import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Configuration
 public class AtlasClientConfig {
@@ -37,15 +39,46 @@ public class AtlasClientConfig {
     private String atlasHost;
     @Value("${atlas.port}")
     private Integer atlasPort;
+    @Value("${atlas.urlContext}")
+    private String atlasUrlContext;
+
+    private AtlasAuthSchema authSchema;
+    @Value("${atlas.auth.username}")
+    private String username;
+    @Value("${atlas.auth.password}")
+    private String password;
 
     @Bean
-    public AtlasClient atlasClient() {
+    public AtlasClient atlasClient(@Value("${atlas.auth.schema}") String authSchemaParam) {
+
+        this.authSchema = AtlasAuthSchema.valueOf(authSchemaParam);
 
         return Feign.builder()
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder())
                 .logger(new Slf4jLogger(AtlasClient.class))
                 .logLevel(feign.Logger.Level.FULL)
-                .target(AtlasClient.class, atlasHost + ":" + atlasPort + "/WebAPI");
+                .requestInterceptor(new AtlasAuthRequestInterceptor(atlasLoginClient(), authSchema, username, password))
+                .target(AtlasClient.class, getAtlasUrl());
+    }
+
+    @Bean
+    public AtlasLoginClient atlasLoginClient() {
+
+        return Feign.builder()
+                .encoder(new FormEncoder(new JacksonEncoder()))
+                .decoder(new TokenDecoder())
+                .logger(new Slf4jLogger(AtlasLoginClient.class))
+                .target(AtlasLoginClient.class, getAtlasUrl());
+    }
+
+    private String getAtlasUrl() {
+
+        return UriComponentsBuilder
+                .fromHttpUrl(atlasHost)
+                .port(atlasPort)
+                .path(atlasUrlContext)
+                .build()
+                .toString();
     }
 }

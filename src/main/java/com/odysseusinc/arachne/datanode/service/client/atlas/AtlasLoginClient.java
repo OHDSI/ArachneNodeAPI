@@ -15,18 +15,24 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: July 11, 2017
+ * Authors: Pavel Grafkin, Alexander Saltykov, Vitaly Koulakov, Anton Gackovka, Alexandr Ryabokon, Mikhail Mironov
+ * Created: Nov 7, 2017
  *
  */
 
-package com.odysseusinc.arachne.datanode.service;
+package com.odysseusinc.arachne.datanode.service.client.atlas;
 
-import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
-import java.io.IOException;
-import java.nio.file.Path;
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
 
-public interface DataSourceHelper {
-    AnalysisRequestDTO getDataSourceCheckRequest(DataSource dataSource, Path tempDirectory) throws IOException;
+public interface AtlasLoginClient {
+
+    @RequestLine("POST /user/login/db")
+    @Headers("Content-Type: application/x-www-form-urlencoded")
+    String loginDatabase(@Param("login") String username, @Param("password") String password);
+
+    @RequestLine("POST /user/login/ldap")
+    @Headers("Content-Type: application/x-www-form-urlencoded")
+    String loginLdap(@Param("login") String username, @Param("password") String password);
 }

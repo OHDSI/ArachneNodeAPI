@@ -36,6 +36,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
+import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
@@ -43,20 +44,6 @@ import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -64,12 +51,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, DTO extends CommonDataSourceDTO> implements BaseCentralIntegrationService<DS, DTO> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CentralIntegrationServiceImpl.class);
     protected final RestTemplate centralRestTemplate;
     protected final GenericConversionService conversionService;
     protected final CentralUtil centralUtil;
+
+    @Value("${arachne.token.header}")
+    private String authHeader;
 
     public BaseCentralIntegrationServiceImpl(GenericConversionService conversionService, @Qualifier("centralRestTemplate") RestTemplate centralRestTemplate, CentralUtil centralUtil) {
 
@@ -201,6 +206,19 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
+    public User getUserInfoFromCentral(String centralToken) {
+
+        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        headers.add(authHeader, centralToken);
+        HttpEntity request = new HttpEntity(headers);
+        String url = centralUtil.getCentralUrl() + Constants.CentralApi.User.USER_INFO;
+        ResponseEntity<JsonResult<UserDTO>> exchange =
+                centralRestTemplate.exchange(url, HttpMethod.GET, request,
+                        new ParameterizedTypeReference<JsonResult<UserDTO>>() {});
+        return conversionService.convert(exchange.getBody().getResult(), User.class);
+    }
+
+    @Override
     public JsonResult<CommonProfessionalTypeDTO> getProfessionalTypes() {
 
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
@@ -234,38 +252,38 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
 
         HttpEntity request = new HttpEntity<>(centralUtil.getCentralAuthHeader(user.getToken()));
 
-        ResponseEntity<JsonResult> exchange = centralRestTemplate.exchange(
+        ResponseEntity<JsonResult<DTO>> exchange = centralRestTemplate.exchange(
                 uriBuilder.buildAndExpand(uriParams).toUri(),
                 HttpMethod.GET,
                 request,
-                JsonResult.class
+                getParameterizedTypeReferenceJsonResultDTO()
         );
-        return (JsonResult<DTO>) exchange.getBody();
+        return exchange.getBody();
     }
 
     @Override
     public JsonResult<DTO> updateDataSource(
             User user,
-            DS dataSource, DTO commonCreateDataSourceDTO) {
+            Long centralId, DTO commonCreateDataSourceDTO) {
 
         String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.UPDATE;
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
 
         Map<String, Long> uriParams = new HashMap<>();
-        uriParams.put("id", dataSource.getCentralId());
+        uriParams.put("id", centralId);
 
         HttpEntity<DTO> request = new HttpEntity<>(
                 commonCreateDataSourceDTO,
                 centralUtil.getCentralAuthHeader(user.getToken())
         );
 
-        ResponseEntity<JsonResult> exchange = centralRestTemplate.exchange(
+        ResponseEntity<JsonResult<DTO>> exchange = centralRestTemplate.exchange(
                 uriBuilder.buildAndExpand(uriParams).toUri(),
                 HttpMethod.PUT,
                 request,
-                JsonResult.class
+                getParameterizedTypeReferenceJsonResultDTO()
         );
-        return (JsonResult<DTO>) exchange.getBody();
+        return exchange.getBody();
     }
 
     @Override
@@ -333,7 +351,8 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
-    public void relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users) {
+    @Transactional
+    public List<User> relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users) {
 
         final HttpHeaders headers = centralUtil.getCentralNodeAuthHeader(dataNode.getToken());
         final List<CommonLinkUserToDataNodeDTO> commonLinkUserToDataNodes = users.stream()
@@ -341,23 +360,25 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                 .collect(Collectors.toList());
         final HttpEntity<List<CommonLinkUserToDataNodeDTO>> httpEntity
                 = new HttpEntity<>(commonLinkUserToDataNodes, headers);
-        linkUnlinkDataNodeUsers(dataNode.getCentralId(), httpEntity, HttpMethod.PUT);
+        List<CommonUserDTO> linkedUsers = linkUnlinkDataNodeUsers(dataNode.getCentralId(), httpEntity, HttpMethod.PUT);
+        return linkedUsers.stream().map(user -> conversionService.convert(user, User.class)).collect(Collectors.toList());
     }
 
-    private void linkUnlinkDataNodeUsers(Long datanodeId, HttpEntity httpEntity, HttpMethod method) {
+    private List<CommonUserDTO> linkUnlinkDataNodeUsers(Long datanodeId, HttpEntity httpEntity, HttpMethod method) {
 
         final String uri = centralUtil.getCentralUrl() + Constants.CentralApi.User.LINK_TO_NODE;
-        final ResponseEntity<JsonResult> response = centralRestTemplate.exchange(
+        final ResponseEntity<JsonResult<List<CommonUserDTO>>> response = centralRestTemplate.exchange(
                 uri,
                 method,
                 httpEntity,
-                JsonResult.class,
+                new ParameterizedTypeReference<JsonResult<List<CommonUserDTO>>>() {},
                 datanodeId
         );
         final JsonResult result = response.getBody();
         if (result.getErrorCode() != 0) {
             throw new IllegalStateException(result.getErrorMessage());
         }
+        return (List<CommonUserDTO>) result.getResult();
     }
 
     protected void logoutFromCentral(String token) {
@@ -370,4 +391,6 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             throw new AuthException("unable to logout from central " + ex.getMessage());
         }
     }
+
+    protected abstract ParameterizedTypeReference<JsonResult<DTO>> getParameterizedTypeReferenceJsonResultDTO();
 }

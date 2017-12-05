@@ -24,6 +24,7 @@ package com.odysseusinc.arachne.datanode.util;
 
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.util.datasource.QueryProcessor;
+import com.odysseusinc.arachne.datanode.util.datasource.ResultSetContainer;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultSetProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultTransformer;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultWriter;
@@ -100,7 +101,7 @@ public class DataSourceUtils<T> {
         Objects.requireNonNull(c, "Connection was not established");
         Objects.requireNonNull(resultSet, "try to run query first");
         try (ResultSet rs = this.resultSet) {
-            results = processor.process(rs);
+            results = processor.process(rs).getValues();
         } finally {
             if (c != null) {
                 c.close();
@@ -118,7 +119,7 @@ public class DataSourceUtils<T> {
             this.results = new HashMap();
         }
         try (ResultSet rs = this.resultSet) {
-            Map proceed = processor.process(rs);
+            Map proceed = processor.process(rs).getValues();
             this.results.merge(key, proceed, (old, value) -> {
                 ((Map)old).putAll((Map) value);
                 return old;
@@ -139,9 +140,10 @@ public class DataSourceUtils<T> {
             this.results = new HashMap();
         }
         try (ResultSet rs = this.resultSet) {
-            Map proceed = processor.process(rs);
+            final ResultSetContainer<Map> resultContainer = processor.process(rs);
+            Map proceed = resultContainer.getValues();
             identities.forEach(id -> {
-                List<Map> values = (List<Map>) proceed.getOrDefault(id, new ArrayList<>());
+                List<Map> values = (List<Map>) proceed.getOrDefault(id, resultContainer.getDefaultValue());
                 Map filtered = new HashMap();
                 values.forEach(map -> {
                     map.keySet().forEach(col -> {

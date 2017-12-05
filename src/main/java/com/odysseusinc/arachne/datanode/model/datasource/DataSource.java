@@ -24,11 +24,8 @@ package com.odysseusinc.arachne.datanode.model.datasource;
 
 import com.google.common.base.MoreObjects;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
-import org.hibernate.validator.constraints.NotBlank;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -41,9 +38,15 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.Where;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Entity
 @Table(name = "datasource")
+@Where(clause = "deleted_at IS NULL")
+@SQLDelete(sql = "UPDATE datasource SET deleted_at = current_timestamp WHERE id = ?")
 public class DataSource {
 
     @Id
@@ -81,6 +84,7 @@ public class DataSource {
 
 
     @Column(name = "dbms_password", nullable = true)
+    @Type(type = "encryptedString")
     private String password;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -89,15 +93,21 @@ public class DataSource {
     @Column
     private Boolean registred;
 
-    @Enumerated(EnumType.STRING)
-    private CommonModelType modelType;
-
     @Column
     @Enumerated(value = EnumType.STRING)
     private CommonHealthStatus healthStatus = CommonHealthStatus.NOT_COLLECTED;
 
     @Column
     private String healthStatusDescription;
+
+    @Column
+    private String targetSchema;
+
+    @Column
+    private String resultSchema;
+
+    @Column
+    private String cohortTargetTable;
 
     private Long centralId;
 
@@ -214,16 +224,6 @@ public class DataSource {
         this.registred = registred;
     }
 
-    public CommonModelType getModelType() {
-
-        return modelType;
-    }
-
-    public void setModelType(CommonModelType modelType) {
-
-        this.modelType = modelType;
-    }
-
     public CommonHealthStatus getHealthStatus() {
 
         return healthStatus;
@@ -254,16 +254,57 @@ public class DataSource {
         this.centralId = centralId;
     }
 
+    public String getTargetSchema() {
+
+        return targetSchema;
+    }
+
+    public void setTargetSchema(String atlasTargetDbSchema) {
+
+        this.targetSchema = atlasTargetDbSchema;
+    }
+
+    public String getResultSchema() {
+
+        return resultSchema;
+    }
+
+    public void setResultSchema(String resultSchema) {
+
+        this.resultSchema = resultSchema;
+    }
+
+    public String getCohortTargetTable() {
+
+        return cohortTargetTable;
+    }
+
+    public void setCohortTargetTable(String cohortTargetTable) {
+
+        this.cohortTargetTable = cohortTargetTable;
+    }
+
     @Override
     public String toString() {
 
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
-                .add("centralId", centralId)
                 .add("name", name)
                 .add("description", description)
                 .add("type", type)
                 .add("connectionString", connectionString)
+                .add("cdmSchema", cdmSchema)
+                .add("username", username)
+                .add("password", password)
+                .add("dataNode", dataNode)
+                .add("registred", registred)
+                .add("healthStatus", healthStatus)
+                .add("healthStatusDescription", healthStatusDescription)
+                .add("targetSchema", targetSchema)
+                .add("resultSchema", resultSchema)
+                .add("cohortTargetTable", cohortTargetTable)
+                .add("centralId", centralId)
                 .toString();
     }
+
 }
