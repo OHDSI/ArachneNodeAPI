@@ -36,7 +36,7 @@ public class JasyptConfigurator {
 
     @Value("${jasypt.encryptor.password}")
     private String password;
-    @Value("${jasypt.encryptor.algorythm}")
+    @Value("${jasypt.encryptor.database.algorithm}")
     private String algorythm;
 
     @Bean

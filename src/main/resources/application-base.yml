@@ -145,7 +145,8 @@ entities:
 jasypt:
   encryptor:
     password:
-    algorithm: PBEWITHMD5ANDDES
+    database:
+      algorithm: PBEWITHMD5ANDDES
 migration:
   retry:
     timeout: 10000
