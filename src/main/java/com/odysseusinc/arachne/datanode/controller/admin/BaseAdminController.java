@@ -28,6 +28,7 @@ import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.user.User;
+import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,14 +50,17 @@ public abstract class BaseAdminController {
 
     protected UserService userService;
     protected GenericConversionService conversionService;
+    protected AtlasService atlasService;
 
     @Autowired
     public BaseAdminController(
             UserService userService,
-            GenericConversionService conversionService
+            GenericConversionService conversionService,
+            AtlasService atlasService
     ) {
         this.userService = userService;
         this.conversionService = conversionService;
+        this.atlasService = atlasService;
     }
 
     @ApiOperation(value = "Get all admins", hidden = true)
@@ -187,6 +191,17 @@ public abstract class BaseAdminController {
 
         userService.remove(id);
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+    }
+
+    @ApiOperation("Check Atlas Connection")
+    @RequestMapping(value = "/api/v1/admin/atlasConnection", method = RequestMethod.POST)
+    public JsonResult checkAtlasConnection() {
+
+        //error for UI alert
+        JsonResult result = new JsonResult<>(JsonResult.ErrorCode.SYSTEM_ERROR);
+        String atlasVersion = atlasService.checkConnection();
+        result.setErrorMessage("Atlas version: " + atlasVersion);
+        return result;
     }
 
 }
