@@ -197,8 +197,7 @@ public abstract class BaseAdminController {
     @RequestMapping(value = "/api/v1/admin/atlasConnection", method = RequestMethod.POST)
     public JsonResult checkAtlasConnection() {
 
-        //error for UI alert
-        JsonResult result = new JsonResult<>(JsonResult.ErrorCode.SYSTEM_ERROR);
+        JsonResult result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
         String atlasVersion = atlasService.checkConnection();
         result.setErrorMessage("Atlas version: " + atlasVersion);
         return result;
