@@ -194,7 +194,7 @@ public abstract class BaseAdminController {
     }
 
     @ApiOperation("Check Atlas Connection")
-    @RequestMapping(value = "/api/v1/admin/atlasConnection", method = RequestMethod.POST)
+    @RequestMapping(value = "/api/v1/admin/atlas-connection", method = RequestMethod.POST)
     public JsonResult checkAtlasConnection() {
 
         JsonResult result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
