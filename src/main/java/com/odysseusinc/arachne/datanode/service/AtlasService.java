@@ -16,22 +16,12 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: April 12, 2017
+ * Created: December 05, 2017
  *
  */
 
-package com.odysseusinc.arachne.datanode.controller.admin;
+package com.odysseusinc.arachne.datanode.service;
 
-import com.odysseusinc.arachne.datanode.service.AtlasService;
-import com.odysseusinc.arachne.datanode.service.UserService;
-import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.web.bind.annotation.RestController;
-
-@RestController
-public class AdminController extends BaseAdminController {
-
-    public AdminController(UserService userService, GenericConversionService conversionService, AtlasService atlasService) {
-
-        super(userService, conversionService, atlasService);
-    }
+public interface AtlasService {
+    String checkConnection();
 }

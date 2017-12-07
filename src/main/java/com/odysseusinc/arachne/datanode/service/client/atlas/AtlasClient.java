@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.datanode.service.client.atlas;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
+import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysisInfo;
@@ -42,7 +43,7 @@ public interface AtlasClient {
     @RequestLine("GET /exchange/cohorts/{guid}")
     CommonCohortDTO getCohort(@Param("guid") String guid);
 
-    @RequestLine("GET /info")
+    @RequestLine("GET " + Constants.Atlas.INFO)
     Info getInfo();
 
     @RequestLine("GET /exchange/estimations")
@@ -51,7 +52,7 @@ public interface AtlasClient {
     @RequestLine("GET /exchange/estimations/{guid}")
     CommonCohortAnalysisDTO getEstimation(@Param("guid") String guid);
 
-    @RequestLine("GET /cohortdefinition")
+    @RequestLine("GET " + Constants.Atlas.COHORT_DEFINITION)
     List<CohortDefinition> getCohortDefinitions();
 
     @RequestLine("GET /cohortdefinition/{id}")

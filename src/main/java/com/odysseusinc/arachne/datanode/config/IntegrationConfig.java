@@ -87,6 +87,14 @@ public class IntegrationConfig {
         return new RestTemplate(factory);
     }
 
+    @Bean(name = "atlasRestTemplate")
+    public RestTemplate atlasRestTemplate(@Qualifier("integration") CloseableHttpClient httpClient) {
+
+        RestTemplate restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
+        restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter());
+        return restTemplate;
+    }
+
     @Configuration
     @ConditionalOnProperty(value = "server.ssl.strictMode", havingValue = "false")
     public class nonStrictSSLSecurityConfig {
