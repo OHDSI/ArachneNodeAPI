@@ -1,0 +1,26 @@
+ssl:
+  enabled: false
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5490/datanode
+    username: ohdsi
+    password: ENC(0Lpfvg9UPAyaaZpSIqwaDg==)
+datanode:
+  arachneCentral:
+    host: http://localhost
+    port: 8080
+atlas:
+  host: http://localhost
+  port: 8088
+  urlContext: WebAPI
+  auth:
+    schema: NONE
+    username:
+    password:
+jasypt:
+  encryptor:
+    password:
+    algorythm: PBEWITHMD5ANDDES
+build:
+  number: no_build_number
+  id: no_build_id
