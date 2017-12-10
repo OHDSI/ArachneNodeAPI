@@ -48,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
@@ -64,6 +65,11 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
     private final CentralSystemClient centralClient;
     private final SqlRenderService sqlRenderService;
     private final Template runnerTemplate;
+
+    @Value("${cohorts.result.countEnabled}")
+    private Boolean countEnabled;
+    @Value("${cohorts.result.summaryEnabled}")
+    private Boolean summaryEnabled;
 
     @Autowired
     public CohortCharacterizationRequestHandler(AtlasClient atlasClient,
@@ -123,6 +129,8 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 
         Map<String, Object> params = new HashMap<>();
         params.put("initialFileName", initialFileName);
+        params.put("countEnabled", countEnabled);
+        params.put("summaryEnabled", summaryEnabled);
         String result = runnerTemplate.apply(params);
         return new MockMultipartFile("main.r", result.getBytes());
     }
