@@ -64,12 +64,7 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
     private final CommonEntityService commonEntityService;
     private final CentralSystemClient centralClient;
     private final SqlRenderService sqlRenderService;
-    private final Template runnerTemplate;
-
-    @Value("${cohorts.result.countEnabled}")
-    private Boolean countEnabled;
-    @Value("${cohorts.result.summaryEnabled}")
-    private Boolean summaryEnabled;
+    protected final Template runnerTemplate;
 
     @Autowired
     public CohortCharacterizationRequestHandler(AtlasClient atlasClient,
@@ -125,12 +120,10 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
         }).orElse(null);
     }
 
-    private MultipartFile getRunner(String initialFileName) throws IOException {
+    protected MultipartFile getRunner(String initialFileName) throws IOException {
 
         Map<String, Object> params = new HashMap<>();
         params.put("initialFileName", initialFileName);
-        params.put("countEnabled", countEnabled);
-        params.put("summaryEnabled", summaryEnabled);
         String result = runnerTemplate.apply(params);
         return new MockMultipartFile("main.r", result.getBytes());
     }
