@@ -159,4 +159,12 @@ public interface Constants {
         String ACHILLES_CDM_VERSION = "ACHILLES_CDM_VERSION";
         String DEFAULT_CDM_VERSION = "5";
     }
+
+    interface Atlas {
+
+        String INFO = "/info";
+        String LOGIN_DB = "/user/login/db";
+        String LOGIN_LDAP = "/user/login/ldap";
+        String COHORT_DEFINITION = "/cohortdefinition";
+    }
 }

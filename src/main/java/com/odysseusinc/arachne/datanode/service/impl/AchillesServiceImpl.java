@@ -525,16 +525,6 @@ public class AchillesServiceImpl implements AchillesService {
     private void sendResultToCentral(DataSource dataSource, Path results) throws IOException, NotExistException {
 
         LOGGER.debug("Sending results to central: {}", centralHost);
-        LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-        map.add("file", new FileSystemResource(results.toFile()));
-        Optional<DataNode> dataNode = dataNodeService.findCurrentDataNode();
-        String token = dataNode.orElseThrow(() -> new NotExistException(DATA_NODE_NOT_EXISTS_EXCEPTION,
-                DataNode.class)).getToken();
-
-        HttpHeaders headers = centralUtil.getCentralNodeAuthHeader(token);
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, headers);
-
         final File file = results.toFile();
         final File targetFile = new File("/tmp", "archive" + UUID.randomUUID());
         try {
