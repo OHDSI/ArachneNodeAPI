@@ -35,6 +35,5 @@ run_cohort_characterization(cohortDefinitionSqlPath = file.path(workDir, "{{init
                                                    "conditionsByIndex" = TRUE,
                                                    "proceduresByIndex" = TRUE,
                                                    "drugsByIndex" = TRUE),
-                            cohortResults = list("count" = "{{countEnabled}}",
-                                                 "summary" = "{{summaryEnabled}}")
+                            cohortResults = list()
 )
