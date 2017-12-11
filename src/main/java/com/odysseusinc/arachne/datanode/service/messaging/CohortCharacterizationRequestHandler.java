@@ -120,12 +120,17 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
         }).orElse(null);
     }
 
-    protected MultipartFile getRunner(String initialFileName) throws IOException {
+    private MultipartFile getRunner(String initialFileName) throws IOException {
+
+        String result = runnerTemplate.apply(getRunnerParameters(initialFileName));
+        return new MockMultipartFile("main.r", result.getBytes());
+    }
+
+    protected Map<String, Object> getRunnerParameters(String initialFileName) throws IOException {
 
         Map<String, Object> params = new HashMap<>();
         params.put("initialFileName", initialFileName);
-        String result = runnerTemplate.apply(params);
-        return new MockMultipartFile("main.r", result.getBytes());
+        return params;
     }
 
     @Override
