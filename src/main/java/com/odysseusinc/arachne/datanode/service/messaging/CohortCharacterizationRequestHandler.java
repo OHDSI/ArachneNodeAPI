@@ -48,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
@@ -63,7 +64,7 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
     private final CommonEntityService commonEntityService;
     private final CentralSystemClient centralClient;
     private final SqlRenderService sqlRenderService;
-    private final Template runnerTemplate;
+    protected final Template runnerTemplate;
 
     @Autowired
     public CohortCharacterizationRequestHandler(AtlasClient atlasClient,
@@ -121,10 +122,15 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 
     private MultipartFile getRunner(String initialFileName) throws IOException {
 
+        String result = runnerTemplate.apply(getRunnerParameters(initialFileName));
+        return new MockMultipartFile("main.r", result.getBytes());
+    }
+
+    protected Map<String, Object> getRunnerParameters(String initialFileName) throws IOException {
+
         Map<String, Object> params = new HashMap<>();
         params.put("initialFileName", initialFileName);
-        String result = runnerTemplate.apply(params);
-        return new MockMultipartFile("main.r", result.getBytes());
+        return params;
     }
 
     @Override
