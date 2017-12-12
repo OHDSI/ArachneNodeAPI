@@ -34,6 +34,5 @@ run_cohort_characterization(cohortDefinitionSqlPath = file.path(workDir, "{{init
                                                    "conditionEraTreemap" = TRUE,
                                                    "conditionsByIndex" = TRUE,
                                                    "proceduresByIndex" = TRUE,
-                                                   "drugsByIndex" = TRUE),
-                            cohortResults = list()
+                                                   "drugsByIndex" = TRUE)
 )
