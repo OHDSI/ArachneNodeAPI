@@ -24,9 +24,12 @@ package com.odysseusinc.arachne.datanode.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
 import javax.sql.DataSource;
-
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
+import org.jasypt.hibernate4.encryptor.HibernatePBEEncryptorRegistry;
+import org.jasypt.util.password.PasswordEncryptor;
+import org.jasypt.util.password.StrongPasswordEncryptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -42,6 +45,10 @@ public class DataSourceConfig extends HikariConfig {
     private String jdbcUrl;
     @Value("${spring.datasource.driver-class-name}")
     private String driverClassName;
+    @Value("${jasypt.encryptor.password}")
+    private String password;
+    @Value("${jasypt.encryptor.database.algorithm}")
+    private String algorythm;
 
     @Primary
     @Bean
@@ -52,4 +59,17 @@ public class DataSourceConfig extends HikariConfig {
         return new HikariDataSource(this);
     }
 
+    @Bean
+    public PasswordEncryptor defaultStringEncryptor(){
+
+        StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
+        encryptor.setProvider(new BouncyCastleProvider());
+        encryptor.setProviderName("BC");
+        encryptor.setAlgorithm(algorythm);
+        encryptor.setKeyObtentionIterations(1000);
+        encryptor.setPassword(password);
+        HibernatePBEEncryptorRegistry.getInstance()
+                .registerPBEStringEncryptor("defaultStringEncryptor", encryptor);
+        return new StrongPasswordEncryptor();
+    }
 }
