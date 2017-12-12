@@ -54,12 +54,12 @@ public class DataSourceConfig extends HikariConfig {
     @Bean
     public DataSource primaryDataSource() {
 
+        defaultStringEncryptor();
         setDriverClassName(driverClassName);
         setJdbcUrl(jdbcUrl);
         return new HikariDataSource(this);
     }
 
-    @Bean
     public PasswordEncryptor defaultStringEncryptor(){
 
         StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
