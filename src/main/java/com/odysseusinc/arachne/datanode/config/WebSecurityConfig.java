@@ -114,7 +114,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .antMatchers("/api/v1/data-sources/**/check/result/**").permitAll()
                 .antMatchers("/api/v1/data-sources/**/check/update/**").permitAll()
-                .anyRequest().authenticated();
+
+                .antMatchers("/api**").authenticated()
+                .antMatchers("/api/**").authenticated()
+                .anyRequest().permitAll();
         http
                 .addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
     }

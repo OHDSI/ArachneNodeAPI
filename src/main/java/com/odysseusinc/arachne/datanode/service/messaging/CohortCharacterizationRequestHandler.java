@@ -37,18 +37,22 @@ import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -63,7 +67,12 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
     private final CommonEntityService commonEntityService;
     private final CentralSystemClient centralClient;
     private final SqlRenderService sqlRenderService;
-    private final Template runnerTemplate;
+    protected final Template runnerTemplate;
+
+    @Value("${cohorts.result.countEnabled}")
+    private Boolean countEnabled;
+    @Value("${cohorts.result.summaryEnabled}")
+    private Boolean summaryEnabled;
 
     @Autowired
     public CohortCharacterizationRequestHandler(AtlasClient atlasClient,
@@ -106,6 +115,12 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
                     files.add(new MockMultipartFile(cohortSqlFileName, ignorePreprocessingMark(content).getBytes()));
                     try {
                         files.add(getRunner(cohortSqlFileName));
+                        if (countEnabled) {
+                            files.add(generateFile("cohort/cohort-count.sql", "cohort-count.ohdsi.sql"));
+                        }
+                        if (summaryEnabled) {
+                            files.add(generateFile("cohort/cohort-summary.sql", "cohort-summary.ohdsi.sql"));
+                        }
                     } catch (IOException e) {
                         logger.error("Failed to build CC data", e);
                         throw new RuntimeIOException("Failed to build CC data", e);
@@ -117,6 +132,13 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
             }
             return files;
         }).orElse(null);
+    }
+
+    private MockMultipartFile generateFile(String resourcePath, String outputName) throws IOException {
+
+        ClassPathResource resource = new ClassPathResource(resourcePath);
+        final String resourceContent = IOUtils.toString(resource.getInputStream(), Charset.defaultCharset());
+        return new MockMultipartFile(outputName, ignorePreprocessingMark(resourceContent).getBytes());
     }
 
     private MultipartFile getRunner(String initialFileName) throws IOException {
