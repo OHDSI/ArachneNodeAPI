@@ -124,7 +124,8 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
         if (value instanceof List){
             for(Integer cohortId : ((List<Integer>)value)){
                 String name = String.format("%s_%d_%s.sql", analysisName, cohortId, property);
-                files.add(getCohortFile(cohortId, name));
+                files.add(getCohortFile(cohortId, name, new String[]{"target_cohort_id"},
+                        new String[]{ cohortId.toString() }));
             }
         }
         return files;

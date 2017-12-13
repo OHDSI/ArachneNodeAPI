@@ -26,4 +26,6 @@ import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 
 public interface SqlRenderService {
     String renderSql(CohortDefinition cohort);
+
+    String renderSql(CohortDefinition cohort, String[] parameters, String values[]);
 }

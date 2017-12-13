@@ -49,7 +49,12 @@ public abstract class BaseRequestHandler {
         return new MockMultipartFile("analysisDescription.json", result.getBytes());
     }
 
-    protected MultipartFile getCohortFile(Integer cohortId, String name) {
+    protected MultipartFile getCohortFile(Integer cohortId, String name){
+
+        return getCohortFile(cohortId, name, null, null);
+    }
+
+    protected MultipartFile getCohortFile(Integer cohortId, String name, String[] parameters, String[] values) {
          CohortDefinition cohort = atlasClient.getCohortDefinition(cohortId);
          if (Objects.nonNull(cohort)) {
              String content = sqlRenderService.renderSql(cohort);
