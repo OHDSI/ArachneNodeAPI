@@ -106,7 +106,6 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
                 files.addAll(cohortFiles);
                 List<String> cohortFileNames = cohortFiles.stream().map(MultipartFile::getName).collect(Collectors.toList());
                 files.add(getRunner(analysis, cohortFileNames));
-//                files.add(new MockMultipartFile("ir_analysis.r", new byte[0]));
             } catch (IOException e) {
                 logger.error(IR_BUILD_ERROR, e);
                 throw new RuntimeIOException(IR_BUILD_ERROR, e);
