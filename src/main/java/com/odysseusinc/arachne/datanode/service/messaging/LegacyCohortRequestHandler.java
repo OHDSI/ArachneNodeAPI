@@ -24,21 +24,18 @@ package com.odysseusinc.arachne.datanode.service.messaging;
 
 import static com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType.COHORT;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
+import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
-import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
-import org.ohdsi.circe.cohortdefinition.CohortExpression;
-import org.ohdsi.circe.cohortdefinition.CohortExpressionQueryBuilder;
-import org.ohdsi.sql.SqlRender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,27 +46,27 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 @Service
-public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCohortShortDTO, MultipartFile> {
+public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCohortShortDTO, MultipartFile[]> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LegacyCohortRequestHandler.class);
     private final CentralSystemClient centralClient;
     private final AtlasClient atlasClient;
     private final GenericConversionService conversionService;
     private final CommonEntityService commonEntityService;
-    private final CohortExpressionQueryBuilder queryBuilder;
+    private final SqlRenderService sqlRenderService;
 
     @Autowired
     public LegacyCohortRequestHandler(CentralSystemClient centralClient,
                                       AtlasClient atlasClient,
                                       GenericConversionService conversionService,
                                       CommonEntityService commonEntityService,
-                                      CohortExpressionQueryBuilder queryBuilder) {
+                                      SqlRenderService sqlRenderService) {
 
         this.centralClient = centralClient;
         this.atlasClient = atlasClient;
         this.conversionService = conversionService;
         this.commonEntityService = commonEntityService;
-        this.queryBuilder = queryBuilder;
+        this.sqlRenderService = sqlRenderService;
     }
 
 
@@ -84,20 +81,19 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
     }
 
     @Override
-    public MultipartFile getAtlasObject(String guid) {
+    public MultipartFile[] getAtlasObject(String guid) {
 
         return commonEntityService.findByGuid(guid).map(entity -> {
             CohortDefinition definition = atlasClient.getCohortDefinition(entity.getLocalId());
-            if (definition != null) {
-                try {
-                    ObjectMapper mapper = new ObjectMapper();
-                    CohortExpression expression = mapper.readValue(definition.getExpression(), CohortExpression.class);
-                    final CohortExpressionQueryBuilder.BuildExpressionQueryOptions options = new CohortExpressionQueryBuilder.BuildExpressionQueryOptions();
-                    String expressionSql = queryBuilder.buildExpressionQuery(expression, options);
-                    String content = SqlRender.renderSql(expressionSql, null, null);
-                    return new MockMultipartFile(definition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT, content.getBytes());
-                } catch (IOException e) {
-                    LOGGER.error("Failed to construct cohort", e);
+            if (Objects.nonNull(definition)) {
+                String content = sqlRenderService.renderSql(definition);
+                if (Objects.nonNull(content)) {
+                    return new MockMultipartFile[]{
+                            new MockMultipartFile(definition.getName().trim() + CommonFileUtils.OHDSI_JSON_EXT, definition.getExpression().getBytes()),
+                            new MockMultipartFile(definition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT, content.getBytes())
+                    };
+                } else {
+                    return null;
                 }
             }
             return null;
@@ -111,9 +107,8 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
     }
 
     @Override
-    public void sendResponse(MultipartFile response, String id) {
+    public void sendResponse(MultipartFile[] files, String id) {
 
-        MultipartFile[] files = new MultipartFile[]{ response };
         centralClient.sendCommonEntityResponse(id, files);
     }
 }

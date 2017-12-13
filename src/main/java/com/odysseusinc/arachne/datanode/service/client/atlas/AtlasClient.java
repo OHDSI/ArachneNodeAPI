@@ -28,9 +28,11 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysisInfo;
+import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
 import feign.Param;
 import feign.RequestLine;
 import java.util.List;
+import java.util.Map;
 
 public interface AtlasClient {
 
@@ -60,6 +62,12 @@ public interface AtlasClient {
 
     @RequestLine("GET /comparativecohortanalysis/{id}")
     ComparativeCohortAnalysisInfo getComparativeCohortAnalysisInfo(@Param("id") Integer id);
+
+    @RequestLine("GET /plp")
+    List<PatientLevelPredictionInfo> getPatientLevelPredictions();
+
+    @RequestLine("GET /plp/{id}")
+    Map<String, Object> getPatientLevelPrediction(@Param("id") Integer id);
 
     class Info {
         public String version;

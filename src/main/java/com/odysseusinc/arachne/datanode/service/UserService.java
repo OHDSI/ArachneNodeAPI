@@ -23,13 +23,15 @@
 package com.odysseusinc.arachne.datanode.service;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
+import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.user.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface UserService extends UserDetailsService {
 
@@ -48,7 +50,7 @@ public interface UserService extends UserDetailsService {
 
     void setToken(User user, String token);
 
-    User createIfFirst(String email);
+    User createIfFirst(User centralUserDto) throws AlreadyExistsException;
 
     List<User> suggestNotAdmin(User user, String query, Integer limit);
 
@@ -67,4 +69,6 @@ public interface UserService extends UserDetailsService {
     User addUserFromCentral(User user, Long centralId);
 
     User getUser(Principal principal) throws PermissionDeniedException;
+
+    void updateUser(User original, User updated);
 }

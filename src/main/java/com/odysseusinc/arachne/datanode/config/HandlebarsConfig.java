@@ -22,7 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.config;
 
-import static com.odysseusinc.arachne.commons.utils.TemplateUtils.*;
+import static com.odysseusinc.arachne.commons.utils.TemplateUtils.loadTemplate;
 
 import com.github.jknack.handlebars.Template;
 import org.springframework.context.annotation.Bean;
@@ -34,10 +34,25 @@ import org.springframework.context.annotation.Configuration;
 public class HandlebarsConfig {
 
     private static final String ESTIMATION_RUNNER_TEMPLATE = "estimation/runner.mustache";
+    private static final String PATIENT_LEVEL_PREDICTION_RUNNER_TEMPLATE = "plp/main.r";
+    private static final String COHORT_CHARACTERIZATION_RUNNER_TEMPLATE = "cc/main.r";
 
     @Bean
     public Template estimationRunnerTemplate() {
 
         return loadTemplate(ESTIMATION_RUNNER_TEMPLATE);
     }
+
+    @Bean
+    public Template patientLevelPredictionRunnerTemplate() {
+
+        return loadTemplate(PATIENT_LEVEL_PREDICTION_RUNNER_TEMPLATE);
+    }
+
+    @Bean
+    public Template cohortCharacterizationRunnerTemplate() {
+
+        return loadTemplate(COHORT_CHARACTERIZATION_RUNNER_TEMPLATE);
+    }
+
 }

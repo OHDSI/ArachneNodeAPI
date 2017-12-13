@@ -54,6 +54,7 @@ public class DataSourceToDataSourceBusinessDTO implements Converter<DataSource, 
         dataSourceBusinessDTO.setTargetSchema(source.getTargetSchema());
         dataSourceBusinessDTO.setResultSchema(source.getResultSchema());
         dataSourceBusinessDTO.setCohortTargetTable(source.getCohortTargetTable());
+        dataSourceBusinessDTO.setName(source.getName());
         return dataSourceBusinessDTO;
     }
 }

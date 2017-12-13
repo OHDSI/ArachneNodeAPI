@@ -98,6 +98,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/auth/logout**").permitAll()
                 .antMatchers("/api/v1/auth/login**").permitAll()
                 .antMatchers("/api/v1/auth/register**").permitAll()
+                .antMatchers("/api/v1/auth/refresh**").permitAll()
                 .antMatchers("/api/v1/auth/method**").permitAll()
                 .antMatchers("/api/v1/user-management/professional-types**").permitAll()
                 .antMatchers("/api/v1/auth/registration**").permitAll()
@@ -113,7 +114,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .antMatchers("/api/v1/data-sources/**/check/result/**").permitAll()
                 .antMatchers("/api/v1/data-sources/**/check/update/**").permitAll()
-                .anyRequest().authenticated();
+
+                .antMatchers("/api**").authenticated()
+                .antMatchers("/api/**").authenticated()
+                .anyRequest().permitAll();
         http
                 .addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
     }
