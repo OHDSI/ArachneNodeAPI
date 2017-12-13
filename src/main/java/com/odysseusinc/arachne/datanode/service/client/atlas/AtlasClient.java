@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysisInfo;
+import com.odysseusinc.arachne.datanode.dto.atlas.IRAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
 import feign.Param;
 import feign.RequestLine;
@@ -69,6 +70,12 @@ public interface AtlasClient {
 
     @RequestLine("GET /plp/{id}")
     Map<String, Object> getPatientLevelPrediction(@Param("id") Integer id);
+
+    @RequestLine("GET /ir")
+    List<IRAnalysis> getIncidenceRates();
+
+    @RequestLine("GET /ir/{id}")
+    Map<String, Object> getIncidenceRate(@Param("id") Integer localId);
 
     class Info {
         public String version;

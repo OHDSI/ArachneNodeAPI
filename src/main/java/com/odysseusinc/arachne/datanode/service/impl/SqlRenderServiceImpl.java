@@ -48,13 +48,19 @@ public class SqlRenderServiceImpl implements SqlRenderService {
     @Override
     public String renderSql(CohortDefinition cohort) {
 
+        return renderSql(cohort, null, null);
+    }
+
+    @Override
+    public String renderSql(CohortDefinition cohort, String[] parameters, String values[]){
+
         try {
             ObjectMapper mapper = new ObjectMapper();
             if (Objects.nonNull(cohort.getExpression())) {
                 CohortExpression expression = mapper.readValue(cohort.getExpression(), CohortExpression.class);
                 final CohortExpressionQueryBuilder.BuildExpressionQueryOptions options = new CohortExpressionQueryBuilder.BuildExpressionQueryOptions();
                 String expressionSql = queryBuilder.buildExpressionQuery(expression, options);
-                return SqlRender.renderSql(expressionSql, null, null);
+                return SqlRender.renderSql(expressionSql, parameters, values);
             }
         } catch (IOException e) {
             LOGGER.error("Failed to construct cohort", e);
