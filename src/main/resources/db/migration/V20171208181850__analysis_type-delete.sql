@@ -1,0 +1,1 @@
+UPDATE common_entity SET analysis_type = 'CUSTOM' WHERE analysis_type = 'CHARACTERIZATION';

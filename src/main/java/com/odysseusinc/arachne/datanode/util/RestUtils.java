@@ -25,6 +25,9 @@ package com.odysseusinc.arachne.datanode.util;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -48,17 +51,26 @@ public class RestUtils {
             String executionEngineToken, boolean compressedResult, boolean healthCheck) {
 
         final List<File> files = com.odysseusinc.arachne.commons.utils.CommonFileUtils.getFiles(analysisFolder);
-        Collection<FileSystemResource> fsResources = CommonFileUtils.getFSResources(files);
+
+        File archive;
+        try {
+            archive = new File(Files.createTempDirectory("analysis").toString(), "request.zip");
+            CommonFileUtils.compressAndSplit(analysisFolder, archive, null);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+
         HttpHeaders jsonHeader = new HttpHeaders();
         jsonHeader.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<AnalysisRequestDTO> analysisRequestHttpEntity
                 = new HttpEntity<>(analysisRequestDTO, jsonHeader);
         LinkedMultiValueMap<String, Object> multipartRequest = new LinkedMultiValueMap<>();
         multipartRequest.add("analysisRequest", analysisRequestHttpEntity);
-        if (fsResources != null) {
-            fsResources.forEach(f -> multipartRequest.add("file", f));
-        }
+
+        multipartRequest.add("file", new FileSystemResource(archive));
+
         HttpHeaders headers = new HttpHeaders();
+        headers.add("arachne-compressed", String.valueOf(true));
         if (compressedResult) {
             headers.add("arachne-waiting-compressed-result", String.valueOf(true));
         }

@@ -16,7 +16,7 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexander Saltykov, Vitaly Koulakov, Anton Gackovka, Alexandr Ryabokon, Mikhail Mironov
- * Created: Nov 8, 2017
+ * Created: Nov 7, 2017
  *
  */
 
@@ -24,7 +24,8 @@ package com.odysseusinc.arachne.datanode.service.client.atlas;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
-
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Objects;
 
 public class AtlasAuthRequestInterceptor implements RequestInterceptor {
@@ -48,15 +49,20 @@ public class AtlasAuthRequestInterceptor implements RequestInterceptor {
     public void apply(RequestTemplate template) {
 
         if (!Objects.equals(AtlasAuthSchema.NONE, authSchema)) {
-            String token = authenticate();
+            String token = null;
+            try {
+                token = authenticate();
+            } catch (UnsupportedEncodingException ignored) {
+            }
             if (Objects.nonNull(token)) {
                 template.header(AUTHORIZATION_HEADER, BEARER_PREFIX + token);
             }
         }
     }
 
-    private String authenticate(){
+    private String authenticate() throws UnsupportedEncodingException {
         String result = null;
+
         if (Objects.nonNull(authSchema)) {
             switch (authSchema) {
                 case DATABASE:

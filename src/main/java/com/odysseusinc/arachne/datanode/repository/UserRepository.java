@@ -25,20 +25,25 @@ package com.odysseusinc.arachne.datanode.repository;
 import static com.odysseusinc.arachne.datanode.security.RolesConstants.ROLE_ADMIN;
 
 import com.odysseusinc.arachne.datanode.model.user.User;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+import java.util.Optional;
+
 public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findOneByEmail(String email);
 
+    Optional<User> findOneByEmailAndEnabled(String email, boolean enabled);
+
     Optional<User> findOneById(Long userId);
 
     List<User> findByRoles_name(String roleName, Sort sort);
+
+    int countByRoles_nameAndEnabled(String roleAdmin, Boolean enabled);
 
     @Query(nativeQuery = true, value = "select * from users u "
             + " where (lower(u.first_name) similar to :suggestRequest or\n"
