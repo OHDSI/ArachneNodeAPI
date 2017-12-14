@@ -152,4 +152,12 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
 
         centralClient.sendCommonEntityResponse(id, response.toArray(new MultipartFile[response.size()]));
     }
+
+    @Override
+    protected MultipartFile getAnalysisDescription(Map<String, Object> info) throws IOException {
+
+        String result = ((String) info.getOrDefault("expression", "{}"))
+                .replaceAll("\\\\", "");
+        return new MockMultipartFile("analysisDescription.json", result.getBytes());
+    }
 }
