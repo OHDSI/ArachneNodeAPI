@@ -24,6 +24,7 @@ package com.odysseusinc.arachne.datanode.service.messaging;
 
 import static com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType.COHORT;
 
+import com.google.common.collect.ImmutableMap;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
@@ -34,6 +35,7 @@ import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -48,6 +50,17 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCohortShortDTO, MultipartFile[]> {
 
+    private static final Map<String, String> ESCAPE_CHARS = ImmutableMap.<String, String>builder()
+            .put(":", "-colon-")
+            .put("/", "-slash-")
+            .put("<", "-lt-")
+            .put(">", "-gt-")
+            .put("*", "-star-")
+            .put("?", "-question mark-")
+            .put("\\", "-backslash-")
+            .put("|", "-verticalbar-")
+            .put("\"", "-quote-")
+            .build();
     private static final Logger LOGGER = LoggerFactory.getLogger(LegacyCohortRequestHandler.class);
     private final CentralSystemClient centralClient;
     private final AtlasClient atlasClient;
@@ -69,7 +82,6 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
         this.sqlRenderService = sqlRenderService;
     }
 
-
     @Override
     public List<CommonCohortShortDTO> getObjectsList() {
 
@@ -88,9 +100,11 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
             if (Objects.nonNull(definition)) {
                 String content = sqlRenderService.renderSql(definition);
                 if (Objects.nonNull(content)) {
+                    final String definitionName = definition.getName().trim();
+                    final String filteredDefinitionName = filterFileName(definitionName);
                     return new MockMultipartFile[]{
-                            new MockMultipartFile(definition.getName().trim() + CommonFileUtils.OHDSI_JSON_EXT, definition.getExpression().getBytes()),
-                            new MockMultipartFile(definition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT, content.getBytes())
+                            new MockMultipartFile(filteredDefinitionName + CommonFileUtils.OHDSI_JSON_EXT, definition.getExpression().getBytes()),
+                            new MockMultipartFile(filteredDefinitionName + CommonFileUtils.OHDSI_SQL_EXT, content.getBytes())
                     };
                 } else {
                     return null;
@@ -110,5 +124,16 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
     public void sendResponse(MultipartFile[] files, String id) {
 
         centralClient.sendCommonEntityResponse(id, files);
+    }
+
+    private String filterFileName(final String fileName) {
+
+        String filteredFileName = fileName;
+        for (Map.Entry<String, String> charEntry : ESCAPE_CHARS.entrySet()) {
+            if (filteredFileName.contains(charEntry.getKey())) {
+                filteredFileName = filteredFileName.replace(charEntry.getKey(), charEntry.getValue());
+            }
+        }
+        return filteredFileName;
     }
 }
