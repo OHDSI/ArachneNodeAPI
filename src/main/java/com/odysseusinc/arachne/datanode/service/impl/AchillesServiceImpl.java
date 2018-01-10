@@ -258,16 +258,12 @@ public class AchillesServiceImpl implements AchillesService {
 
     private AchillesJob checkAchillesJob(DataSource dataSource, AchillesJobSource source) {
 
-        if (hasAchillesResultTable(dataSource)) {
-            Optional<AchillesJob> achillesJob = achillesJobRepository
-                    .findTopByDataSourceAndStatusOrderByStarted(dataSource, IN_PROGRESS);
-            achillesJob.ifPresent(job -> {
-                LOGGER.warn("Achilles is in progress for datasource: {}", dataSource);
-                throw new AchillesJobInProgressException();
-            });
-            return createJob(dataSource, source);
-        }
-        return null;
+        achillesJobRepository.findTopByDataSourceAndStatusOrderByStarted(dataSource, IN_PROGRESS)
+                .ifPresent(job -> {
+                    final String message = String.format("Achilles is in progress for datasource: %s", dataSource);
+                    throw new AchillesJobInProgressException(message);
+                });
+        return createJob(dataSource, source);
     }
 
     @Override
@@ -277,10 +273,9 @@ public class AchillesServiceImpl implements AchillesService {
             String query = "select count(*) from %s.achilles_results";
             query = String.format(query, getResultSchema(dataSource));
             Map<String, Integer> result = DataSourceUtils.<Integer>withDataSource(dataSource)
-                    .run(statement(query))
                     .ifTableNotExists("achilles_results",
                             table -> new AchillesResultNotAvailableException(String.format(ACHILLES_RESULTS_EXCEPTION, table)))
-                    .run(statement("select count(*) from achilles_results"))
+                    .run(statement(query))
                     .collectResults(resultSet -> {
                         Map<String, Integer> data = new HashMap<>();
                         int count = 0;
@@ -296,7 +291,7 @@ public class AchillesServiceImpl implements AchillesService {
             LOGGER.warn("Failed to check achilles results", e);
             return false;
         } catch (AchillesResultNotAvailableException e) {
-            LOGGER.warn(e.getMessage());
+            LOGGER.info(e.getMessage());
             return false;
         }
     }
@@ -304,7 +299,10 @@ public class AchillesServiceImpl implements AchillesService {
     @Override
     public AchillesJob createAchillesImportJob(DataSource dataSource) {
 
-        return checkAchillesJob(dataSource, AchillesJobSource.IMPORT);
+        if (hasAchillesResultTable(dataSource)) {
+            return checkAchillesJob(dataSource, AchillesJobSource.IMPORT);
+        }
+        return null;
     }
 
     @Async
