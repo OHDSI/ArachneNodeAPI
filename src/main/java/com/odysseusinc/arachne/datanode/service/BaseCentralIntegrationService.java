@@ -24,7 +24,6 @@ package com.odysseusinc.arachne.datanode.service;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonBaseDataSourceDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonProfessionalTypeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
@@ -44,7 +43,7 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     DataNode updateDataNodeOnCentral(User user, DataNode dataNode);
 
-    JsonResult<CommonDataSourceDTO> sendDataSourceRegistrationRequest(
+    JsonResult<DTO> sendDataSourceRegistrationRequest(
             User user, DataNode dataNode,
             DTO commonCreateDataSourceDTO);
 
