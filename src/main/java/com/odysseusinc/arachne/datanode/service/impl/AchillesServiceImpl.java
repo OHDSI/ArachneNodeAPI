@@ -102,7 +102,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -124,19 +123,16 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -155,6 +151,7 @@ public class AchillesServiceImpl implements AchillesService {
     protected static final Logger LOGGER = LoggerFactory.getLogger(AchillesService.class);
     protected static final String DATA_NODE_NOT_EXISTS_EXCEPTION = "DataNode is not registered, please register";
     public static final String ACHILLES_RESULTS_EXCEPTION = "Achilles results is not available, table %s was not found";
+    private static final String ACHILLES_RESULTS_AVAILABLE_LOG = "Achilles results available at: {}";
     protected final DockerClient dockerClient;
     protected final AchillesProperties properties;
     protected final RestTemplate restTemplate;
@@ -250,7 +247,7 @@ public class AchillesServiceImpl implements AchillesService {
             LOGGER.error("Achilles failed to execute", e);
             updateJob(job, FAILED);
         } finally {
-            if (workDir != null) {
+            if (workDir != null && !LOGGER.isDebugEnabled()) {
                 FileUtils.deleteQuietly(workDir.toFile());
             }
         }
@@ -569,6 +566,7 @@ public class AchillesServiceImpl implements AchillesService {
                 .withNetworkMode("host")
                 .exec();
         LOGGER.debug("Container created: {}", container.getId());
+        final boolean debugEnabled = LOGGER.isDebugEnabled();
         try {
             LOGGER.debug("Starting container: {}", container.getId());
             dockerClient.startContainerCmd(container.getId()).exec();
@@ -599,28 +597,38 @@ public class AchillesServiceImpl implements AchillesService {
             job.setAchillesLog(logEntries.stream().collect(Collectors.joining("\n")));
             achillesJobRepository.save(job);
             if (statusCode == 0) {
-                LOGGER.debug("Creating Achilles output results archive");
-                Path dataDir = workDir.resolve(dataSource.getName());
-                Path jsonDir = dataDir;
-                try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(dataDir)) {
-                    for (Path path : directoryStream) {
-                        if (Files.isDirectory(path)) {
-                            jsonDir = path;
-                        }
-                    }
-                }
-                LOGGER.info("Achilles results available at: {}", jsonDir);
+                Path jsonDir = createAchillesOutputResults(dataSource, workDir);
+                LOGGER.info(ACHILLES_RESULTS_AVAILABLE_LOG, jsonDir);
                 return jsonDir;
             } else {
                 String message = "Achilles exited with errors, lost results";
                 LOGGER.warn(message);
+                if (debugEnabled) {
+                    LOGGER.debug(ACHILLES_RESULTS_AVAILABLE_LOG, createAchillesOutputResults(dataSource, workDir));
+                }
                 throw new IOException(message);
             }
         } finally {
             dockerClient.removeContainerCmd(container.getId())
-                    .withRemoveVolumes(true)
+                    .withRemoveVolumes(!debugEnabled)
                     .exec();
         }
+    }
+
+    private Path createAchillesOutputResults(DataSource dataSource, Path workDir) throws IOException {
+
+        LOGGER.debug("Creating Achilles output results archive");
+        Path dataDir = workDir.resolve(dataSource.getName());
+        Path jsonDir = null;
+        jsonDir = dataDir;
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(dataDir)) {
+            for (Path path : directoryStream) {
+                if (Files.isDirectory(path)) {
+                    jsonDir = path;
+                }
+            }
+        }
+        return jsonDir;
     }
 
     private String dburi(DataSource dataSource) {
