@@ -92,6 +92,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -607,11 +608,8 @@ public class AchillesServiceImpl implements AchillesService {
                 LOGGER.warn(message);
                 final CopyArchiveFromContainerCmd errorReport
                         = dockerClient.copyArchiveFromContainerCmd(container.getId(), "/opt/app/errorReport.txt");
-                try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(errorReport.exec()))) {
-                    String str;
-                    while ((str = bufferedReader.readLine()) != null) {
-                        logEntries.add(str.replace("\n", ""));
-                    }
+                try  {
+                    logEntries.addAll(IOUtils.readLines(errorReport.exec(), Charset.forName("UTF-8")));
                 } catch (NotFoundException e) {
                     logEntries.add("errorReport.txt does not exists");
                 }
