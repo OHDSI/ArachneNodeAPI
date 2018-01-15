@@ -86,13 +86,12 @@ import com.odysseusinc.arachne.datanode.util.datasource.ResultSetProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultTransformers;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultWriters;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -609,7 +608,7 @@ public class AchillesServiceImpl implements AchillesService {
                 final CopyArchiveFromContainerCmd errorReport
                         = dockerClient.copyArchiveFromContainerCmd(container.getId(), "/opt/app/errorReport.txt");
                 try  {
-                    logEntries.addAll(IOUtils.readLines(errorReport.exec(), Charset.forName("UTF-8")));
+                    logEntries.addAll(IOUtils.readLines(errorReport.exec(), Charset.forName(StandardCharsets.UTF_8.name())));
                 } catch (NotFoundException e) {
                     logEntries.add("errorReport.txt does not exists");
                 }
