@@ -37,7 +37,9 @@ import static com.odysseusinc.arachne.datanode.service.achilles.AchillesProcesso
 import static com.odysseusinc.arachne.datanode.util.datasource.QueryProcessors.statement;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.CopyArchiveFromContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.AuthConfig;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
@@ -84,9 +86,11 @@ import com.odysseusinc.arachne.datanode.util.datasource.ResultSetProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultTransformers;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultWriters;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -567,13 +571,13 @@ public class AchillesServiceImpl implements AchillesService {
                 .exec();
         LOGGER.debug("Container created: {}", container.getId());
         final boolean debugEnabled = LOGGER.isDebugEnabled();
+        List<String> logEntries = new LinkedList<>();
         try {
             LOGGER.debug("Starting container: {}", container.getId());
             dockerClient.startContainerCmd(container.getId()).exec();
             LOGGER.debug("Container running: {}", container.getId());
             WaitContainerResultCallback callback = dockerClient.waitContainerCmd(container.getId())
                     .exec(new WaitContainerResultCallback());
-            List<String> logEntries = new LinkedList<>();
             LogContainerResultCallback logCallback = new LogContainerResultCallback() {
                 @Override
                 public void onNext(Frame item) {
@@ -594,8 +598,6 @@ public class AchillesServiceImpl implements AchillesService {
             } catch (InterruptedException ignored) {
             }
             LOGGER.debug("Achilles finished with status code: {}", statusCode);
-            job.setAchillesLog(logEntries.stream().collect(Collectors.joining("\n")));
-            achillesJobRepository.save(job);
             if (statusCode == 0) {
                 Path jsonDir = createAchillesOutputResults(dataSource, workDir);
                 LOGGER.info(ACHILLES_RESULTS_AVAILABLE_LOG, jsonDir);
@@ -603,12 +605,24 @@ public class AchillesServiceImpl implements AchillesService {
             } else {
                 String message = "Achilles exited with errors, lost results";
                 LOGGER.warn(message);
+                final CopyArchiveFromContainerCmd errorReport
+                        = dockerClient.copyArchiveFromContainerCmd(container.getId(), "/opt/app/errorReport.txt");
+                try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(errorReport.exec()))) {
+                    String str;
+                    while ((str = bufferedReader.readLine()) != null) {
+                        logEntries.add(str.replace("\n", ""));
+                    }
+                } catch (NotFoundException e) {
+                    logEntries.add("errorReport.txt does not exists");
+                }
                 if (debugEnabled) {
                     LOGGER.debug(ACHILLES_RESULTS_AVAILABLE_LOG, createAchillesOutputResults(dataSource, workDir));
                 }
                 throw new IOException(message);
             }
         } finally {
+            job.setAchillesLog(logEntries.stream().map(s -> s.replaceAll("\u0000", "")).collect(Collectors.joining("\n")));
+            achillesJobRepository.save(job);
             dockerClient.removeContainerCmd(container.getId())
                     .withRemoveVolumes(!debugEnabled)
                     .exec();
