@@ -325,6 +325,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         result.setErrorCode(centralJsonResult.getErrorCode());
         result.setErrorMessage(centralJsonResult.getErrorMessage());
         result.setResult(updatedDataSourceBusinessDTO);
+        result.setValidatorErrors(centralJsonResult.getValidatorErrors());
         return result;
     }
 
