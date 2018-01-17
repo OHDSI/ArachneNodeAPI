@@ -24,20 +24,15 @@ package com.odysseusinc.arachne.datanode;
 
 import com.odysseusinc.arachne.datanode.config.WebSecurityConfig;
 import javax.annotation.Resource;
-import javax.sql.DataSource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -46,7 +41,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 @EnableAutoConfiguration
-@EnableJpaRepositories(basePackages = "com.odysseusinc.arachne.datanode.repository")
+@EnableJpaRepositories(basePackages = {
+        "com.odysseusinc.arachne.datanode.repository",
+        "com.odysseusinc.arachne.system.settings.repository"
+})
 @EntityScan(basePackages = {"com.odysseusinc.arachne.*"})
 @ComponentScan(basePackages = {"com.odysseusinc.arachne.datanode"},
         excludeFilters = {
@@ -66,11 +64,11 @@ public class TestApplication {
         SpringApplication.run(TestApplication.class, args);
     }
 
-    @Primary
+   /* @Primary
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource")
     public DataSource primaryDataSource() {
 
         return DataSourceBuilder.create().build();
-    }
+    }*/
 }

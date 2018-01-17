@@ -37,7 +37,9 @@ import static com.odysseusinc.arachne.datanode.service.achilles.AchillesProcesso
 import static com.odysseusinc.arachne.datanode.util.datasource.QueryProcessors.statement;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.CopyArchiveFromContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.AuthConfig;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
@@ -88,6 +90,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -102,7 +106,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -124,19 +127,16 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -155,6 +155,7 @@ public class AchillesServiceImpl implements AchillesService {
     protected static final Logger LOGGER = LoggerFactory.getLogger(AchillesService.class);
     protected static final String DATA_NODE_NOT_EXISTS_EXCEPTION = "DataNode is not registered, please register";
     public static final String ACHILLES_RESULTS_EXCEPTION = "Achilles results is not available, table %s was not found";
+    private static final String ACHILLES_RESULTS_AVAILABLE_LOG = "Achilles results available at: {}";
     protected final DockerClient dockerClient;
     protected final AchillesProperties properties;
     protected final RestTemplate restTemplate;
@@ -250,7 +251,7 @@ public class AchillesServiceImpl implements AchillesService {
             LOGGER.error("Achilles failed to execute", e);
             updateJob(job, FAILED);
         } finally {
-            if (workDir != null) {
+            if (workDir != null && !LOGGER.isDebugEnabled()) {
                 FileUtils.deleteQuietly(workDir.toFile());
             }
         }
@@ -258,16 +259,12 @@ public class AchillesServiceImpl implements AchillesService {
 
     private AchillesJob checkAchillesJob(DataSource dataSource, AchillesJobSource source) {
 
-        if (hasAchillesResultTable(dataSource)) {
-            Optional<AchillesJob> achillesJob = achillesJobRepository
-                    .findTopByDataSourceAndStatusOrderByStarted(dataSource, IN_PROGRESS);
-            achillesJob.ifPresent(job -> {
-                LOGGER.warn("Achilles is in progress for datasource: {}", dataSource);
-                throw new AchillesJobInProgressException();
-            });
-            return createJob(dataSource, source);
-        }
-        return null;
+        achillesJobRepository.findTopByDataSourceAndStatusOrderByStarted(dataSource, IN_PROGRESS)
+                .ifPresent(job -> {
+                    final String message = String.format("Achilles is in progress for datasource: %s", dataSource);
+                    throw new AchillesJobInProgressException(message);
+                });
+        return createJob(dataSource, source);
     }
 
     @Override
@@ -277,10 +274,9 @@ public class AchillesServiceImpl implements AchillesService {
             String query = "select count(*) from %s.achilles_results";
             query = String.format(query, getResultSchema(dataSource));
             Map<String, Integer> result = DataSourceUtils.<Integer>withDataSource(dataSource)
-                    .run(statement(query))
                     .ifTableNotExists("achilles_results",
                             table -> new AchillesResultNotAvailableException(String.format(ACHILLES_RESULTS_EXCEPTION, table)))
-                    .run(statement("select count(*) from achilles_results"))
+                    .run(statement(query))
                     .collectResults(resultSet -> {
                         Map<String, Integer> data = new HashMap<>();
                         int count = 0;
@@ -296,7 +292,7 @@ public class AchillesServiceImpl implements AchillesService {
             LOGGER.warn("Failed to check achilles results", e);
             return false;
         } catch (AchillesResultNotAvailableException e) {
-            LOGGER.warn(e.getMessage());
+            LOGGER.info(e.getMessage());
             return false;
         }
     }
@@ -304,7 +300,10 @@ public class AchillesServiceImpl implements AchillesService {
     @Override
     public AchillesJob createAchillesImportJob(DataSource dataSource) {
 
-        return checkAchillesJob(dataSource, AchillesJobSource.IMPORT);
+        if (hasAchillesResultTable(dataSource)) {
+            return checkAchillesJob(dataSource, AchillesJobSource.IMPORT);
+        }
+        return null;
     }
 
     @Async
@@ -571,13 +570,14 @@ public class AchillesServiceImpl implements AchillesService {
                 .withNetworkMode("host")
                 .exec();
         LOGGER.debug("Container created: {}", container.getId());
+        final boolean debugEnabled = LOGGER.isDebugEnabled();
+        List<String> logEntries = new LinkedList<>();
         try {
             LOGGER.debug("Starting container: {}", container.getId());
             dockerClient.startContainerCmd(container.getId()).exec();
             LOGGER.debug("Container running: {}", container.getId());
             WaitContainerResultCallback callback = dockerClient.waitContainerCmd(container.getId())
                     .exec(new WaitContainerResultCallback());
-            List<String> logEntries = new LinkedList<>();
             LogContainerResultCallback logCallback = new LogContainerResultCallback() {
                 @Override
                 public void onNext(Frame item) {
@@ -598,31 +598,48 @@ public class AchillesServiceImpl implements AchillesService {
             } catch (InterruptedException ignored) {
             }
             LOGGER.debug("Achilles finished with status code: {}", statusCode);
-            job.setAchillesLog(logEntries.stream().collect(Collectors.joining("\n")));
-            achillesJobRepository.save(job);
             if (statusCode == 0) {
-                LOGGER.debug("Creating Achilles output results archive");
-                Path dataDir = workDir.resolve(dataSource.getName());
-                Path jsonDir = dataDir;
-                try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(dataDir)) {
-                    for (Path path : directoryStream) {
-                        if (Files.isDirectory(path)) {
-                            jsonDir = path;
-                        }
-                    }
-                }
-                LOGGER.info("Achilles results available at: {}", jsonDir);
+                Path jsonDir = createAchillesOutputResults(dataSource, workDir);
+                LOGGER.info(ACHILLES_RESULTS_AVAILABLE_LOG, jsonDir);
                 return jsonDir;
             } else {
                 String message = "Achilles exited with errors, lost results";
                 LOGGER.warn(message);
+                final CopyArchiveFromContainerCmd errorReport
+                        = dockerClient.copyArchiveFromContainerCmd(container.getId(), "/opt/app/errorReport.txt");
+                try  {
+                    logEntries.addAll(IOUtils.readLines(errorReport.exec(), Charset.forName(StandardCharsets.UTF_8.name())));
+                } catch (NotFoundException e) {
+                    logEntries.add("errorReport.txt does not exists");
+                }
+                if (debugEnabled) {
+                    LOGGER.debug(ACHILLES_RESULTS_AVAILABLE_LOG, createAchillesOutputResults(dataSource, workDir));
+                }
                 throw new IOException(message);
             }
         } finally {
+            job.setAchillesLog(logEntries.stream().map(s -> s.replaceAll("\u0000", "")).collect(Collectors.joining("\n")));
+            achillesJobRepository.save(job);
             dockerClient.removeContainerCmd(container.getId())
-                    .withRemoveVolumes(true)
+                    .withRemoveVolumes(!debugEnabled)
                     .exec();
         }
+    }
+
+    private Path createAchillesOutputResults(DataSource dataSource, Path workDir) throws IOException {
+
+        LOGGER.debug("Creating Achilles output results archive");
+        Path dataDir = workDir.resolve(dataSource.getName());
+        Path jsonDir = null;
+        jsonDir = dataDir;
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(dataDir)) {
+            for (Path path : directoryStream) {
+                if (Files.isDirectory(path)) {
+                    jsonDir = path;
+                }
+            }
+        }
+        return jsonDir;
     }
 
     private String dburi(DataSource dataSource) {

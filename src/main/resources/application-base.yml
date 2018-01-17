@@ -150,3 +150,7 @@ jasypt:
 migration:
   retry:
     timeout: 10000
+cohorts:
+  result:
+    countEnabled: false
+    summaryEnabled: false

@@ -6,7 +6,7 @@
 
     <artifactId>datanode</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.10.0-QA</version>
+    <version>1.11.0-QA</version>
     <packaging>jar</packaging>
 
 
@@ -387,6 +387,13 @@
             <properties>
                 <env>integration</env>
                 <latestSuffix>-snapshot</latestSuffix>
+            </properties>
+        </profile>
+        <profile>
+            <id>selenium-test</id>
+            <properties>
+                <env>selenium-test</env>
+                <latestSuffix>-selenium-test</latestSuffix>
             </properties>
         </profile>
         <profile>
