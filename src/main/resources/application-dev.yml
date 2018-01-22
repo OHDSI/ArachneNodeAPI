@@ -8,6 +8,8 @@ datanode:
   arachneCentral:
     host: https://localhost
     port: 8080
+  jwt:
+    expiration: 604800
 swagger:
   enabled: true
   title: Arachne Data Node
