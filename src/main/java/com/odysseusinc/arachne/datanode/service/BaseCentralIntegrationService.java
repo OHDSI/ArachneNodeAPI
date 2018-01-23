@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.service;
 
+import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonBaseDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonProfessionalTypeDTO;
@@ -32,6 +33,7 @@ import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Set;
 
@@ -46,6 +48,8 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
     JsonResult<DTO> sendDataSourceRegistrationRequest(
             User user, DataNode dataNode,
             DTO commonCreateDataSourceDTO);
+
+    ArachnePasswordInfoDTO getPasswordInfo() throws URISyntaxException;
 
     void registerUserOnCentral(CentralRegisterUserDTO registerUserDTO);
 
