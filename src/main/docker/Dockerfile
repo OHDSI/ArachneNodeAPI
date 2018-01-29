@@ -1,4 +1,4 @@
-FROM hub.arachnenetwork.com/datanode_env
+FROM hub.arachnenetwork.com/datanode_env:1.0.1
 MAINTAINER alexandr.ryabokon@odysseusinc.com
 USER root
 VOLUME /tmp
