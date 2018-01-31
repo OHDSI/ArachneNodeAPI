@@ -25,7 +25,8 @@ package com.odysseusinc.arachne.datanode.dto.user;
 import java.util.List;
 
 public class UserDTO {
-    private Long id;
+
+    private String id;
     private String firstname;
     private String middlename;
     private String lastname;
@@ -34,13 +35,11 @@ public class UserDTO {
     private List<String> roles;
     private Boolean enabled;
 
-    public Long getId() {
-
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
-
+    public void setId(String id) {
         this.id = id;
     }
 
