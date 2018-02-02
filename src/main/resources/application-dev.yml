@@ -27,3 +27,7 @@ entities:
   scheduler:
     checkListRequestsInterval: 1000
     checkRequestInterval: 1000
+cohorts:
+  result:
+    countEnabled: true
+    summaryEnabled: true

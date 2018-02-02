@@ -62,17 +62,22 @@ public class AtlasClientConfig {
                 .target(AtlasClient.class, getAtlasUrl());
     }
 
-    @Bean
-    public AtlasLoginClient atlasLoginClient() {
+    public static AtlasLoginClient buildAtlasLoginClient(String url) {
 
         return Feign.builder()
                 .encoder(new FormEncoder(new JacksonEncoder()))
                 .decoder(new TokenDecoder())
                 .logger(new Slf4jLogger(AtlasLoginClient.class))
-                .target(AtlasLoginClient.class, getAtlasUrl());
+                .target(AtlasLoginClient.class, url);
     }
 
-    private String getAtlasUrl() {
+    @Bean
+    public AtlasLoginClient atlasLoginClient() {
+
+        return buildAtlasLoginClient(getAtlasUrl());
+    }
+
+    public static String getAtlasUrl(String atlasHost, Integer atlasPort, String atlasUrlContext) {
 
         return UriComponentsBuilder
                 .fromHttpUrl(atlasHost)
@@ -80,5 +85,10 @@ public class AtlasClientConfig {
                 .path(atlasUrlContext)
                 .build()
                 .toString();
+    }
+
+    private String getAtlasUrl() {
+
+        return getAtlasUrl(atlasHost, atlasPort, atlasUrlContext);
     }
 }

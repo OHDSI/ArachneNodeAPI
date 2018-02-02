@@ -65,6 +65,7 @@ public interface Constants {
             String GET_USER = "/api/v1/user-management/users/{id}";
             String LINK_TO_NODE = "/api/v1/user-management/datanodes/{datanodeId}/users";
             String USER_INFO = "/api/v1/auth/me";
+            String PASSWORD_POLICIES = "/api/v1/auth/password-policies";
         }
 
         interface Submission {
@@ -158,5 +159,13 @@ public interface Constants {
         String ACHILLES_RES_SCHEMA = "ACHILLES_RES_SCHEMA";
         String ACHILLES_CDM_VERSION = "ACHILLES_CDM_VERSION";
         String DEFAULT_CDM_VERSION = "5";
+    }
+
+    interface Atlas {
+
+        String INFO = "/info";
+        String LOGIN_DB = "/user/login/db";
+        String LOGIN_LDAP = "/user/login/ldap";
+        String COHORT_DEFINITION = "/cohortdefinition";
     }
 }

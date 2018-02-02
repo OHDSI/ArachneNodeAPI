@@ -49,7 +49,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class ExceptionHandlingAdvice extends BaseController {
 
-    private static final String ERROR_MESSAGE = "Please contact system administrator and provide this error token: %s";
+    private static final String ERROR_MESSAGE_WITH_TOKEN = "Please contact system administrator and provide this error token: %s";
+    private static final String ERROR_MESSAGE = "An error has occurred. Please contact system administrator";
     private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandlingAdvice.class);
     @Value("${datanode.app.errorsTokenEnabled}")
     private boolean errorsTokenEnabled;
@@ -59,101 +60,84 @@ public class ExceptionHandlingAdvice extends BaseController {
         super(userService);
     }
 
-
     @ExceptionHandler({SQLException.class, DataAccessException.class})
     public ResponseEntity handleDataAccessExceptions(Exception ex) {
 
-        LOGGER.error(ex.getMessage(), ex);
-        JsonResult result = new JsonResult<>(SYSTEM_ERROR);
-        result.setErrorMessage(ex.getMessage());
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return getErrorResponse(SYSTEM_ERROR, ex);
     }
-
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<JsonResult> exceptionHandler(Exception ex) {
 
-        LOGGER.error(ex.getMessage(), ex);
-        JsonResult result = new JsonResult<>(SYSTEM_ERROR);
-        result.setErrorMessage(ex.getMessage());
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return getErrorResponse(SYSTEM_ERROR, ex);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<JsonResult> exceptionHandler(MethodArgumentNotValidException ex) {
 
-        LOGGER.error(ex.getMessage(), ex);
         JsonResult result = new JsonResult<>(VALIDATION_ERROR);
         if (ex.getBindingResult().hasErrors()) {
             result = setValidationErrors(ex.getBindingResult());
         }
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return getErrorResponse(result, ex);
     }
 
     @ExceptionHandler(IOException.class)
     public ResponseEntity<JsonResult> exceptionHandler(IOException ex) {
 
-        LOGGER.error(ex.getMessage(), ex);
-        JsonResult result = new JsonResult<>(SYSTEM_ERROR);
-        result.setErrorMessage(ex.getMessage());
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return getErrorResponse(SYSTEM_ERROR, ex);
     }
 
     @ExceptionHandler(AuthException.class)
     public ResponseEntity<JsonResult> exceptionHandler(AuthException ex) {
 
-        LOGGER.error(ex.getMessage(), ex);
-        JsonResult result = new JsonResult<>(UNAUTHORIZED);
-        result.setErrorMessage(ex.getMessage());
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return getErrorResponse(UNAUTHORIZED, ex);
     }
 
-    private ResponseEntity getErrorResponse(HttpStatus status, Exception ex) {
+    private ResponseEntity<JsonResult> getErrorResponse(JsonResult.ErrorCode errorCode, Exception ex) {
+
+        JsonResult result = new JsonResult<>(errorCode);
+        return  getErrorResponse(result,  ex);
+    }
+
+    private ResponseEntity<JsonResult> getErrorResponse(JsonResult result, Exception ex) {
+
+        result.setErrorMessage(ex.getMessage());
 
         if (errorsTokenEnabled) {
             String errorToken = generateErrorToken();
-            //process error context staff
-            //fill me
-            // end process error context staff
-            LOGGER.error("Server error : " + errorToken, ex);
-            return new ResponseEntity(generateExceptionMessage(errorToken), status);
+            LOGGER.error(ex.getMessage() + " token: " + errorToken, ex);
+            result.setErrorMessage(String.format(ERROR_MESSAGE_WITH_TOKEN, errorToken));
         }
 
-        LOGGER.error("Server error ", ex);
-        return new ResponseEntity(ex.getMessage(), status);
+        LOGGER.error(ex.getMessage(), ex);
+        result.setErrorMessage(ERROR_MESSAGE);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @ExceptionHandler(IntegrationValidationException.class)
-    public ResponseEntity<JsonResult> exceptionHandler(IntegrationValidationException ex) throws IOException {
+    public ResponseEntity<JsonResult> exceptionHandler(IntegrationValidationException ex) {
 
         LOGGER.error(ex.getMessage(), ex);
         return new ResponseEntity<>(ex.getJsonResult(), HttpStatus.OK);
     }
 
     @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<JsonResult> exceptionHandler(ValidationException ex) throws IOException {
+    public ResponseEntity<JsonResult> exceptionHandler(ValidationException ex) {
 
-        LOGGER.error(ex.getMessage(), ex);
-        JsonResult result = new JsonResult<>(VALIDATION_ERROR);
-        result.setErrorMessage(ex.getMessage());
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return getErrorResponse(VALIDATION_ERROR, ex);
     }
 
     @ExceptionHandler(NotExistException.class)
     public ResponseEntity<JsonResult> exceptionHandler(NotExistException ex) {
-        LOGGER.error(ex.getMessage());
-        JsonResult result = new JsonResult<>(SYSTEM_ERROR);
-        result.setErrorMessage(ex.getMessage());
-        return new ResponseEntity<>(result, HttpStatus.OK);
+
+        return getErrorResponse(SYSTEM_ERROR, ex);
     }
 
     @ExceptionHandler(IllegalOperationException.class)
     public ResponseEntity<JsonResult> exceptionHandler(IllegalOperationException ex) {
 
-        LOGGER.error(ex.getMessage());
-        final JsonResult result = new JsonResult(SYSTEM_ERROR);
-        result.setErrorMessage(ex.getMessage());
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return getErrorResponse(SYSTEM_ERROR, ex);
     }
 
     private String generateErrorToken() {
@@ -161,8 +145,4 @@ public class ExceptionHandlingAdvice extends BaseController {
         return UUID.randomUUID().toString();
     }
 
-    private String generateExceptionMessage(String token) {
-
-        return String.format(ERROR_MESSAGE, token);
-    }
 }

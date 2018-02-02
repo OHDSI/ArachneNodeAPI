@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.controller.admin;
 
+import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,8 +30,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AdminController extends BaseAdminController {
 
-    public AdminController(UserService userService, GenericConversionService conversionService) {
+    public AdminController(UserService userService, GenericConversionService conversionService, AtlasService atlasService) {
 
-        super(userService, conversionService);
+        super(userService, conversionService, atlasService);
     }
 }

@@ -64,13 +64,13 @@ public class DataSourceUtils<T> {
         return new DataSourceUtils<>(dataSource);
     }
 
-    public DataSourceUtils<T> ifTableNotExists(String tableName, Function<String, RuntimeException> handler) throws SQLException {
+    public DataSourceUtils<T> ifTableNotExists(String schema, String tableName, Function<String, RuntimeException> handler) throws SQLException {
 
         Objects.requireNonNull(handler, "Handler function is required");
         createConnection();
         DatabaseMetaData metaData = c.getMetaData();
-        ResultSet resultSet = metaData.getTables(null, dataSource.getCdmSchema(), tableName, null);
-        if (!resultSet.next()){
+        ResultSet resultSet = metaData.getTables(null, schema, tableName, null);
+        if (!resultSet.next()) {
             throw handler.apply(tableName);
         }
         return this;
@@ -121,7 +121,7 @@ public class DataSourceUtils<T> {
         try (ResultSet rs = this.resultSet) {
             Map proceed = processor.process(rs).getValues();
             this.results.merge(key, proceed, (old, value) -> {
-                ((Map)old).putAll((Map) value);
+                ((Map) old).putAll((Map) value);
                 return old;
             });
         } finally {

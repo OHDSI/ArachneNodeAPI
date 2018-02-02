@@ -15,17 +15,13 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexander Saltykov, Vitaly Koulakov, Anton Gackovka, Alexandr Ryabokon, Mikhail Mironov
- * Created: Nov 20, 2017
+ * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
+ * Created: December 05, 2017
  *
  */
 
 package com.odysseusinc.arachne.datanode.service;
 
-import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
-
-public interface SqlRenderService {
-    String renderSql(CohortDefinition cohort);
-
-    String renderSql(CohortDefinition cohort, String[] parameters, String values[]);
+public interface AtlasService {
+    String checkConnection();
 }

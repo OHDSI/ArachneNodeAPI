@@ -16,16 +16,22 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexander Saltykov, Vitaly Koulakov, Anton Gackovka, Alexandr Ryabokon, Mikhail Mironov
- * Created: Nov 20, 2017
+ * Created: Nov 3, 2017
  *
  */
 
-package com.odysseusinc.arachne.datanode.service;
+package com.odysseusinc.arachne.datanode.dto.atlas;
 
-import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
+public class IRAnalysisInfo extends IRAnalysis {
+    private String expression;
 
-public interface SqlRenderService {
-    String renderSql(CohortDefinition cohort);
+    public String getExpression() {
 
-    String renderSql(CohortDefinition cohort, String[] parameters, String values[]);
+        return expression;
+    }
+
+    public void setExpression(String expression) {
+
+        this.expression = expression;
+    }
 }

@@ -41,7 +41,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 @EnableAutoConfiguration
-@EnableJpaRepositories(basePackages = "com.odysseusinc.arachne.datanode.repository")
+@EnableJpaRepositories(basePackages = {
+        "com.odysseusinc.arachne.datanode.repository",
+        "com.odysseusinc.arachne.system.settings.repository"
+})
 @EntityScan(basePackages = {"com.odysseusinc.arachne.*"})
 @ComponentScan(basePackages = {"com.odysseusinc.arachne.datanode"},
         excludeFilters = {

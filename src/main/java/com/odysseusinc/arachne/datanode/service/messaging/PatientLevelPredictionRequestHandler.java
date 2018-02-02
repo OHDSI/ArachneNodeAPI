@@ -23,11 +23,9 @@
 
 package com.odysseusinc.arachne.datanode.service.messaging;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonPredictionDTO;
-import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
@@ -39,7 +37,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
@@ -52,17 +49,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler<CommonPredictionDTO, List<MultipartFile>> {
+public class PatientLevelPredictionRequestHandler extends BaseRequestHandler implements AtlasRequestHandler<CommonPredictionDTO, List<MultipartFile>> {
 
     private static final Logger logger = LoggerFactory.getLogger(PatientLevelPredictionRequestHandler.class);
     public static final String INITIAL_SUFFIX = " initial population.sql";
     public static final String OUTCOME_SUFFIX = " outcome population.sql";
 
-    private final AtlasClient atlasClient;
     private final GenericConversionService conversionService;
     private final CommonEntityService commonEntityService;
     private final CentralSystemClient centralClient;
-    private final SqlRenderService sqlRenderService;
     private final Template patientLevelPredictionRunnerTemplate;
 
     @Autowired
@@ -74,11 +69,11 @@ public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler
                                                 @Qualifier("patientLevelPredictionRunnerTemplate")
                                                             Template patientLevelPredictionRunnerTemplate) {
 
-        this.atlasClient = atlasClient;
+        super(sqlRenderService, atlasClient);
+
         this.conversionService = conversionService;
         this.commonEntityService = commonEntityService;
         this.centralClient = centralClient;
-        this.sqlRenderService = sqlRenderService;
         this.patientLevelPredictionRunnerTemplate = patientLevelPredictionRunnerTemplate;
     }
 
@@ -120,24 +115,6 @@ public class PatientLevelPredictionRequestHandler implements AtlasRequestHandler
         params.put("outcomeFileName", outcomeName);
         String result = patientLevelPredictionRunnerTemplate.apply(params);
         return new MockMultipartFile("main.r", result.getBytes());
-    }
-
-    private MultipartFile getCohortFile(Integer cohortId, String name) {
-         CohortDefinition cohort = atlasClient.getCohortDefinition(cohortId);
-         if (Objects.nonNull(cohort)) {
-             String content = sqlRenderService.renderSql(cohort);
-             if (Objects.nonNull(content)) {
-                 return new MockMultipartFile(name, content.getBytes());
-             }
-         }
-         return null;
-    }
-
-    private MultipartFile getAnalysisDescription(Map<String, Object> info) throws IOException {
-
-        ObjectMapper mapper = new ObjectMapper();
-        String result = mapper.writeValueAsString(info);
-        return new MockMultipartFile("analysisDescription.json", result.getBytes());
     }
 
     @Override

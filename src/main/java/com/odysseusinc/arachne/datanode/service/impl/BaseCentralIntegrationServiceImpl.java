@@ -24,6 +24,7 @@ package com.odysseusinc.arachne.datanode.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.isAnyBlank;
 
+import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeRegisterDTO;
@@ -145,7 +146,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
-    public JsonResult<CommonDataSourceDTO> sendDataSourceRegistrationRequest(
+    public JsonResult<DTO> sendDataSourceRegistrationRequest(
             User user, DataNode dataNode,
             DTO commonCreateDataSourceDTO) {
 
@@ -156,13 +157,21 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
 
         HttpEntity<DTO> requestEntity =
                 new HttpEntity<>(commonCreateDataSourceDTO, centralUtil.getCentralAuthHeader(user.getToken()));
-        ResponseEntity<JsonResult<CommonDataSourceDTO>> exchange =
+        ResponseEntity<JsonResult<DTO>> exchange =
                 centralRestTemplate.exchange(
                         uriBuilder.buildAndExpand(uriParams).toUri(),
                         HttpMethod.POST, requestEntity,
-                        new ParameterizedTypeReference<JsonResult<CommonDataSourceDTO>>() {});
+                        getParameterizedTypeReferenceJsonResultDTO());
 
         return exchange.getBody();
+    }
+
+    @Override
+    public ArachnePasswordInfoDTO getPasswordInfo() throws URISyntaxException {
+
+        return centralRestTemplate.getForEntity(new URI(centralUtil.getCentralUrl()
+                + Constants.CentralApi.User.PASSWORD_POLICIES), ArachnePasswordInfoDTO.class)
+                .getBody();
     }
 
     @Override
@@ -214,7 +223,8 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
         String url = centralUtil.getCentralUrl() + Constants.CentralApi.User.USER_INFO;
         ResponseEntity<JsonResult<UserDTO>> exchange =
                 centralRestTemplate.exchange(url, HttpMethod.GET, request,
-                        new ParameterizedTypeReference<JsonResult<UserDTO>>() {});
+                        new ParameterizedTypeReference<JsonResult<UserDTO>>() {
+                        });
         return conversionService.convert(exchange.getBody().getResult(), User.class);
     }
 
@@ -371,7 +381,8 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                 uri,
                 method,
                 httpEntity,
-                new ParameterizedTypeReference<JsonResult<List<CommonUserDTO>>>() {},
+                new ParameterizedTypeReference<JsonResult<List<CommonUserDTO>>>() {
+                },
                 datanodeId
         );
         final JsonResult result = response.getBody();
