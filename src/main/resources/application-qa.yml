@@ -1,0 +1,12 @@
+server:
+  ssl:
+    enabled: false
+datanode:
+  arachneCentral:
+    host: https://qacommunity.arachnenetwork.com
+  baseURL: https://qacommunitynode.arachnenetwork.com
+jasypt:
+  encryptor:
+    algorythm: SHA-256
+docker:
+  host: tcp://149.56.25.6:2375

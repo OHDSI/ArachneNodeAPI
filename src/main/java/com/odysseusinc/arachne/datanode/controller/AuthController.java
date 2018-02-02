@@ -22,6 +22,9 @@
 
 package com.odysseusinc.arachne.datanode.controller;
 
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+
+import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationResponse;
@@ -37,11 +40,11 @@ import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import io.swagger.annotations.ApiOperation;
+import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +78,7 @@ public class AuthController {
     private String tokenHeader;
 
     @ApiOperation("Get auth method")
-    @RequestMapping(value = "/api/v1/auth/method", method = RequestMethod.GET)
+    @RequestMapping(value = "/api/v1/auth/method", method = GET)
     public JsonResult<CommonAuthMethodDTO> authMethod() {
 
         return integrationService.getAuthMethod();
@@ -144,7 +147,7 @@ public class AuthController {
     }
 
     @ApiOperation("Get current principal")
-    @RequestMapping(value = "/api/v1/auth/me", method = RequestMethod.GET)
+    @RequestMapping(value = "/api/v1/auth/me", method = GET)
     public JsonResult principal(Principal principal) {
 
         JsonResult result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
@@ -185,7 +188,7 @@ public class AuthController {
     }
 
     @ApiOperation(value = "Get professional types list")
-    @RequestMapping(value = "/api/v1/user-management/professional-types", method = RequestMethod.GET)
+    @RequestMapping(value = "/api/v1/user-management/professional-types", method = GET)
     public JsonResult<CommonProfessionalTypeDTO> getProfessionalTypes() {
 
         return integrationService.getProfessionalTypes();
@@ -200,4 +203,10 @@ public class AuthController {
 
     }
 
+    @ApiOperation("Password restrictions")
+    @RequestMapping(value = "/api/v1/auth/password-policies", method = GET)
+    public ArachnePasswordInfoDTO getPasswordPolicies() throws URISyntaxException {
+
+        return integrationService.getPasswordInfo();
+    }
 }

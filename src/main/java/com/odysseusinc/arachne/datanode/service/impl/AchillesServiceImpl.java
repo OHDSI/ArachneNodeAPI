@@ -274,7 +274,7 @@ public class AchillesServiceImpl implements AchillesService {
             String query = "select count(*) from %s.achilles_results";
             query = String.format(query, getResultSchema(dataSource));
             Map<String, Integer> result = DataSourceUtils.<Integer>withDataSource(dataSource)
-                    .ifTableNotExists("achilles_results",
+                    .ifTableNotExists(dataSource.getResultSchema(), "achilles_results",
                             table -> new AchillesResultNotAvailableException(String.format(ACHILLES_RESULTS_EXCEPTION, table)))
                     .run(statement(query))
                     .collectResults(resultSet -> {
