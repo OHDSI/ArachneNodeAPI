@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
+import com.odysseusinc.arachne.commons.utils.UserIdUtils;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
@@ -52,7 +53,7 @@ public class CommonUserDTOToUserConverter implements Converter<CommonUserDTO, Us
     public User convert(CommonUserDTO user) {
 
         User dto = new User();
-        dto.setId(user.getId());
+        dto.setId(UserIdUtils.uuidToId(user.getId()));
         dto.setEmail(user.getEmail());
         dto.setFirstName(user.getFirstname());
         dto.setLastName(user.getLastname());
