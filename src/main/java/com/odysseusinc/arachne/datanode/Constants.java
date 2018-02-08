@@ -28,6 +28,7 @@ public interface Constants {
     String LOGIN_REGEX = "^[_'.@A-Za-z0-9-]*$";
     int PASSWORD_MIN_LENGTH = 6;
     int PASSWORD_MAX_LENGTH = 100;
+    String DUMMY_PASSWORD = "password_was_set";
 
     interface AppConf {
         String PROFILE_DEVELOPMENT = "dev";
