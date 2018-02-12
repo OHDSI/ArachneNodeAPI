@@ -41,12 +41,16 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     JsonResult<CommonAuthMethodDTO> getAuthMethod();
 
-    DataNode sendDataNodeRegistrationRequest(User user, DataNode dataNode);
+    DataNode sendDataNodeCreationRequest(User user, DataNode dataNode);
 
-    DataNode updateDataNodeOnCentral(User user, DataNode dataNode);
+    /*DataNode updateDataNodeOnCentral(User user, DataNode dataNode);*/
 
-    JsonResult<DTO> sendDataSourceRegistrationRequest(
+    JsonResult<DTO> sendDataSourceCreationRequest(
             User user, DataNode dataNode,
+            DTO commonCreateDataSourceDTO);
+
+    JsonResult<DTO> sendDataSourceUpdateRequest(
+            User user, DataSource dataSource,
             DTO commonCreateDataSourceDTO);
 
     ArachnePasswordInfoDTO getPasswordInfo() throws URISyntaxException;

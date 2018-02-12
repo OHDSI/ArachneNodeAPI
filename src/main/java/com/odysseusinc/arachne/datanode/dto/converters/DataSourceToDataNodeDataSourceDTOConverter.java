@@ -53,7 +53,6 @@ public class DataSourceToDataNodeDataSourceDTOConverter implements Converter<Dat
         dto.setDbUsername(dataSource.getUsername());
         dto.setDbPassword(dataSource.getPassword());
         dto.setDescription(dataSource.getDescription());
-        dto.setIsRegistred(dataSource.getRegistred());
         dto.setUuid(dataSource.getUuid());
         return dto;
     }

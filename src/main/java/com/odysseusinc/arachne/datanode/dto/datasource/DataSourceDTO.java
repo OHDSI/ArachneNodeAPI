@@ -49,9 +49,12 @@ public class DataSourceDTO {
 
     private String dbPassword;
 
-    private Boolean registred;
     private CommonHealthStatus healthStatus;
     private String healthStatusDescription;
+
+    private String targetSchema;
+    private String resultSchema;
+    private String cohortTargetTable;
 
     public Long getId() {
 
@@ -143,16 +146,6 @@ public class DataSourceDTO {
         this.dbPassword = dbPassword;
     }
 
-    public Boolean getIsRegistred() {
-
-        return registred;
-    }
-
-    public void setIsRegistred(Boolean registred) {
-
-        this.registred = registred;
-    }
-
     public CommonHealthStatus getHealthStatus() {
 
         return healthStatus;
@@ -171,5 +164,29 @@ public class DataSourceDTO {
     public void setHealthStatusDescription(String healthStatusDescription) {
 
         this.healthStatusDescription = healthStatusDescription;
+    }
+
+    public String getTargetSchema() {
+        return targetSchema;
+    }
+
+    public void setTargetSchema(String targetSchema) {
+        this.targetSchema = targetSchema;
+    }
+
+    public String getResultSchema() {
+        return resultSchema;
+    }
+
+    public void setResultSchema(String resultSchema) {
+        this.resultSchema = resultSchema;
+    }
+
+    public String getCohortTargetTable() {
+        return cohortTargetTable;
+    }
+
+    public void setCohortTargetTable(String cohortTargetTable) {
+        this.cohortTargetTable = cohortTargetTable;
     }
 }

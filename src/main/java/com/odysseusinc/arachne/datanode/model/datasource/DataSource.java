@@ -91,9 +91,6 @@ public class DataSource {
     private DataNode dataNode;
 
     @Column
-    private Boolean registred;
-
-    @Column
     @Enumerated(value = EnumType.STRING)
     private CommonHealthStatus healthStatus = CommonHealthStatus.NOT_COLLECTED;
 
@@ -214,16 +211,6 @@ public class DataSource {
         this.dataNode = dataNode;
     }
 
-    public Boolean getRegistred() {
-
-        return registred;
-    }
-
-    public void setRegistred(Boolean registred) {
-
-        this.registred = registred;
-    }
-
     public CommonHealthStatus getHealthStatus() {
 
         return healthStatus;
@@ -297,7 +284,6 @@ public class DataSource {
                 .add("username", "***")
                 .add("password", "***")
                 .add("dataNode", dataNode)
-                .add("registred", registred)
                 .add("healthStatus", healthStatus)
                 .add("healthStatusDescription", healthStatusDescription)
                 .add("targetSchema", targetSchema)

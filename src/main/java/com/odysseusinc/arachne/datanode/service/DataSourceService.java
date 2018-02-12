@@ -50,9 +50,11 @@ public interface DataSourceService {
 
     DataSource update(User user, DataSource dataSource);
 
+/*
     DataSource markDataSourceAsRegistered(DataSource dataSource, Long centralId);
 
     DataSource markDataSourceAsUnregistered(Long centralId);
+*/
 
     void updateHealthStatus(Long centralId, CommonHealthStatus status, String description);
 }

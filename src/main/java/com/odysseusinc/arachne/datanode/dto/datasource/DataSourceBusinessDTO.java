@@ -49,7 +49,9 @@ public class DataSourceBusinessDTO {
     private String targetSchema;
     private String resultSchema;
     private String cohortTargetTable;
+/*
     private Boolean isRegistered;
+*/
 
     public Long getId() {
 
@@ -135,15 +137,5 @@ public class DataSourceBusinessDTO {
     public void setCohortTargetTable(String cohortTargetTable) {
 
         this.cohortTargetTable = cohortTargetTable;
-    }
-
-    public Boolean getIsRegistered() {
-
-        return isRegistered;
-    }
-
-    public void setIsRegistered(Boolean registered) {
-
-        isRegistered = registered;
     }
 }

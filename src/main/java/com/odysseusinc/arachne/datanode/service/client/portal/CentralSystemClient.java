@@ -23,7 +23,7 @@
 package com.odysseusinc.arachne.datanode.service.client.portal;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasInfoDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeRegisterResponseDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityRequestDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonListEntityRequest;
@@ -32,9 +32,8 @@ import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface CentralSystemClient {
 
@@ -65,8 +64,8 @@ public interface CentralSystemClient {
     JsonResult<CommonDataSourceDTO> getDataSource(@Param("uuid") String dataSourceUuid);
 
     @RequestLine("GET /api/v1/data-nodes/byuuid/{uuid}")
-    JsonResult<CommonDataNodeRegisterResponseDTO> getDataNode(@Param("uuid") String dataNodeUuid);
+    JsonResult<CommonDataNodeDTO> getDataNode(@Param("uuid") String dataNodeUuid);
 
     @RequestLine("GET /api/v1/data-nodes/{id}")
-    JsonResult<CommonDataNodeRegisterResponseDTO> getDataNode(@Param("id") Long centralId);
+    JsonResult<CommonDataNodeDTO> getDataNode(@Param("id") Long centralId);
 }

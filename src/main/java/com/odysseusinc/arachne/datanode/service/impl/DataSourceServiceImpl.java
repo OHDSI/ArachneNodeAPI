@@ -26,7 +26,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Preconditions;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
-import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
@@ -34,18 +33,17 @@ import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
-import java.util.HashMap;
-import java.util.Map;
-import javax.annotation.PostConstruct;
-import org.springframework.data.domain.Sort;
-
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import javax.annotation.PostConstruct;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,15 +80,13 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     public Optional<DataSource> create(User owner, DataSource dataSource) throws NotExistException {
 
-        Optional<DataNode> currentDataNode = dataNodeService.findCurrentDataNode();
-        if (!currentDataNode.isPresent()) {
-            throw new NotExistException(DATANODE_IS_NOT_EXIST_EXCEPTION, DataNode.class);
-        }
+        DataNode currentDataNode = dataNodeService.findCurrentDataNodeOrCreate(owner);
+
         checkNotNull(dataSource, "given datasource is null");
         checkNotNull(owner, "given owner is null");
+        checkNotNull(currentDataNode, "given datenode is null");
         dataSource.setUuid(UUID.randomUUID().toString());
-        dataSource.setDataNode(currentDataNode.get());
-        dataSource.setRegistred(false);
+        dataSource.setDataNode(currentDataNode);
         return Optional.of(dataSourceRepository.save(dataSource));
     }
 
@@ -109,7 +105,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     public List<DataSource> findAllRegistered() {
 
-        return dataSourceRepository.findAllRegistered();
+        return dataSourceRepository.findAll(); // todo
     }
 
     @Override
@@ -117,11 +113,12 @@ public class DataSourceServiceImpl implements DataSourceService {
 
         checkNotNull(id, "given data source surrogate id is blank ");
         final DataSource dataSource = getById(id);
-        if (dataSource.getRegistred()) {
+        //todo: check at central published
+    /*    if (dataSource.getRegistred()) {
             final String message
                     = String.format("Can not delete registered DataSource with id='%s'. Unregister it first", id);
             throw new IllegalOperationException(message);
-        }
+        }*/
         dataSourceRepository.delete(id);
     }
 
@@ -205,7 +202,7 @@ public class DataSourceServiceImpl implements DataSourceService {
         return dataSourceRepository.save(exists);
     }
 
-    @Transactional
+/*      @Transactional
     @Override
     public DataSource markDataSourceAsRegistered(DataSource dataSource, Long centralId) {
 
@@ -213,14 +210,14 @@ public class DataSourceServiceImpl implements DataSourceService {
         return setDSRegistered(dataSource, centralId);
     }
 
-    @Transactional
+  @Transactional
     @Override
     public DataSource markDataSourceAsUnregistered(Long centralId) {
 
         DataSource dataSource = dataSourceRepository.findByCentralId(centralId)
                 .orElseThrow(() -> new NotExistException(DataSource.class));
-        return setDSRegistered(dataSource, null);
-    }
+        return dataSource;
+    }*/
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -233,11 +230,12 @@ public class DataSourceServiceImpl implements DataSourceService {
         });
     }
 
-    private DataSource setDSRegistered(DataSource dataSource, Long centralId) {
+
+/*    private DataSource setDSRegistered(DataSource dataSource, Long centralId) {
 
         dataSource.setRegistred(centralId != null);
         return dataSourceRepository.save(dataSource);
-    }
+    }*/
 
     protected final Sort getSort(String sortBy, Boolean sortAsc) {
 

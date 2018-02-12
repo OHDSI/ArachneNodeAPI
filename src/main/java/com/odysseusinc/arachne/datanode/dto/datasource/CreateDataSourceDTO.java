@@ -22,8 +22,6 @@
 
 package com.odysseusinc.arachne.datanode.dto.datasource;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -47,6 +45,10 @@ public class CreateDataSourceDTO {
     private String dbUsername;
 
     private String dbPassword;
+
+    private String targetSchema;
+    private String resultSchema;
+    private String cohortTargetTable;
 
     private Boolean registred;
 
@@ -158,5 +160,29 @@ public class CreateDataSourceDTO {
     public void setIsRegistred(Boolean registred) {
 
         this.registred = registred;
+    }
+
+    public String getTargetSchema() {
+        return targetSchema;
+    }
+
+    public void setTargetSchema(String targetSchema) {
+        this.targetSchema = targetSchema;
+    }
+
+    public String getResultSchema() {
+        return resultSchema;
+    }
+
+    public void setResultSchema(String resultSchema) {
+        this.resultSchema = resultSchema;
+    }
+
+    public String getCohortTargetTable() {
+        return cohortTargetTable;
+    }
+
+    public void setCohortTargetTable(String cohortTargetTable) {
+        this.cohortTargetTable = cohortTargetTable;
     }
 }
