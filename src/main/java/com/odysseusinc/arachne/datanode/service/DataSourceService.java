@@ -36,8 +36,6 @@ public interface DataSourceService {
 
     List<DataSource> findAll(String sortBy, Boolean sortAsc);
 
-    List<DataSource> findAllRegistered();
-
     void delete(Long id);
 
     void delete(DataSource dataSource);
@@ -49,12 +47,6 @@ public interface DataSourceService {
     DataSource getById(Long id);
 
     DataSource update(User user, DataSource dataSource);
-
-/*
-    DataSource markDataSourceAsRegistered(DataSource dataSource, Long centralId);
-
-    DataSource markDataSourceAsUnregistered(Long centralId);
-*/
 
     void updateHealthStatus(Long centralId, CommonHealthStatus status, String description);
 }

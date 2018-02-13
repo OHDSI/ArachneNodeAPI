@@ -84,7 +84,7 @@ public class DataNodeServiceImpl implements DataNodeService {
             throw new AlreadyExistsException(ALREADY_EXISTS_EXCEPTION);
         }
         dataNode = centralIntegrationService.sendDataNodeCreationRequest(user, dataNode);
-        centralIntegrationService.relinkAllUsersToDataNodeOnCentral(dataNode, users);
+       // centralIntegrationService.relinkAllUsersToDataNodeOnCentral(dataNode, users);
         return dataNodeRepository.save(dataNode);
     }
 

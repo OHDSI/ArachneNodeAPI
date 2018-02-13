@@ -46,7 +46,6 @@ import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -101,15 +100,20 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
-        final DataSource dataSource = convertAndCheck(dataSourceDTO); // checking here (enterp)
+        final DataSource dataSource = convertAndCheck(dataSourceDTO);
 
-        Optional<DataSource> optional = dataSourceService.create(user, dataSource);
+        DataSource optional = dataSourceService.create(user, dataSource).get();
 
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
-        BusinessDTO businessDTO = conversionService.convert(optional.get(), getDataSourceBusinessDTOClass());
-        createOnCentral(principal, businessDTO.getId(), businessDTO);
+        BusinessDTO businessDTO = conversionService.convert(optional, getDataSourceBusinessDTOClass());
 
-        result.setResult(modelMapper.map(optional.get(), DataSourceDTO.class));
+        BusinessDTO dd = createOnCentral(principal, businessDTO.getId(), businessDTO).getResult();
+        optional.setCentralId(dd.getId());
+        dataSourceService.update(user, optional);
+
+        //integrationService.linkUserToDataNodeOnCentral(dataSource.getDataNode(), user); // move to central
+
+        result.setResult(modelMapper.map(optional, DataSourceDTO.class));
         return result;
     }
 
@@ -172,9 +176,16 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         if (principal == null) {
             throw new AuthException("user not found");
         }
-        dataSourceService.delete(id);
-        JsonResult<Boolean> result = new JsonResult<>(NO_ERROR);
-        result.setResult(Boolean.TRUE);
+        JsonResult centralResult = unpublishAndDeleteOnCentral(id);
+        JsonResult<Boolean> result = new JsonResult<>();
+        result.setErrorCode(centralResult.getErrorCode());
+
+        if (NO_ERROR.getCode().equals(centralResult.getErrorCode())) {
+            dataSourceService.delete(id);
+            result.setResult(Boolean.TRUE);
+        } else {
+            result.setResult(Boolean.FALSE);
+        }
         return result;
     }
 
@@ -200,7 +211,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
         final BusinessDTO dto = conversionService.convert(dataSource, getDataSourceBusinessDTOClass());
         dto.setModelType(checkDataSource(savedDataSource));
-        updateOnCentral(principal, id, dto);
+        updateOnCentral(principal, savedDataSource.getCentralId(), dto);
 
         return new JsonResult<>(NO_ERROR, modelMapper.map(savedDataSource, DataSourceDTO.class));
     }
@@ -235,6 +246,12 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         });
     }
 
+    public JsonResult unpublishAndDeleteOnCentral(Long dataSourceId) {
+
+        DataSource dataSource = dataSourceService.getById(dataSourceId);
+        return centralClient.unpublishAndSoftDeleteDataSource(dataSource.getCentralId());
+    }
+
 /*
     @ApiOperation(value = "Register datasource on arachne central")
     @RequestMapping(
@@ -263,7 +280,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
         DataSource dataSource = dataSourceService.getById(id);
         final Long dataNodeCentralId = dataSource.getDataNode().getCentralId();
-        final JsonResult result = centralClient.unregisterDataSource(dataNodeCentralId, dataSource.getCentralId());
+        final JsonResult result = centralClient.unregisterAndSoftDeleteDataSource(dataNodeCentralId, dataSource.getCentralId());
         if (NO_ERROR.getCode().equals(result.getErrorCode())) {
             dataSourceService.markDataSourceAsUnregistered(dataSource.getCentralId());
         }

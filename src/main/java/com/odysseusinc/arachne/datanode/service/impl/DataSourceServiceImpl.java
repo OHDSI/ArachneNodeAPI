@@ -103,22 +103,9 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     @Override
-    public List<DataSource> findAllRegistered() {
-
-        return dataSourceRepository.findAll(); // todo
-    }
-
-    @Override
     public void delete(Long id) {
 
         checkNotNull(id, "given data source surrogate id is blank ");
-        final DataSource dataSource = getById(id);
-        //todo: check at central published
-    /*    if (dataSource.getRegistred()) {
-            final String message
-                    = String.format("Can not delete registered DataSource with id='%s'. Unregister it first", id);
-            throw new IllegalOperationException(message);
-        }*/
         dataSourceRepository.delete(id);
     }
 
