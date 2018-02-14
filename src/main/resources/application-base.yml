@@ -154,3 +154,4 @@ cohorts:
   result:
     countEnabled: false
     summaryEnabled: false
+    defaultTargetTable: cohort
