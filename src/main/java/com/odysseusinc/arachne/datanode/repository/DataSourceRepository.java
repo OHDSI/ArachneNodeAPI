@@ -48,10 +48,5 @@ public interface DataSourceRepository extends JpaRepository<DataSource, Long> {
     @Query("from DataSource ds where ds.id = ?1")
     Optional<DataSource> findById(Long id);
 
-/*
-    @Query("select ds from DataSource ds where ds.registred = true")
-    List<DataSource> findAllRegistered();
-*/
-
     Stream<DataSource> findAllByCentralIdIsNull();
 }

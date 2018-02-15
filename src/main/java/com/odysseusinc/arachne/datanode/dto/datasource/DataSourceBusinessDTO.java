@@ -49,9 +49,6 @@ public class DataSourceBusinessDTO {
     private String targetSchema;
     private String resultSchema;
     private String cohortTargetTable;
-/*
-    private Boolean isRegistered;
-*/
 
     public Long getId() {
 
