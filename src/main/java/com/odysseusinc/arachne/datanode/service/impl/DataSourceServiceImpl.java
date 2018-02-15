@@ -189,23 +189,6 @@ public class DataSourceServiceImpl implements DataSourceService {
         return dataSourceRepository.save(exists);
     }
 
-/*      @Transactional
-    @Override
-    public DataSource markDataSourceAsRegistered(DataSource dataSource, Long centralId) {
-
-        dataSource.setCentralId(centralId);
-        return setDSRegistered(dataSource, centralId);
-    }
-
-  @Transactional
-    @Override
-    public DataSource markDataSourceAsUnregistered(Long centralId) {
-
-        DataSource dataSource = dataSourceRepository.findByCentralId(centralId)
-                .orElseThrow(() -> new NotExistException(DataSource.class));
-        return dataSource;
-    }*/
-
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void updateHealthStatus(Long centralId, CommonHealthStatus status, String description) {
@@ -216,13 +199,6 @@ public class DataSourceServiceImpl implements DataSourceService {
             dataSourceRepository.save(dataSource);
         });
     }
-
-
-/*    private DataSource setDSRegistered(DataSource dataSource, Long centralId) {
-
-        dataSource.setRegistred(centralId != null);
-        return dataSourceRepository.save(dataSource);
-    }*/
 
     protected final Sort getSort(String sortBy, Boolean sortAsc) {
 

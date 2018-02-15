@@ -36,7 +36,5 @@ public interface DataNodeService {
 
     DataNode create(User user, DataNode dataNode) throws AlreadyExistsException;
 
-   /* DataNode update(User user, DataNode dataNode) throws NotExistException;*/
-
     void updateHealthStatus(Long id, CommonHealthStatus healthStatus, String healthStatusDescription);
 }

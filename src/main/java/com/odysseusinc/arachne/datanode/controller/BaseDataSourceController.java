@@ -110,9 +110,6 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         BusinessDTO dd = createOnCentral(principal, businessDTO.getId(), businessDTO).getResult();
         optional.setCentralId(dd.getId());
         dataSourceService.update(user, optional);
-
-        //integrationService.linkUserToDataNodeOnCentral(dataSource.getDataNode(), user); // move to central
-
         result.setResult(modelMapper.map(optional, DataSourceDTO.class));
         return result;
     }
@@ -220,17 +217,12 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                                                     Long id,
                                                     BusinessDTO dataSourceBusinessDTO) throws PermissionDeniedException {
 
-        return processDataSource(principal, id, dataSourceBusinessDTO, (parameters) -> {
-            final JsonResult<CommonDTO> res = integrationService.sendDataSourceCreationRequest(
-                    parameters.user,
-                    parameters.dataSource.getDataNode(),
-                    parameters.commonDTO
-            );
-           /* if (dataSourceBusinessDTO.getIsRegistered() && NO_ERROR.getCode().equals(res.getErrorCode())) {
-                dataSourceService.markDataSourceAsRegistered(parameters.dataSource, res.getResult().getId()); // вхолостую
-            }*/
-            return res;
-        });
+        return processDataSource(principal, id, dataSourceBusinessDTO, (parameters) ->
+                integrationService.sendDataSourceCreationRequest(
+                        parameters.user,
+                        parameters.dataSource.getDataNode(),
+                        parameters.commonDTO
+                ));
     }
 
     private JsonResult<BusinessDTO> updateOnCentral(Principal principal,
@@ -251,88 +243,6 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         DataSource dataSource = dataSourceService.getById(dataSourceId);
         return centralClient.unpublishAndSoftDeleteDataSource(dataSource.getCentralId());
     }
-
-/*
-    @ApiOperation(value = "Register datasource on arachne central")
-    @RequestMapping(
-            value = Constants.Api.DataSource.CENTRAL_REGISTER,
-            method = RequestMethod.POST,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public JsonResult<BusinessDTO> register(
-            Principal principal,
-            @PathVariable("id") Long id,
-            @Valid @RequestBody BusinessDTO dataSourceBusinessDTO
-    ) throws PermissionDeniedException {
-
-        return registerOnCentral(principal, id, dataSourceBusinessDTO);
-    }
-*/
-
-/*
-    @ApiOperation(value = "Unregister datasource on arachne central")
-    @RequestMapping(
-            value = Constants.Api.DataSource.CENTRAL_REGISTER,
-            method = RequestMethod.DELETE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public JsonResult unregister(@PathVariable("id") Long id) {
-
-        DataSource dataSource = dataSourceService.getById(id);
-        final Long dataNodeCentralId = dataSource.getDataNode().getCentralId();
-        final JsonResult result = centralClient.unregisterAndSoftDeleteDataSource(dataNodeCentralId, dataSource.getCentralId());
-        if (NO_ERROR.getCode().equals(result.getErrorCode())) {
-            dataSourceService.markDataSourceAsUnregistered(dataSource.getCentralId());
-        }
-        return result;
-    }
-*/
-
-/*    @ApiOperation(value = "Get business data of data source")
-    @RequestMapping(
-            value = Constants.Api.DataSource.GET_BUSINESS,
-            method = RequestMethod.GET,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public JsonResult<BusinessDTO> getBusiness(
-            Principal principal,
-            @PathVariable("id") Long id
-    ) throws AuthException, NotExistException {
-
-        DataSource dataSource = dataSourceService.getById(id);
-        User user = userService.findByUsername(principal.getName())
-                .orElseThrow(() -> new AuthException("user not found"));
-
-        final BusinessDTO dataSourceBusinessDTO = conversionService.convertAndCheck(dataSource, getDataSourceBusinessDTOClass());
-        if (dataSource.getRegistred()) {
-            final CommonDTO commonDataSourceDTO
-                    = integrationService.getDataSource(user, dataSource.getCentralId()).getResult();
-            enrichBusinessFromCommon(dataSourceBusinessDTO, commonDataSourceDTO);
-        } else {
-            dataSourceBusinessDTO.setModelType(checkDataSource(dataSource));
-        }
-        return new JsonResult<>(NO_ERROR, dataSourceBusinessDTO);
-    }*/
-
-/*    @ApiOperation(value = "Update business data of data source")
-    @RequestMapping(
-            value = Constants.Api.DataSource.UPDATE_BUSINESS,
-            method = RequestMethod.PUT,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public JsonResult<BusinessDTO> updateBusiness(
-            Principal principal,
-            @PathVariable("id") Long id,
-            @RequestBody BusinessDTO dataSourceBusinessDTO
-    ) throws AuthException, NotExistException, PermissionDeniedException {
-
-        return processDataSource(principal, id, dataSourceBusinessDTO, (parameters) ->
-                integrationService.updateDataSource(
-                        parameters.user,
-                        parameters.dataSource.getCentralId(),
-                        parameters.commonDTO
-                ));
-    }*/
 
     protected abstract BusinessDTO enrichBusinessFromCommon(BusinessDTO businessDTO, CommonDTO commonDTO);
 
@@ -397,7 +307,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
         commonDataSourceDTO.setId(dataSource.getCentralId());
         commonDataSourceDTO.setUuid(dataSource.getUuid());
-        commonDataSourceDTO.setModelType(CommonModelType.OTHER); //TODO 1941
+        commonDataSourceDTO.setModelType(CommonModelType.OTHER); //TODO
         commonDataSourceDTO.setOrganization("");
     }
 }

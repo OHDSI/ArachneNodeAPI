@@ -43,8 +43,6 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     DataNode sendDataNodeCreationRequest(User user, DataNode dataNode);
 
-    /*DataNode updateDataNodeOnCentral(User user, DataNode dataNode);*/
-
     JsonResult<DTO> sendDataSourceCreationRequest(
             User user, DataNode dataNode,
             DTO commonCreateDataSourceDTO);

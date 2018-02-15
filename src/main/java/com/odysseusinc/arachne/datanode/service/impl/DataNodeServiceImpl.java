@@ -84,24 +84,9 @@ public class DataNodeServiceImpl implements DataNodeService {
             throw new AlreadyExistsException(ALREADY_EXISTS_EXCEPTION);
         }
         dataNode = centralIntegrationService.sendDataNodeCreationRequest(user, dataNode);
-       // centralIntegrationService.relinkAllUsersToDataNodeOnCentral(dataNode, users);
         return dataNodeRepository.save(dataNode);
     }
 
-/*    @Override
-    public DataNode update(User user, DataNode dataNode) throws NotExistException {
-
-        final Optional<DataNode> currentDataNode = findCurrentDataNode();
-        if (!currentDataNode.isPresent()) {
-            throw new NotExistException(NOT_EXISTS_EXCEPTION, DataNode.class);
-        }
-        DataNode exists = currentDataNode.get();
-        exists.setName(dataNode.getName());
-        exists.setDescription(dataNode.getDescription());
-        exists.setToken(dataNode.getToken());
-        exists = centralIntegrationService.updateDataNodeOnCentral(user, exists);
-        return dataNodeRepository.save(exists);
-    }*/
 
     @Override
     public void updateHealthStatus(Long id, CommonHealthStatus healthStatus, String healthStatusDescription) {

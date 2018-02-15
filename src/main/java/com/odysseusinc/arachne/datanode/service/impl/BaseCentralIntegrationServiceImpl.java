@@ -102,13 +102,6 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
         return sendDataNodeRequestEntity(user, dataNode, url, HttpMethod.POST);
     }
 
-/*    @Override
-    public DataNode updateDataNodeOnCentral(User user, DataNode dataNode) {
-
-        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataNode.UPDATE;
-        return sendDataNodeRequestEntity(user, dataNode, url, HttpMethod.PUT, dataNode.getCentralId().toString());
-    }*/
-
     private DataNode sendDataNodeRequestEntity(User user, DataNode dataNode, String url, HttpMethod method,
                                                String... uriVariables) {
 
