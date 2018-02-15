@@ -316,7 +316,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
         commonDataSourceDTO.setId(dataSource.getCentralId());
         commonDataSourceDTO.setUuid(dataSource.getUuid());
-        commonDataSourceDTO.setModelType(CommonModelType.OTHER); //TODO
+        commonDataSourceDTO.setModelType(CommonModelType.OTHER);
         commonDataSourceDTO.setOrganization("");
     }
 }
