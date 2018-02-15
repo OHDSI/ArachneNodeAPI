@@ -43,12 +43,8 @@ public class DataSourceBusinessDTO {
     private String name;
     @NotNull
     private CommonModelType modelType;
-    @NotBlank
-    private String organization;
+
     private CommonCDMVersionDTO cdmVersion;
-    private String targetSchema;
-    private String resultSchema;
-    private String cohortTargetTable;
 
     public Long getId() {
 
@@ -90,49 +86,11 @@ public class DataSourceBusinessDTO {
         this.modelType = modelType;
     }
 
-    public String getOrganization() {
-        return organization;
-    }
-
-    public void setOrganization(String organization) {
-        this.organization = organization;
-    }
-
     public CommonCDMVersionDTO getCdmVersion() {
         return cdmVersion;
     }
 
     public void setCdmVersion(CommonCDMVersionDTO cdmVersion) {
         this.cdmVersion = cdmVersion;
-    }
-
-    public String getTargetSchema() {
-
-        return targetSchema;
-    }
-
-    public void setTargetSchema(String targetSchema) {
-
-        this.targetSchema = targetSchema;
-    }
-
-    public String getResultSchema() {
-
-        return resultSchema;
-    }
-
-    public void setResultSchema(String resultSchema) {
-
-        this.resultSchema = resultSchema;
-    }
-
-    public String getCohortTargetTable() {
-
-        return cohortTargetTable;
-    }
-
-    public void setCohortTargetTable(String cohortTargetTable) {
-
-        this.cohortTargetTable = cohortTargetTable;
     }
 }

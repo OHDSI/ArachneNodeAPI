@@ -79,7 +79,6 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
             businessDTO.setUuid(commonDataSourceDTO.getUuid());
             businessDTO.setName(commonDataSourceDTO.getName());
             businessDTO.setModelType(commonDataSourceDTO.getModelType());
-            businessDTO.setOrganization(commonDataSourceDTO.getOrganization());
             businessDTO.setCdmVersion(commonDataSourceDTO.getCdmVersion());
         }
         return businessDTO;
