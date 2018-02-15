@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
+import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
@@ -141,10 +142,17 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         }
         JsonResult<List<DataSourceDTO>> result = new JsonResult<>(NO_ERROR);
         List<DataSourceDTO> dtos = dataSourceService.findAll(sortBy, sortAsc).stream()
+                .peek(this::masqueradePassword)
                 .map(dataSource -> modelMapper.map(dataSource, DataSourceDTO.class))
                 .collect(Collectors.toList());
         result.setResult(dtos);
         return result;
+    }
+
+    private DataSource masqueradePassword(DataSource dataSource){
+
+        dataSource.setPassword(StringUtils.isEmpty(dataSource.getPassword()) ? "" : Constants.DUMMY_PASSWORD);
+        return dataSource;
     }
 
     @ApiOperation(value = "Get data source")
@@ -159,7 +167,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             throw new AuthException("user not found");
         }
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
-        result.setResult(modelMapper.map(dataSourceService.getById(id), DataSourceDTO.class));
+        DataSource dataSource = dataSourceService.getById(id);
+        result.setResult(modelMapper.map(masqueradePassword(dataSource), DataSourceDTO.class));
         return result;
     }
 
@@ -210,7 +219,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         dto.setModelType(checkDataSource(savedDataSource));
         updateOnCentral(principal, savedDataSource.getCentralId(), dto);
 
-        return new JsonResult<>(NO_ERROR, modelMapper.map(savedDataSource, DataSourceDTO.class));
+        return new JsonResult<>(NO_ERROR, modelMapper.map(masqueradePassword(savedDataSource), DataSourceDTO.class));
     }
 
     private JsonResult<BusinessDTO> createOnCentral(Principal principal,

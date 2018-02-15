@@ -26,6 +26,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Preconditions;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
+import com.odysseusinc.arachne.datanode.Constants;
+import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
@@ -167,7 +169,7 @@ public class DataSourceServiceImpl implements DataSourceService {
             exists.setDescription(description);
         }
         final String password = dataSource.getPassword();
-        if (Objects.nonNull(password)) {
+        if (Objects.nonNull(password) && !Objects.equals(password, Constants.DUMMY_PASSWORD)) {
             exists.setPassword(password);
         }
         final String username = dataSource.getUsername();
