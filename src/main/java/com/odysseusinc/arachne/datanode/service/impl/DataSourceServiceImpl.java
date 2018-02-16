@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Preconditions;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
+import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
@@ -34,18 +35,17 @@ import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
-import java.util.HashMap;
-import java.util.Map;
-import javax.annotation.PostConstruct;
-import org.springframework.data.domain.Sort;
-
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import javax.annotation.PostConstruct;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -183,7 +183,7 @@ public class DataSourceServiceImpl implements DataSourceService {
             exists.setDescription(description);
         }
         final String password = dataSource.getPassword();
-        if (Objects.nonNull(password)) {
+        if (Objects.nonNull(password) && !Objects.equals(password, Constants.DUMMY_PASSWORD)) {
             exists.setPassword(password);
         }
         final String username = dataSource.getUsername();
