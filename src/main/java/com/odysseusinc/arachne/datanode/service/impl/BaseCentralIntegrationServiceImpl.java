@@ -158,7 +158,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             User user, DataSource dataSource,
             DTO commonCreateDataSourceDTO) {
 
-        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.UPDATE;
+        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.UPDATE_MODEL_TYPE;
         Map<String, Object> uriParams = new HashMap<>();
         uriParams.put("id", dataSource.getCentralId());
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);

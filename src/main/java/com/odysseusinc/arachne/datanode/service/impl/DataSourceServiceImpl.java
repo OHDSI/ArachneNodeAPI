@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
 
 import com.google.common.base.Preconditions;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
@@ -80,15 +81,14 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Optional<DataSource> create(User owner, DataSource dataSource) throws NotExistException {
+    public Optional<DataSource> create(User owner, DataSource dataSource, DataNode dataNode) throws NotExistException {
 
-        DataNode currentDataNode = dataNodeService.findCurrentDataNodeOrCreate(owner);
 
         checkNotNull(dataSource, "given datasource is null");
         checkNotNull(owner, "given owner is null");
-        checkNotNull(currentDataNode, "given datenode is null");
+        checkNotNull(dataNode, "given datenode is null");
         dataSource.setUuid(UUID.randomUUID().toString());
-        dataSource.setDataNode(currentDataNode);
+        dataSource.setDataNode(dataNode);
         return Optional.of(dataSourceRepository.save(dataSource));
     }
 
@@ -169,7 +169,7 @@ public class DataSourceServiceImpl implements DataSourceService {
             exists.setDescription(description);
         }
         final String password = dataSource.getPassword();
-        if (Objects.nonNull(password) && !Objects.equals(password, Constants.DUMMY_PASSWORD)) {
+        if (isNotDummyPassword(password)) {
             exists.setPassword(password);
         }
         final String username = dataSource.getUsername();

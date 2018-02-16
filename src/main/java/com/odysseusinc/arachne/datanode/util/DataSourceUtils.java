@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.util;
 
+import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.util.datasource.QueryProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultSetContainer;
@@ -57,6 +58,11 @@ public class DataSourceUtils<T> {
     public DataSourceUtils(DataSource dataSource) {
 
         this.dataSource = dataSource;
+    }
+
+    public static boolean isNotDummyPassword(String dbPassword) {
+
+        return Objects.nonNull(dbPassword) && !Objects.equals(dbPassword, Constants.DUMMY_PASSWORD);
     }
 
     public static <T> DataSourceUtils<T> withDataSource(DataSource dataSource) {

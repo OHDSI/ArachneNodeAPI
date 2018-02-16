@@ -23,9 +23,12 @@
 package com.odysseusinc.arachne.datanode.controller;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
+import com.odysseusinc.arachne.datanode.dto.datasource.CreateDataSourceDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceBusinessDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
@@ -49,7 +52,8 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
                                 ModelMapper modelMapper,
                                 GenericConversionService conversionService,
                                 JmsTemplate jmsTemplate,
-                                CentralClient centralClient) {
+                                CentralClient centralClient,
+                                DataNodeService dataNodeService) {
 
         super(userService,
                 modelMapper,
@@ -57,7 +61,8 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
                 dataSourceService,
                 conversionService,
                 centralClient,
-                jmsTemplate);
+                jmsTemplate,
+                dataNodeService);
     }
 
     @Override
