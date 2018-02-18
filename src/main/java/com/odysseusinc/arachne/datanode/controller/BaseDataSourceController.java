@@ -112,13 +112,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
         CommonModelType type = checkDataSource(dataSource);
 
-        if (type == null){
-
-        }
         dataSource.setDataNode(currentDataNode);
-//dn
-       // BusinessDTO dd = createOnCentral(principal, businessDTO.getId(), businessDTO).getResult();
-        CommonDTO commonDataSourceDTO = conversionService.convert(dataSource, getCommonDataSourceDTOClass()); // dn + model t + cdm vers
+        CommonDTO commonDataSourceDTO = conversionService.convert(dataSource, getCommonDataSourceDTOClass());
 
         commonDataSourceDTO.setModelType(type);
         CommonDTO centralDTO = integrationService.sendDataSourceCreationRequest(
@@ -128,17 +123,11 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         ).getResult();
         dataSource.setCentralId(centralDTO.getId());
 
-        //BusinessDTO businessDTO = conversionService.convert(centralDTO, getDataSourceBusinessDTOClass());
-        //final BusinessDTO updatedDataSourceBusinessDTO= conversionService.convert(updatedDataSource, getDataSourceBusinessDTOClass());
-        //enrichBusinessFromCommon(updatedDataSourceBusinessDTO, centralJsonResult.getResult());
-
         DataSource optional = dataSourceService.create(user, dataSource, currentDataNode).get();
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
         result.setResult(modelMapper.map(optional, DataSourceDTO.class));
         return result;
     }
-
-   // protected abstract CommonModelType convertAndCheck(CreateDataSourceDTO dataSourceDTO);
 
     protected CommonModelType checkDataSource(DataSource dataSource) {
 
@@ -259,38 +248,11 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         return result;
     }
 
-/*    private JsonResult<BusinessDTO> createOnCentral(Principal principal,
-                                                    Long id,
-                                                    BusinessDTO dataSourceBusinessDTO) throws PermissionDeniedException {
-
-        return processDataSource(principal, id, dataSourceBusinessDTO, (parameters) ->
-                integrationService.sendDataSourceCreationRequest(
-                        parameters.user,
-                        parameters.dataSource.getDataNode(),
-                        parameters.commonDTO
-                ));
-    }
-
-    private JsonResult<BusinessDTO> updateOnCentral(Principal principal,
-                                                    Long id,
-                                                    BusinessDTO dataSourceBusinessDTO) throws PermissionDeniedException {
-        return processDataSource(principal, id, dataSourceBusinessDTO, (parameters) -> {
-            final JsonResult<CommonDTO> res = integrationService.sendDataSourceUpdateRequest(
-                    parameters.user,
-                    parameters.dataSource,
-                    parameters.commonDTO
-            );
-            return res;
-        });
-    }*/
-
     public JsonResult unpublishAndDeleteOnCentral(Long dataSourceId) {
 
         DataSource dataSource = dataSourceService.getById(dataSourceId);
         return centralClient.unpublishAndSoftDeleteDataSource(dataSource.getCentralId());
     }
-
-    protected abstract BusinessDTO enrichBusinessFromCommon(BusinessDTO businessDTO, CommonDTO commonDTO);
 
     @RequestMapping(
             value = "/api/v1/data-sources/dbms-types",
@@ -305,55 +267,4 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
     protected abstract Class<CommonDTO> getCommonDataSourceDTOClass();
 
-    protected abstract Class<BusinessDTO> getDataSourceBusinessDTOClass();
-
-/*    protected JsonResult<BusinessDTO> processDataSource(Principal principal,
-                                                        Long id,
-                                                        BusinessDTO dataSourceBusinessDTO,
-                                                        Function<PortalInteractionParams, JsonResult<CommonDTO>> portalInteractionFunc
-    ) throws PermissionDeniedException {
-
-        final User user = getAdmin(principal);
-        final DataSource dataSource = conversionService.convert(dataSourceBusinessDTO, DataSource.class);
-        dataSource.setId(id);
-        final DataSource updatedDataSource = dataSourceService.update(user, dataSource);
-        dataSourceBusinessDTO.setUuid(updatedDataSource.getUuid());
-        final CommonDTO commonDataSourceDTO
-                = conversionService.convert(dataSourceBusinessDTO, getCommonDataSourceDTOClass());
-        //processBusinessDTO(updatedDataSource, commonDataSourceDTO);
-
-        JsonResult<CommonDTO> centralJsonResult
-                = portalInteractionFunc.apply(new PortalInteractionParams(user, updatedDataSource, commonDataSourceDTO));
-
-        final BusinessDTO updatedDataSourceBusinessDTO
-                = conversionService.convert(updatedDataSource, getDataSourceBusinessDTOClass());
-        enrichBusinessFromCommon(updatedDataSourceBusinessDTO, centralJsonResult.getResult());
-        final JsonResult<BusinessDTO> result = new JsonResult<>();
-        result.setErrorCode(centralJsonResult.getErrorCode());
-        result.setErrorMessage(centralJsonResult.getErrorMessage());
-        result.setResult(updatedDataSourceBusinessDTO);
-        result.setValidatorErrors(centralJsonResult.getValidatorErrors());
-        return result;
-    }*/
-
-/*    private class PortalInteractionParams {
-        private final User user;
-        private final DataSource dataSource;
-        private final CommonDTO commonDTO;
-
-        public PortalInteractionParams(User user, DataSource dataSource, CommonDTO commonDTO) {
-
-            this.user = user;
-            this.dataSource = dataSource;
-            this.commonDTO = commonDTO;
-        }
-    }*/
-
-/*    protected void processBusinessDTO(DataSource dataSource, CommonDTO commonDataSourceDTO) {
-
-        commonDataSourceDTO.setId(dataSource.getCentralId());
-        commonDataSourceDTO.setUuid(dataSource.getUuid());
-        commonDataSourceDTO.setModelType(CommonModelType.OTHER);
-        commonDataSourceDTO.setOrganization("");
-    }*/
 }

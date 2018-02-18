@@ -54,6 +54,7 @@ public class DataSourceToDataNodeDataSourceDTOConverter implements Converter<Dat
         dto.setDbPassword(dataSource.getPassword());
         dto.setDescription(dataSource.getDescription());
         dto.setUuid(dataSource.getUuid());
+        dto.setCentralId(dataSource.getCentralId());
         return dto;
     }
 }

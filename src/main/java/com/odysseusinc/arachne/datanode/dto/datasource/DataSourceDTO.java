@@ -30,6 +30,7 @@ import org.hibernate.validator.constraints.NotBlank;
 public class DataSourceDTO {
 
     private Long id;
+    private Long centralId;
 
     private String uuid;
     @NotBlank
@@ -64,6 +65,14 @@ public class DataSourceDTO {
     public void setId(Long id) {
 
         this.id = id;
+    }
+
+    public Long getCentralId() {
+        return centralId;
+    }
+
+    public void setCentralId(Long centralId) {
+        this.centralId = centralId;
     }
 
     public String getUuid() {

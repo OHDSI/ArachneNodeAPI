@@ -71,21 +71,4 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
         return CommonDataSourceDTO.class;
     }
 
-    @Override
-    protected Class<DataSourceBusinessDTO> getDataSourceBusinessDTOClass() {
-
-        return DataSourceBusinessDTO.class;
-    }
-
-    @Override
-    protected DataSourceBusinessDTO enrichBusinessFromCommon(DataSourceBusinessDTO businessDTO, CommonDataSourceDTO commonDataSourceDTO) {
-
-        if (Objects.nonNull(commonDataSourceDTO) && Objects.nonNull(businessDTO)) {
-            businessDTO.setUuid(commonDataSourceDTO.getUuid());
-            businessDTO.setName(commonDataSourceDTO.getName());
-            businessDTO.setModelType(commonDataSourceDTO.getModelType());
-            businessDTO.setCdmVersion(commonDataSourceDTO.getCdmVersion());
-        }
-        return businessDTO;
-    }
 }
