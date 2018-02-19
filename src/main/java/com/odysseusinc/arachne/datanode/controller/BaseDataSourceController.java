@@ -49,7 +49,7 @@ import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
@@ -125,7 +125,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
         DataSource optional = dataSourceService.create(user, dataSource, currentDataNode).get();
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
-        result.setResult(modelMapper.map(optional, DataSourceDTO.class));
+        result.setResult(masqueradePassword(modelMapper.map(optional, DataSourceDTO.class)));
         return result;
     }
 
@@ -144,23 +144,32 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             @RequestParam(name = "sortBy", required = false) String sortBy,
             @RequestParam(name = "sortAsc", required = false) Boolean sortAsc,
             Principal principal
-    ) {
+    ) throws PermissionDeniedException {
 
         if (principal == null) {
             throw new AuthException("user not found");
         }
         JsonResult<List<DataSourceDTO>> result = new JsonResult<>(NO_ERROR);
         List<DataSourceDTO> dtos = dataSourceService.findAll(sortBy, sortAsc).stream()
-                .peek(this::masqueradePassword)
                 .map(dataSource -> modelMapper.map(dataSource, DataSourceDTO.class))
+                .peek(this::masqueradePassword)
                 .collect(Collectors.toList());
+
+       JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs = integrationService.getDataSources(getUser(principal),
+               dtos.stream().map(DataSourceDTO::getCentralId).collect(Collectors.toList()));
+
+        Map<Long, Boolean> idToPublished = centralCommonDTOs.getResult()
+                .stream()
+                .collect(Collectors.toMap(CommonDataSourceDTO::getId, CommonDataSourceDTO::getPublished));
+
+        dtos.forEach(dto -> dto.setPublished(idToPublished.get(dto.getCentralId())));
         result.setResult(dtos);
         return result;
     }
 
-    private DataSource masqueradePassword(DataSource dataSource){
+    private DataSourceDTO masqueradePassword(DataSourceDTO dataSource){
 
-        dataSource.setPassword(StringUtils.isEmpty(dataSource.getPassword()) ? "" : Constants.DUMMY_PASSWORD);
+        dataSource.setDbPassword(StringUtils.isEmpty(dataSource.getDbPassword()) ? "" : Constants.DUMMY_PASSWORD);
         return dataSource;
     }
 
@@ -177,7 +186,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         }
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
         DataSource dataSource = dataSourceService.getById(id);
-        result.setResult(modelMapper.map(masqueradePassword(dataSource), DataSourceDTO.class));
+        result.setResult(masqueradePassword(modelMapper.map(dataSource, DataSourceDTO.class)));
         return result;
     }
 
@@ -224,7 +233,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         dataSource.setId(id);
 
         String inputPassword = dataSourceDTO.getDbPassword();
-        dataSource.setPassword(isNotDummyPassword(inputPassword)? inputPassword: dataSourceService.getById(id).getPassword() );
+        dataSource.setPassword(isNotDummyPassword(inputPassword)? inputPassword: dataSourceService.getById(id).getPassword());
 
         CommonModelType type = checkDataSource(dataSource);
         final DataSource savedDataSource = dataSourceService.update(user, dataSource);
@@ -240,7 +249,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         JsonResult<DataSourceDTO> result = new JsonResult<>();
         result.setErrorCode(res.getErrorCode());
         if (NO_ERROR.getCode().equals(res.getErrorCode())) {
-            result.setResult(modelMapper.map(masqueradePassword(savedDataSource), DataSourceDTO.class));
+            result.setResult(masqueradePassword(modelMapper.map(savedDataSource, DataSourceDTO.class)));
         } else {
             result.setValidatorErrors(res.getValidatorErrors());
             result.setErrorMessage(res.getErrorMessage());

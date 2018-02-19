@@ -24,6 +24,8 @@ package com.odysseusinc.arachne.datanode.service.impl;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 
+import com.google.common.base.Functions;
+import com.google.common.collect.Lists;
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
@@ -275,6 +277,26 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                 HttpMethod.GET,
                 request,
                 getParameterizedTypeReferenceJsonResultDTO()
+        );
+        return exchange.getBody();
+    }
+
+    @Override
+    public JsonResult<List<CommonDataSourceDTO>> getDataSources(User user, List<Long> ids) {
+
+        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.GET_LIST;
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        uriBuilder.queryParam("id", String.join(",", Lists.transform(ids, Functions.toStringFunction())));
+
+        HttpEntity request = new HttpEntity<>(centralUtil.getCentralAuthHeader(user.getToken()));
+        ParameterizedTypeReference<JsonResult<List<CommonDataSourceDTO>>> responseType
+                = new ParameterizedTypeReference<JsonResult<List<CommonDataSourceDTO>>>() {
+        };
+        ResponseEntity<JsonResult<List<CommonDataSourceDTO>>> exchange = centralRestTemplate.exchange(
+                uriBuilder.buildAndExpand().toUri(),
+                HttpMethod.GET,
+                request,
+                responseType
         );
         return exchange.getBody();
     }

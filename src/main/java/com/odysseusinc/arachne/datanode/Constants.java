@@ -51,6 +51,7 @@ public interface Constants {
         interface DataSource {
             String CREATION = "/api/v1/data-nodes/{id}/data-sources";
             String GET = "/api/v1/data-sources/{id}";
+            String GET_LIST = "/api/v1/data-sources/commondata";
             String GET_METADATA_SCHEMA = "/api/v1/metadata/data-source/attributes";
             String UPDATE = "/api/v1/data-sources/{id}";
             String UPDATE_MODEL_TYPE = "/api/v1/data-sources/{id}/model-type";

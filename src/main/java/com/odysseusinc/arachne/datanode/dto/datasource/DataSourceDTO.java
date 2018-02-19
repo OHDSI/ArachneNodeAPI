@@ -57,6 +57,8 @@ public class DataSourceDTO {
     private String resultSchema;
     private String cohortTargetTable;
 
+    private Boolean published;
+
     public Long getId() {
 
         return id;
@@ -197,5 +199,13 @@ public class DataSourceDTO {
 
     public void setCohortTargetTable(String cohortTargetTable) {
         this.cohortTargetTable = cohortTargetTable;
+    }
+
+    public Boolean getPublished() {
+        return published;
+    }
+
+    public void setPublished(Boolean published) {
+        this.published = published;
     }
 }
