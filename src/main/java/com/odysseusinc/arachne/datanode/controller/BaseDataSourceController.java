@@ -58,6 +58,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.destination.DestinationResolver;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -155,14 +156,18 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                 .peek(this::masqueradePassword)
                 .collect(Collectors.toList());
 
-       JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs = integrationService.getDataSources(getUser(principal),
-               dtos.stream().map(DataSourceDTO::getCentralId).collect(Collectors.toList()));
+        if (!CollectionUtils.isEmpty(dtos)) {
 
-        Map<Long, Boolean> idToPublished = centralCommonDTOs.getResult()
-                .stream()
-                .collect(Collectors.toMap(CommonDataSourceDTO::getId, CommonDataSourceDTO::getPublished));
+            JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs =
+                    integrationService.getDataSources(getUser(principal),
+                    dtos.stream().map(DataSourceDTO::getCentralId).collect(Collectors.toList()));
 
-        dtos.forEach(dto -> dto.setPublished(idToPublished.get(dto.getCentralId())));
+            Map<Long, Boolean> idToPublished = centralCommonDTOs.getResult()
+                    .stream()
+                    .collect(Collectors.toMap(CommonDataSourceDTO::getId, CommonDataSourceDTO::getPublished));
+
+            dtos.forEach(dto -> dto.setPublished(idToPublished.get(dto.getCentralId())));
+        }
         result.setResult(dtos);
         return result;
     }
