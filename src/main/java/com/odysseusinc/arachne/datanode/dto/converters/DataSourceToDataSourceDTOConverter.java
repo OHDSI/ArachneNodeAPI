@@ -64,7 +64,9 @@ public class DataSourceToDataSourceDTOConverter implements Converter<DataSource,
         target.setPassword(source.getPassword());
         final String cdmSchema = source.getCdmSchema();
         target.setCdmSchema(cdmSchema);
-        target.setType(DBMSType.valueOf(source.getType().name()));
+        if (source.getType() != null) {
+            target.setType(DBMSType.valueOf(source.getType().name()));
+        }
         final String targetSchema = source.getTargetSchema();
         target.setTargetSchema(StringUtils.isEmpty(targetSchema) ? cdmSchema : targetSchema);
         final String resultSchema = source.getResultSchema();
