@@ -37,6 +37,7 @@ import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import com.odysseusinc.arachne.datanode.model.datasource.AutoDetectedFields;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
@@ -108,15 +109,15 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
-        DataNode currentDataNode = dataNodeService.findCurrentDataNodeOrCreate(user);
-
         DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
-        CommonModelType type = checkDataSource(dataSource);
+        AutoDetectedFields autoDetectedFields = checkDataSource(dataSource);
 
+        DataNode currentDataNode = dataNodeService.findCurrentDataNodeOrCreate(user);
         dataSource.setDataNode(currentDataNode);
-        CommonDTO commonDataSourceDTO = conversionService.convert(dataSource, getCommonDataSourceDTOClass());
 
-        commonDataSourceDTO.setModelType(type);
+        CommonDTO commonDataSourceDTO = conversionService.convert(dataSource, getCommonDataSourceDTOClass());
+        commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
+        commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
         CommonDTO centralDTO = integrationService.sendDataSourceCreationRequest(
                 user,
                 dataSource.getDataNode(),
@@ -130,9 +131,9 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         return result;
     }
 
-    protected CommonModelType checkDataSource(DataSource dataSource) {
+    protected AutoDetectedFields checkDataSource(DataSource dataSource) {
 
-        return CommonModelType.CDM;
+        return new AutoDetectedFields(CommonModelType.CDM);
     }
 
     @ApiOperation(value = "Returns all data sources for current data node")
@@ -240,11 +241,12 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         String inputPassword = dataSourceDTO.getDbPassword();
         dataSource.setPassword(isNotDummyPassword(inputPassword)? inputPassword: dataSourceService.getById(id).getPassword());
 
-        CommonModelType type = checkDataSource(dataSource);
+        AutoDetectedFields autoDetectedFields = checkDataSource(dataSource);
         final DataSource savedDataSource = dataSourceService.update(user, dataSource);
 
         CommonDTO commonDataSourceDTO = conversionService.convert(savedDataSource, getCommonDataSourceDTOClass());
-        commonDataSourceDTO.setModelType(type);
+        commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
+        commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
         final JsonResult<CommonDTO> res = integrationService.sendDataSourceUpdateRequest(
                 user,
                 savedDataSource,
