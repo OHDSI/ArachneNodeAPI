@@ -25,8 +25,10 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
@@ -35,6 +37,8 @@ import org.springframework.stereotype.Component;
 public class DataSourceToDataSourceDTOConverter implements Converter<DataSource, DataSourceDTO>, InitializingBean {
 
     private GenericConversionService conversionService;
+    @Value("${cohorts.result.defaultTargetTable}")
+    private String defaultCohortTargetTable;
 
     @Autowired
     @SuppressWarnings("SpringJavaAutowiringInspection")
@@ -58,11 +62,17 @@ public class DataSourceToDataSourceDTOConverter implements Converter<DataSource,
         target.setConnectionString(source.getConnectionString());
         target.setUsername(source.getUsername());
         target.setPassword(source.getPassword());
-        target.setCdmSchema(source.getCdmSchema());
-        target.setType(DBMSType.valueOf(source.getType().name()));
-        target.setTargetSchema(source.getTargetSchema());
-        target.setResultSchema(source.getResultSchema());
-        target.setCohortTargetTable(source.getCohortTargetTable());
+        final String cdmSchema = source.getCdmSchema();
+        target.setCdmSchema(cdmSchema);
+        if (source.getType() != null) {
+            target.setType(DBMSType.valueOf(source.getType().name()));
+        }
+        final String targetSchema = source.getTargetSchema();
+        target.setTargetSchema(StringUtils.isEmpty(targetSchema) ? cdmSchema : targetSchema);
+        final String resultSchema = source.getResultSchema();
+        target.setResultSchema(StringUtils.isEmpty(resultSchema) ? cdmSchema : resultSchema);
+        final String cohortTargetTable = source.getCohortTargetTable();
+        target.setCohortTargetTable(StringUtils.isEmpty(cohortTargetTable) ? defaultCohortTargetTable : cohortTargetTable);
         return target;
     }
 }
