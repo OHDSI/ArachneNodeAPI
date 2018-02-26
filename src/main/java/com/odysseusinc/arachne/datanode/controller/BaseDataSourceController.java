@@ -49,7 +49,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
-import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
@@ -135,17 +134,10 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         }
         JsonResult<List<DataSourceDTO>> result = new JsonResult<>(NO_ERROR);
         List<DataSourceDTO> dtos = dataSourceService.findAll(sortBy, sortAsc).stream()
-                .peek(this::masqueradePassword)
-                .map(dataSource -> modelMapper.map(dataSource, DataSourceDTO.class))
+                .map(dataSource -> conversionService.convert(dataSource, DataSourceDTO.class))
                 .collect(Collectors.toList());
         result.setResult(dtos);
         return result;
-    }
-
-    private DataSource masqueradePassword(DataSource dataSource){
-
-        dataSource.setPassword(StringUtils.isEmpty(dataSource.getPassword()) ? "" : Constants.DUMMY_PASSWORD);
-        return dataSource;
     }
 
     @ApiOperation(value = "Get data source")
@@ -161,7 +153,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         }
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
         DataSource dataSource = dataSourceService.getById(id);
-        result.setResult(modelMapper.map(masqueradePassword(dataSource), DataSourceDTO.class));
+        result.setResult(conversionService.convert(dataSource, DataSourceDTO.class));
         return result;
     }
 
@@ -200,7 +192,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         final DataSource dataSource = convert(dataSourceDTO);
         dataSource.setId(id);
         final DataSource savedDataSource = dataSourceService.update(user, dataSource);
-        return new JsonResult<>(NO_ERROR, modelMapper.map(masqueradePassword(savedDataSource), DataSourceDTO.class));
+        return new JsonResult<>(NO_ERROR, conversionService.convert(savedDataSource, DataSourceDTO.class));
     }
 
     @ApiOperation(value = "Register datasource on arachne central")
