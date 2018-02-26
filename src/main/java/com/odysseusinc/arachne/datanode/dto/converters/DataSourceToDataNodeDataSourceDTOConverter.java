@@ -24,6 +24,7 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
+import com.odysseusinc.arachne.datanode.util.DataSourceUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -55,6 +56,9 @@ public class DataSourceToDataNodeDataSourceDTOConverter implements Converter<Dat
         dto.setDescription(dataSource.getDescription());
         dto.setIsRegistred(dataSource.getRegistred());
         dto.setUuid(dataSource.getUuid());
+
+        DataSourceUtils.masqueradePassword(dto);
+
         return dto;
     }
 }
