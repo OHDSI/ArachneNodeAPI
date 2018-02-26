@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.dto.datasource;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
@@ -49,6 +50,8 @@ public class DataSourceDTO {
     private String dbUsername;
 
     private String dbPassword;
+
+    private CommonModelType modelType;
 
     private CommonHealthStatus healthStatus;
     private String healthStatusDescription;
@@ -207,5 +210,13 @@ public class DataSourceDTO {
 
     public void setPublished(Boolean published) {
         this.published = published;
+    }
+
+    public CommonModelType getModelType() {
+        return modelType;
+    }
+
+    public void setModelType(CommonModelType modelType) {
+        this.modelType = modelType;
     }
 }

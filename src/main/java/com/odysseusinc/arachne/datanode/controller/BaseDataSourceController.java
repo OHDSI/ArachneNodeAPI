@@ -49,6 +49,7 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -185,14 +186,22 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public JsonResult<DataSourceDTO> get(Principal principal, @PathVariable("id") Long id) {
+    public JsonResult<DataSourceDTO> get(Principal principal, @PathVariable("id") Long id) throws PermissionDeniedException {
 
         if (principal == null) {
             throw new AuthException("user not found");
         }
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
         DataSource dataSource = dataSourceService.getById(id);
-        result.setResult(masqueradePassword(modelMapper.map(dataSource, DataSourceDTO.class)));
+
+        JsonResult<List<CommonDataSourceDTO>> centralCommonDTO =
+                integrationService.getDataSources(getUser(principal),
+                        Collections.singletonList(dataSource.getCentralId()));
+        DataSourceDTO resultDTO = modelMapper.map(dataSource, DataSourceDTO.class);
+
+        resultDTO.setPublished(centralCommonDTO.getResult().get(0).getPublished());
+        resultDTO.setModelType(centralCommonDTO.getResult().get(0).getModelType());
+        result.setResult(masqueradePassword(resultDTO));
         return result;
     }
 
