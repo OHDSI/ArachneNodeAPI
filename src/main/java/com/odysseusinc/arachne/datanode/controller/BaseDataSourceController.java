@@ -127,7 +127,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
         DataSource optional = dataSourceService.create(user, dataSource, currentDataNode).get();
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
-        result.setResult(masqueradePassword(modelMapper.map(optional, DataSourceDTO.class)));
+        result.setResult(conversionService.convert(optional, DataSourceDTO.class));
         return result;
     }
 
@@ -168,8 +168,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
             dtos.forEach(e -> {
                 CommonDataSourceDTO dto = idToDto.get(e.getCentralId());
-                dto.setPublished(dto.getPublished());
-                dto.setModelType(dto.getModelType());
+                e.setPublished(dto.getPublished());
+                e.setModelType(dto.getModelType());
             });
         }
         result.setResult(dtos);
@@ -240,7 +240,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
-        DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class); // check password
+        DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
         dataSource.setId(id);
 
         String inputPassword = dataSourceDTO.getDbPassword();
