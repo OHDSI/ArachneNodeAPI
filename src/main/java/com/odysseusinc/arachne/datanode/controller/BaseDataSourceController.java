@@ -164,11 +164,15 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                     integrationService.getDataSources(getUser(principal),
                     dtos.stream().map(DataSourceDTO::getCentralId).collect(Collectors.toList()));
 
-            Map<Long, Boolean> idToPublished = centralCommonDTOs.getResult()
+            Map<Long, CommonDataSourceDTO> idToDto = centralCommonDTOs.getResult()
                     .stream()
-                    .collect(Collectors.toMap(CommonDataSourceDTO::getId, CommonDataSourceDTO::getPublished));
+                    .collect(Collectors.toMap(CommonDataSourceDTO::getId, e -> e));
 
-            dtos.forEach(dto -> dto.setPublished(idToPublished.get(dto.getCentralId())));
+            dtos.forEach(e -> {
+                CommonDataSourceDTO dto = idToDto.get(e.getCentralId());
+                dto.setPublished(dto.getPublished());
+                dto.setModelType(dto.getModelType());
+            });
         }
         result.setResult(dtos);
         return result;
