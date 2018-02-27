@@ -54,7 +54,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
-import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
@@ -154,8 +153,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         }
         JsonResult<List<DataSourceDTO>> result = new JsonResult<>(NO_ERROR);
         List<DataSourceDTO> dtos = dataSourceService.findAll(sortBy, sortAsc).stream()
-                .map(dataSource -> modelMapper.map(dataSource, DataSourceDTO.class))
-                .peek(this::masqueradePassword)
+                .map(dataSource -> conversionService.convert(dataSource, DataSourceDTO.class))
                 .collect(Collectors.toList());
 
         if (!CollectionUtils.isEmpty(dtos)) {
@@ -176,12 +174,6 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         }
         result.setResult(dtos);
         return result;
-    }
-
-    private DataSourceDTO masqueradePassword(DataSourceDTO dataSource){
-
-        dataSource.setDbPassword(StringUtils.isEmpty(dataSource.getDbPassword()) ? "" : Constants.DUMMY_PASSWORD);
-        return dataSource;
     }
 
     @ApiOperation(value = "Get data source")
@@ -205,7 +197,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
         resultDTO.setPublished(centralCommonDTO.getResult().get(0).getPublished());
         resultDTO.setModelType(centralCommonDTO.getResult().get(0).getModelType());
-        result.setResult(masqueradePassword(resultDTO));
+        result.setResult(conversionService.convert(resultDTO, DataSourceDTO.class));
         return result;
     }
 
@@ -248,7 +240,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
-        DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
+        DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class); // check password
         dataSource.setId(id);
 
         String inputPassword = dataSourceDTO.getDbPassword();
@@ -269,7 +261,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         JsonResult<DataSourceDTO> result = new JsonResult<>();
         result.setErrorCode(res.getErrorCode());
         if (NO_ERROR.getCode().equals(res.getErrorCode())) {
-            result.setResult(masqueradePassword(modelMapper.map(savedDataSource, DataSourceDTO.class)));
+            result.setResult(conversionService.convert(savedDataSource, DataSourceDTO.class));
         } else {
             result.setValidatorErrors(res.getValidatorErrors());
             result.setErrorMessage(res.getErrorMessage());

@@ -30,6 +30,7 @@ import com.odysseusinc.arachne.datanode.util.datasource.ResultSetProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultTransformer;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultWriter;
 
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -46,6 +47,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import org.apache.commons.lang3.StringUtils;
 
 public class DataSourceUtils<T> {
 
@@ -68,6 +70,21 @@ public class DataSourceUtils<T> {
     public static <T> DataSourceUtils<T> withDataSource(DataSource dataSource) {
 
         return new DataSourceUtils<>(dataSource);
+    }
+
+    public static void masqueradePassword(DataSourceDTO dataSource) {
+
+        dataSource.setPassword(getMasqueradedPassword(dataSource.getPassword()));
+    }
+
+    public static void masqueradePassword(com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO dataSource) {
+
+        dataSource.setDbPassword(getMasqueradedPassword(dataSource.getDbPassword()));
+    }
+
+    private static String getMasqueradedPassword(String password) {
+
+        return StringUtils.isEmpty(password) ? "" : Constants.DUMMY_PASSWORD;
     }
 
     public DataSourceUtils<T> ifTableNotExists(String schema, String tableName, Function<String, RuntimeException> handler) throws SQLException {
