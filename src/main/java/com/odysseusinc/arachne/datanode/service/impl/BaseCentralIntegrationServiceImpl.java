@@ -160,7 +160,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             User user, DataSource dataSource,
             DTO commonCreateDataSourceDTO) {
 
-        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.UPDATE_MODEL_TYPE;
+        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.UPDATE;
         Map<String, Object> uriParams = new HashMap<>();
         uriParams.put("id", dataSource.getCentralId());
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
@@ -297,31 +297,6 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                 HttpMethod.GET,
                 request,
                 responseType
-        );
-        return exchange.getBody();
-    }
-
-    @Override
-    public JsonResult<DTO> updateDataSource(
-            User user,
-            Long centralId, DTO commonCreateDataSourceDTO) {
-
-        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.UPDATE;
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
-
-        Map<String, Long> uriParams = new HashMap<>();
-        uriParams.put("id", centralId);
-
-        HttpEntity<DTO> request = new HttpEntity<>(
-                commonCreateDataSourceDTO,
-                centralUtil.getCentralAuthHeader(user.getToken())
-        );
-
-        ResponseEntity<JsonResult<DTO>> exchange = centralRestTemplate.exchange(
-                uriBuilder.buildAndExpand(uriParams).toUri(),
-                HttpMethod.PUT,
-                request,
-                getParameterizedTypeReferenceJsonResultDTO()
         );
         return exchange.getBody();
     }
