@@ -56,13 +56,15 @@ public class CreateDataSourceDTOToDataSourceConverter implements Converter<Creat
         }
         DataSource dataSource = new DataSource();
         dataSource.setName(createDataSourceDTO.getName());
-        dataSource.setUuid(createDataSourceDTO.getUuid());
         dataSource.setDescription(createDataSourceDTO.getDescription());
         dataSource.setType(DBMSType.valueOf(createDataSourceDTO.getDbmsType()));
         dataSource.setConnectionString(createDataSourceDTO.getConnectionString());
         dataSource.setUsername(createDataSourceDTO.getDbUsername());
         dataSource.setPassword(createDataSourceDTO.getDbPassword());
         dataSource.setCdmSchema(createDataSourceDTO.getCdmSchema());
+        dataSource.setCohortTargetTable(createDataSourceDTO.getCohortTargetTable());
+        dataSource.setTargetSchema(createDataSourceDTO.getTargetSchema());
+        dataSource.setResultSchema(createDataSourceDTO.getResultSchema());
         return dataSource;
 
     }

@@ -22,11 +22,12 @@
 
 package com.odysseusinc.arachne.datanode.service.impl;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeRegisterResponseDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.datanode.repository.DataNodeRepository;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
+import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,8 +42,6 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import javax.annotation.PostConstruct;
 
 @Component
 @Transactional
@@ -88,7 +87,7 @@ public class DataSourceUUIDMigration {
     public void migrateDataNodes() {
 
         dataNodeRepository.findAllByCentralIdIsNull().forEach(dn -> {
-            CommonDataNodeRegisterResponseDTO dataNodeRegisterResponseDTO = centralClient.getDataNode(dn.getSid()).getResult();
+            CommonDataNodeDTO dataNodeRegisterResponseDTO = centralClient.getDataNode(dn.getSid()).getResult();
             if (dataNodeRegisterResponseDTO != null) {
                 dn.setCentralId(dataNodeRegisterResponseDTO.getCentralId());
                 dataNodeRepository.save(dn);

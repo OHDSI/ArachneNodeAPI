@@ -62,6 +62,11 @@ public class DataSourceUtils<T> {
         this.dataSource = dataSource;
     }
 
+    public static boolean isNotDummyPassword(String dbPassword) {
+
+        return Objects.nonNull(dbPassword) && !Objects.equals(dbPassword, Constants.DUMMY_PASSWORD);
+    }
+
     public static <T> DataSourceUtils<T> withDataSource(DataSource dataSource) {
 
         return new DataSourceUtils<>(dataSource);

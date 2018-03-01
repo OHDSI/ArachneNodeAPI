@@ -23,16 +23,19 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
 
 import com.google.common.base.Preconditions;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
-import com.odysseusinc.arachne.datanode.Constants;
-import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import com.odysseusinc.arachne.datanode.model.datasource.AutoDetectedFields;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
+import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
@@ -41,10 +44,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import javax.annotation.PostConstruct;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,13 +60,19 @@ public class DataSourceServiceImpl implements DataSourceService {
     private final DataSourceRepository dataSourceRepository;
     private final DataNodeService dataNodeService;
     private final Map<String, String> dsSortPath = new HashMap<>();
+    protected final GenericConversionService conversionService;
+    protected final BaseCentralIntegrationService<DataSource, CommonDataSourceDTO> integrationService;
 
     @Autowired
     public DataSourceServiceImpl(DataSourceRepository dataSourceRepository,
-                                 DataNodeService dataNodeService) {
+                                 DataNodeService dataNodeService,
+                                 BaseCentralIntegrationService<DataSource, CommonDataSourceDTO>  integrationService,
+                                 GenericConversionService conversionService) {
 
         this.dataSourceRepository = dataSourceRepository;
         this.dataNodeService = dataNodeService;
+        this.integrationService = integrationService;
+        this.conversionService = conversionService;
     }
 
     @PostConstruct
@@ -80,18 +88,27 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Optional<DataSource> create(User owner, DataSource dataSource) throws NotExistException {
+    public DataSource create(User owner, DataSource dataSource) throws NotExistException {
 
-        Optional<DataNode> currentDataNode = dataNodeService.findCurrentDataNode();
-        if (!currentDataNode.isPresent()) {
-            throw new NotExistException(DATANODE_IS_NOT_EXIST_EXCEPTION, DataNode.class);
-        }
+        AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
+
+        DataNode currentDataNode = dataNodeService.findCurrentDataNodeOrCreate(owner);
+        dataSource.setDataNode(currentDataNode);
+
+        CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
+        commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
+        commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
+
+        CommonDataSourceDTO centralDTO = integrationService.sendDataSourceCreationRequest(
+                owner,
+                dataSource.getDataNode(),
+                commonDataSourceDTO
+        );
+        dataSource.setCentralId(centralDTO.getId());
+
         checkNotNull(dataSource, "given datasource is null");
         checkNotNull(owner, "given owner is null");
-        dataSource.setUuid(UUID.randomUUID().toString());
-        dataSource.setDataNode(currentDataNode.get());
-        dataSource.setRegistred(false);
-        return Optional.of(dataSourceRepository.save(dataSource));
+        return dataSourceRepository.save(dataSource);
     }
 
     @Override
@@ -107,21 +124,9 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     @Override
-    public List<DataSource> findAllRegistered() {
-
-        return dataSourceRepository.findAllRegistered();
-    }
-
-    @Override
     public void delete(Long id) {
 
         checkNotNull(id, "given data source surrogate id is blank ");
-        final DataSource dataSource = getById(id);
-        if (dataSource.getRegistred()) {
-            final String message
-                    = String.format("Can not delete registered DataSource with id='%s'. Unregister it first", id);
-            throw new IllegalOperationException(message);
-        }
         dataSourceRepository.delete(id);
     }
 
@@ -132,13 +137,6 @@ public class DataSourceServiceImpl implements DataSourceService {
         dataSourceRepository.delete(dataSource);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<DataSource> findBySid(String sid) {
-
-        Preconditions.checkArgument(StringUtils.isNotBlank(sid), "given data source surrogate sid is blank ");
-        return dataSourceRepository.findByUuid(sid);
-    }
     @Override
     @Transactional(readOnly = true)
     public Optional<DataSource> findByCentralId(Long centralId) {
@@ -183,7 +181,7 @@ public class DataSourceServiceImpl implements DataSourceService {
             exists.setDescription(description);
         }
         final String password = dataSource.getPassword();
-        if (Objects.nonNull(password) && !Objects.equals(password, Constants.DUMMY_PASSWORD)) {
+        if (isNotDummyPassword(password)) {
             exists.setPassword(password);
         }
         final String username = dataSource.getUsername();
@@ -202,24 +200,20 @@ public class DataSourceServiceImpl implements DataSourceService {
         if (Objects.nonNull(atlasTargetCohortTable)) {
             exists.setCohortTargetTable(atlasTargetCohortTable);
         }
-        return dataSourceRepository.save(exists);
-    }
 
-    @Transactional
-    @Override
-    public DataSource markDataSourceAsRegistered(DataSource dataSource, Long centralId) {
+        AutoDetectedFields autoDetectedFields = autoDetectFields(exists);
+        DataSource updated = dataSourceRepository.save(exists);
 
-        dataSource.setCentralId(centralId);
-        return setDSRegistered(dataSource, centralId);
-    }
+        CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(updated, CommonDataSourceDTO.class);
+        commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
+        commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
+        integrationService.sendDataSourceUpdateRequest(
+                user,
+                updated.getCentralId(),
+                commonDataSourceDTO
+        );
 
-    @Transactional
-    @Override
-    public DataSource markDataSourceAsUnregistered(Long centralId) {
-
-        DataSource dataSource = dataSourceRepository.findByCentralId(centralId)
-                .orElseThrow(() -> new NotExistException(DataSource.class));
-        return setDSRegistered(dataSource, null);
+        return updated;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -233,10 +227,10 @@ public class DataSourceServiceImpl implements DataSourceService {
         });
     }
 
-    private DataSource setDSRegistered(DataSource dataSource, Long centralId) {
+    @Override
+    public AutoDetectedFields autoDetectFields(DataSource dataSource) {
 
-        dataSource.setRegistred(centralId != null);
-        return dataSourceRepository.save(dataSource);
+        return new AutoDetectedFields(CommonModelType.CDM);
     }
 
     protected final Sort getSort(String sortBy, Boolean sortAsc) {

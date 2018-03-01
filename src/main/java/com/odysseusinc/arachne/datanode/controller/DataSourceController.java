@@ -23,9 +23,12 @@
 package com.odysseusinc.arachne.datanode.controller;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
+import com.odysseusinc.arachne.datanode.dto.datasource.CreateDataSourceDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceBusinessDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
@@ -40,8 +43,6 @@ import java.util.Objects;
 @RestController
 public class DataSourceController extends BaseDataSourceController<DataSource, DataSourceBusinessDTO, CommonDataSourceDTO> {
 
-    private static final String CDM_VERSION_FILENAME = "cdm_version.txt";
-
     @Autowired
     public DataSourceController(DataSourceService dataSourceService,
                                 CentralIntegrationService integrationService,
@@ -49,7 +50,8 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
                                 ModelMapper modelMapper,
                                 GenericConversionService conversionService,
                                 JmsTemplate jmsTemplate,
-                                CentralClient centralClient) {
+                                CentralClient centralClient,
+                                DataNodeService dataNodeService) {
 
         super(userService,
                 modelMapper,
@@ -57,31 +59,8 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
                 dataSourceService,
                 conversionService,
                 centralClient,
-                jmsTemplate);
+                jmsTemplate,
+                dataNodeService);
     }
 
-    @Override
-    protected Class<CommonDataSourceDTO> getCommonDataSourceDTOClass() {
-
-        return CommonDataSourceDTO.class;
-    }
-
-    @Override
-    protected Class<DataSourceBusinessDTO> getDataSourceBusinessDTOClass() {
-
-        return DataSourceBusinessDTO.class;
-    }
-
-    @Override
-    protected DataSourceBusinessDTO enrichBusinessFromCommon(DataSourceBusinessDTO businessDTO, CommonDataSourceDTO commonDataSourceDTO) {
-
-        if (Objects.nonNull(commonDataSourceDTO) && Objects.nonNull(businessDTO)) {
-            businessDTO.setUuid(commonDataSourceDTO.getUuid());
-            businessDTO.setName(commonDataSourceDTO.getName());
-            businessDTO.setModelType(commonDataSourceDTO.getModelType());
-            businessDTO.setOrganization(commonDataSourceDTO.getOrganization());
-            businessDTO.setCdmVersion(commonDataSourceDTO.getCdmVersion());
-        }
-        return businessDTO;
-    }
 }

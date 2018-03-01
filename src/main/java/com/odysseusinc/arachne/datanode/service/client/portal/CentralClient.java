@@ -30,8 +30,8 @@ import java.util.Map;
 
 public interface CentralClient {
 
-    @RequestLine("DELETE /api/v1/data-nodes/{dataNodeId}/data-sources/{dataSourceId}")
-    JsonResult unregisterDataSource(@Param("dataNodeId") Long dataNodeId, @Param("dataSourceId") Long dataSourceId);
+    @RequestLine("DELETE /api/v1/data-sources/{dataSourceId}")
+    JsonResult unpublishAndSoftDeleteDataSource(@Param("dataSourceId") Long dataSourceId);
 
     @RequestLine("POST /api/v1/auth/refresh")
     JsonResult<String> refreshToken(@HeaderMap Map<String, String> tokenHeader);

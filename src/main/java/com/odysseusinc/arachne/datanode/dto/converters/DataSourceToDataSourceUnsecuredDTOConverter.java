@@ -26,6 +26,7 @@ import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,9 +65,7 @@ public class DataSourceToDataSourceUnsecuredDTOConverter implements Converter<Da
         target.setPassword(source.getPassword());
         final String cdmSchema = source.getCdmSchema();
         target.setCdmSchema(cdmSchema);
-        if (source.getType() != null) {
-            target.setType(DBMSType.valueOf(source.getType().name()));
-        }
+        target.setType(source.getType() != null ? DBMSType.valueOf(source.getType().name()) : null);
         final String targetSchema = source.getTargetSchema();
         target.setTargetSchema(StringUtils.isEmpty(targetSchema) ? cdmSchema : targetSchema);
         final String resultSchema = source.getResultSchema();

@@ -24,25 +24,22 @@ package com.odysseusinc.arachne.datanode.service;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
+import com.odysseusinc.arachne.datanode.model.datasource.AutoDetectedFields;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import java.util.List;
 import java.util.Optional;
 
 public interface DataSourceService {
-    Optional<DataSource> create(User owner, DataSource dataSource) throws NotExistException;
+    DataSource create(User owner, DataSource dataSource) throws NotExistException;
 
     List<DataSource> findAll();
 
     List<DataSource> findAll(String sortBy, Boolean sortAsc);
 
-    List<DataSource> findAllRegistered();
-
     void delete(Long id);
 
     void delete(DataSource dataSource);
-
-    Optional<DataSource> findBySid(String sid);
 
     Optional<DataSource> findByCentralId(Long centralId);
 
@@ -50,9 +47,7 @@ public interface DataSourceService {
 
     DataSource update(User user, DataSource dataSource);
 
-    DataSource markDataSourceAsRegistered(DataSource dataSource, Long centralId);
-
-    DataSource markDataSourceAsUnregistered(Long centralId);
-
     void updateHealthStatus(Long centralId, CommonHealthStatus status, String description);
+
+    AutoDetectedFields autoDetectFields(DataSource dataSource);
 }

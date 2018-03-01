@@ -22,13 +22,16 @@
 
 package com.odysseusinc.arachne.datanode.service.impl;
 
-import static org.apache.commons.lang3.StringUtils.isAnyBlank;
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
+import static org.apache.commons.lang.StringUtils.isBlank;
 
+import com.google.common.base.Functions;
+import com.google.common.collect.Lists;
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeCreationResponseDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeRegisterDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeRegisterResponseDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonLinkUserToDataNodeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonProfessionalTypeDTO;
@@ -96,32 +99,23 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
-    public DataNode sendDataNodeRegistrationRequest(User user, DataNode dataNode) {
+    public DataNode sendDataNodeCreationRequest(User user, DataNode dataNode) {
 
-        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataNode.REGISTRATION;
+        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataNode.CREATION;
         return sendDataNodeRequestEntity(user, dataNode, url, HttpMethod.POST);
-    }
-
-    @Override
-    public DataNode updateDataNodeOnCentral(User user, DataNode dataNode) {
-
-        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataNode.UPDATE;
-        return sendDataNodeRequestEntity(user, dataNode, url, HttpMethod.PUT, dataNode.getCentralId().toString());
     }
 
     private DataNode sendDataNodeRequestEntity(User user, DataNode dataNode, String url, HttpMethod method,
                                                String... uriVariables) {
 
-        final CommonDataNodeRegisterDTO commonDataNodeRegisterDTO
-                = conversionService.convert(dataNode, CommonDataNodeRegisterDTO.class);
         final HttpEntity<CommonDataNodeRegisterDTO> requestEntity
-                = new HttpEntity<>(commonDataNodeRegisterDTO, centralUtil.getCentralAuthHeader(user.getToken()));
-        final ParameterizedTypeReference<JsonResult<CommonDataNodeRegisterResponseDTO>> responseType
-                = new ParameterizedTypeReference<JsonResult<CommonDataNodeRegisterResponseDTO>>() {
+                = new HttpEntity<>(centralUtil.getCentralAuthHeader(user.getToken()));
+        final ParameterizedTypeReference<JsonResult<CommonDataNodeCreationResponseDTO>> responseType
+                = new ParameterizedTypeReference<JsonResult<CommonDataNodeCreationResponseDTO>>() {
         };
-        ResponseEntity<JsonResult<CommonDataNodeRegisterResponseDTO>> responseEntity
+        ResponseEntity<JsonResult<CommonDataNodeCreationResponseDTO>> responseEntity
                 = centralRestTemplate.exchange(url, method, requestEntity, responseType, uriVariables);
-        JsonResult<CommonDataNodeRegisterResponseDTO> jsonResult = responseEntity.getBody();
+        JsonResult<CommonDataNodeCreationResponseDTO> jsonResult = responseEntity.getBody();
         if (jsonResult != null && JsonResult.ErrorCode.VALIDATION_ERROR.getCode().equals(jsonResult.getErrorCode())) {
             throw new IntegrationValidationException(jsonResult);
         }
@@ -130,27 +124,23 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             throw new IllegalStateException("Unable to register data node on central." + (jsonResult == null
                     ? "" : jsonResult.getErrorMessage()));
         }
-        final CommonDataNodeRegisterResponseDTO commonDataNodeRegisterResponseDTO = jsonResult.getResult();
-        final String name = commonDataNodeRegisterResponseDTO.getName();
-        final String description = commonDataNodeRegisterResponseDTO.getDescription();
-        final String token = commonDataNodeRegisterResponseDTO.getToken();
-        if (isAnyBlank(name, description, token)) {
-            throw new IllegalStateException("Unable to register data node on central. Topic names is blank or empty response");
+        final CommonDataNodeCreationResponseDTO responseDTO = jsonResult.getResult();
+        final String token = responseDTO.getToken();
+        if (isBlank(token)) {
+            throw new IllegalStateException("Unable to register data node on central. Token is blank");
         } else {
-            dataNode.setCentralId(commonDataNodeRegisterResponseDTO.getCentralId());
-            dataNode.setName(name);
-            dataNode.setDescription(description);
+            dataNode.setCentralId(responseDTO.getCentralId());
             dataNode.setToken(token);
         }
         return dataNode;
     }
 
     @Override
-    public JsonResult<DTO> sendDataSourceRegistrationRequest(
+    public DTO sendDataSourceCreationRequest(
             User user, DataNode dataNode,
             DTO commonCreateDataSourceDTO) {
 
-        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.REGISTRATION;
+        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.CREATION;
         Map<String, Object> uriParams = new HashMap<>();
         uriParams.put("id", dataNode.getCentralId());
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
@@ -163,7 +153,38 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                         HttpMethod.POST, requestEntity,
                         getParameterizedTypeReferenceJsonResultDTO());
 
-        return exchange.getBody();
+        JsonResult<DTO> jsonResult = exchange.getBody();
+        if (jsonResult == null || !NO_ERROR.getCode().equals(jsonResult.getErrorCode())) {
+            throw new IllegalStateException("Unable to create data source on central." + (jsonResult == null
+                    ? "" : jsonResult.getErrorMessage()));
+        }
+        return jsonResult.getResult();
+    }
+
+    @Override
+    public DTO sendDataSourceUpdateRequest(
+            User user, Long centralDataSourceId,
+            DTO commonCreateDataSourceDTO) {
+
+        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.UPDATE;
+        Map<String, Object> uriParams = new HashMap<>();
+        uriParams.put("id", centralDataSourceId);
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+
+        HttpEntity<DTO> requestEntity =
+                new HttpEntity<>(commonCreateDataSourceDTO, centralUtil.getCentralAuthHeader(user.getToken()));
+        ResponseEntity<JsonResult<DTO>> exchange =
+                centralRestTemplate.exchange(
+                        uriBuilder.buildAndExpand(uriParams).toUri(),
+                        HttpMethod.PUT, requestEntity,
+                        getParameterizedTypeReferenceJsonResultDTO());
+
+        JsonResult<DTO> jsonResult = exchange.getBody();
+        if (jsonResult == null || !NO_ERROR.getCode().equals(jsonResult.getErrorCode())) {
+            throw new IllegalStateException("Unable to update data source on central." + (jsonResult == null
+                    ? "" : jsonResult.getErrorMessage()));
+        }
+        return jsonResult.getResult();
     }
 
     @Override
@@ -272,26 +293,21 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
-    public JsonResult<DTO> updateDataSource(
-            User user,
-            Long centralId, DTO commonCreateDataSourceDTO) {
+    public JsonResult<List<CommonDataSourceDTO>> getDataSources(User user, List<Long> ids) {
 
-        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.UPDATE;
+        String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.GET_LIST;
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        uriBuilder.queryParam("id", String.join(",", Lists.transform(ids, Functions.toStringFunction())));
 
-        Map<String, Long> uriParams = new HashMap<>();
-        uriParams.put("id", centralId);
-
-        HttpEntity<DTO> request = new HttpEntity<>(
-                commonCreateDataSourceDTO,
-                centralUtil.getCentralAuthHeader(user.getToken())
-        );
-
-        ResponseEntity<JsonResult<DTO>> exchange = centralRestTemplate.exchange(
-                uriBuilder.buildAndExpand(uriParams).toUri(),
-                HttpMethod.PUT,
+        HttpEntity request = new HttpEntity<>(centralUtil.getCentralAuthHeader(user.getToken()));
+        ParameterizedTypeReference<JsonResult<List<CommonDataSourceDTO>>> responseType
+                = new ParameterizedTypeReference<JsonResult<List<CommonDataSourceDTO>>>() {
+        };
+        ResponseEntity<JsonResult<List<CommonDataSourceDTO>>> exchange = centralRestTemplate.exchange(
+                uriBuilder.buildAndExpand().toUri(),
+                HttpMethod.GET,
                 request,
-                getParameterizedTypeReferenceJsonResultDTO()
+                responseType
         );
         return exchange.getBody();
     }

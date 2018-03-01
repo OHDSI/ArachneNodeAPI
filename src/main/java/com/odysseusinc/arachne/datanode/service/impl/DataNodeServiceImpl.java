@@ -24,12 +24,12 @@ package com.odysseusinc.arachne.datanode.service.impl;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
-import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.DataNodeRepository;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
+import com.odysseusinc.arachne.datanode.service.UserService;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,12 +45,15 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     private final DataNodeRepository dataNodeRepository;
     private final BaseCentralIntegrationService centralIntegrationService;
+    private final UserService userService;
 
     @Autowired
     public DataNodeServiceImpl(BaseCentralIntegrationService centralIntegrationService,
+                               UserService userService,
                                DataNodeRepository dataNodeRepository) {
 
         this.centralIntegrationService = centralIntegrationService;
+        this.userService = userService;
         this.dataNodeRepository = dataNodeRepository;
     }
 
@@ -65,31 +68,25 @@ public class DataNodeServiceImpl implements DataNodeService {
     }
 
     @Override
-    public DataNode create(User user, DataNode dataNode, List<User> users) throws AlreadyExistsException {
+    public DataNode findCurrentDataNodeOrCreate(User user) {
+
+        Optional<DataNode> currentDataNode = findCurrentDataNode();
+        return currentDataNode.orElseGet(() -> currentDataNode.orElse(create(user, new DataNode())));
+    }
+
+    @Override
+    public DataNode create(User user, DataNode dataNode) throws AlreadyExistsException {
+
+        final List<User> users = userService.getAllUsers(null, null);
 
         final Optional<DataNode> currentDataNode = findCurrentDataNode();
         if (currentDataNode.isPresent()) {
             throw new AlreadyExistsException(ALREADY_EXISTS_EXCEPTION);
         }
-        dataNode = centralIntegrationService.sendDataNodeRegistrationRequest(user, dataNode);
-        centralIntegrationService.relinkAllUsersToDataNodeOnCentral(dataNode, users);
+        dataNode = centralIntegrationService.sendDataNodeCreationRequest(user, dataNode);
         return dataNodeRepository.save(dataNode);
     }
 
-    @Override
-    public DataNode update(User user, DataNode dataNode) throws NotExistException {
-
-        final Optional<DataNode> currentDataNode = findCurrentDataNode();
-        if (!currentDataNode.isPresent()) {
-            throw new NotExistException(NOT_EXISTS_EXCEPTION, DataNode.class);
-        }
-        DataNode exists = currentDataNode.get();
-        exists.setName(dataNode.getName());
-        exists.setDescription(dataNode.getDescription());
-        exists.setToken(dataNode.getToken());
-        exists = centralIntegrationService.updateDataNodeOnCentral(user, exists);
-        return dataNodeRepository.save(exists);
-    }
 
     @Override
     public void updateHealthStatus(Long id, CommonHealthStatus healthStatus, String healthStatusDescription) {

@@ -24,8 +24,7 @@ package com.odysseusinc.arachne.datanode.model.datanode;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import org.hibernate.validator.constraints.NotEmpty;
-
+import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -38,7 +37,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
-import java.util.Set;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Entity
 @Table(name = "datanode")
@@ -52,14 +51,6 @@ public class DataNode {
     @Size(max = 50)
     @Column(length = 50, name = "sid")
     private String sid;
-
-    @NotEmpty
-    @Column(name = "name")
-    private String name;
-
-    @NotEmpty
-    @Column(name = "description")
-    private String description;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "dataNode")
     private Set<DataSource> dataSources;
@@ -98,26 +89,6 @@ public class DataNode {
     public void setSid(String sid) {
 
         this.sid = sid;
-    }
-
-    public String getName() {
-
-        return name;
-    }
-
-    public void setName(String name) {
-
-        this.name = name;
-    }
-
-    public String getDescription() {
-
-        return description;
-    }
-
-    public void setDescription(String description) {
-
-        this.description = description;
     }
 
     public Set<DataSource> getDataSources() {

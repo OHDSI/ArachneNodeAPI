@@ -44,15 +44,16 @@ public interface Constants {
 
     interface CentralApi {
         interface DataNode {
-            String REGISTRATION = "/api/v1/data-nodes";
+            String CREATION = "/api/v1/data-nodes";
             String UPDATE = "/api/v1/data-nodes/{uuid}";
         }
 
         interface DataSource {
-            String REGISTRATION = "/api/v1/data-nodes/{id}/data-sources";
+            String CREATION = "/api/v1/data-nodes/{id}/data-sources";
             String GET = "/api/v1/data-sources/{id}";
+            String GET_LIST = "/api/v1/data-sources/commondata";
             String GET_METADATA_SCHEMA = "/api/v1/metadata/data-source/attributes";
-            String UPDATE = "/api/v1/data-sources/{id}";
+            String UPDATE = "/api/v1/data-sources/{id}/from-node";
         }
 
         interface User {
