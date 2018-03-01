@@ -4,8 +4,6 @@
             id="1"
             sid="2f2586ee-13ff-40e9-9211-d03c15a36d44"
             health_status="GREEN"
-            name="test_datanode"
-            description="test_datanode"
             token="039ab69ed999450891223732a6afe150"
     />
 </dataset>
