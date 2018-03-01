@@ -45,15 +45,12 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     private final DataNodeRepository dataNodeRepository;
     private final BaseCentralIntegrationService centralIntegrationService;
-    private final UserService userService;
 
     @Autowired
     public DataNodeServiceImpl(BaseCentralIntegrationService centralIntegrationService,
-                               UserService userService,
                                DataNodeRepository dataNodeRepository) {
 
         this.centralIntegrationService = centralIntegrationService;
-        this.userService = userService;
         this.dataNodeRepository = dataNodeRepository;
     }
 
@@ -76,8 +73,6 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     @Override
     public DataNode create(User user, DataNode dataNode) throws AlreadyExistsException {
-
-        final List<User> users = userService.getAllUsers(null, null);
 
         final Optional<DataNode> currentDataNode = findCurrentDataNode();
         if (currentDataNode.isPresent()) {
