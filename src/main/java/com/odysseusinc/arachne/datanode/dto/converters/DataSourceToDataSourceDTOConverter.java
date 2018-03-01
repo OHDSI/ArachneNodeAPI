@@ -23,9 +23,8 @@
 package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.datanode.util.DataSourceUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecureDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +34,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataSourceToDataSourceDTOConverter implements Converter<DataSource, DataSourceDTO>, InitializingBean {
+public class DataSourceToDataSourceDTOConverter implements Converter<DataSource, DataSourceUnsecureDTO>, InitializingBean {
 
     private GenericConversionService conversionService;
     @Value("${cohorts.result.defaultTargetTable}")
@@ -57,9 +56,9 @@ public class DataSourceToDataSourceDTOConverter implements Converter<DataSource,
     }
 
     @Override
-    public DataSourceDTO convert(DataSource source) {
+    public DataSourceUnsecureDTO convert(DataSource source) {
 
-        DataSourceDTO target = new DataSourceDTO();
+        DataSourceUnsecureDTO target = new DataSourceUnsecureDTO();
         target.setConnectionString(source.getConnectionString());
         target.setUsername(source.getUsername());
         target.setPassword(source.getPassword());
@@ -74,8 +73,6 @@ public class DataSourceToDataSourceDTOConverter implements Converter<DataSource,
         target.setResultSchema(StringUtils.isEmpty(resultSchema) ? cdmSchema : resultSchema);
         final String cohortTargetTable = source.getCohortTargetTable();
         target.setCohortTargetTable(StringUtils.isEmpty(cohortTargetTable) ? defaultCohortTargetTable : cohortTargetTable);
-
-        DataSourceUtils.masqueradePassword(target);
 
         return target;
     }
