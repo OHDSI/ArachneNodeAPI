@@ -24,7 +24,7 @@
     <properties>
         <start-class>com.odysseusinc.arachne.datanode.WebApplicationStarter</start-class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>1.8</java.version>
+        <java.version>1.9</java.version>
         <jjwt.version>0.6.0</jjwt.version>
         <postgresql.version>9.1-901-1.jdbc4</postgresql.version>
         <flywayVersion>4.2.0</flywayVersion>
