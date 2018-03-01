@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.util;
 
 import com.odysseusinc.arachne.datanode.Constants;
+import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.util.datasource.QueryProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultSetContainer;
@@ -30,7 +31,6 @@ import com.odysseusinc.arachne.datanode.util.datasource.ResultSetProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultTransformer;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultWriter;
 
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -73,11 +73,6 @@ public class DataSourceUtils<T> {
     }
 
     public static void masqueradePassword(DataSourceDTO dataSource) {
-
-        dataSource.setPassword(getMasqueradedPassword(dataSource.getPassword()));
-    }
-
-    public static void masqueradePassword(com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO dataSource) {
 
         dataSource.setDbPassword(getMasqueradedPassword(dataSource.getDbPassword()));
     }

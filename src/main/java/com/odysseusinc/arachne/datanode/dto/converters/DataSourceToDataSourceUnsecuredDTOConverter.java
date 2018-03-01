@@ -23,9 +23,8 @@
 package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.datanode.util.DataSourceUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
@@ -36,7 +35,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataSourceToDataSourceDTOConverter implements Converter<DataSource, DataSourceDTO>, InitializingBean {
+public class DataSourceToDataSourceUnsecuredDTOConverter implements Converter<DataSource, DataSourceUnsecuredDTO>, InitializingBean {
 
     private GenericConversionService conversionService;
     @Value("${cohorts.result.defaultTargetTable}")
@@ -44,7 +43,7 @@ public class DataSourceToDataSourceDTOConverter implements Converter<DataSource,
 
     @Autowired
     @SuppressWarnings("SpringJavaAutowiringInspection")
-    public DataSourceToDataSourceDTOConverter(GenericConversionService conversionService) {
+    public DataSourceToDataSourceUnsecuredDTOConverter(GenericConversionService conversionService) {
 
         this.conversionService = conversionService;
 
@@ -58,9 +57,9 @@ public class DataSourceToDataSourceDTOConverter implements Converter<DataSource,
     }
 
     @Override
-    public DataSourceDTO convert(DataSource source) {
+    public DataSourceUnsecuredDTO convert(DataSource source) {
 
-        DataSourceDTO target = new DataSourceDTO();
+        DataSourceUnsecuredDTO target = new DataSourceUnsecuredDTO();
         target.setConnectionString(source.getConnectionString());
         target.setUsername(source.getUsername());
         target.setPassword(source.getPassword());
@@ -73,8 +72,6 @@ public class DataSourceToDataSourceDTOConverter implements Converter<DataSource,
         target.setResultSchema(StringUtils.isEmpty(resultSchema) ? cdmSchema : resultSchema);
         final String cohortTargetTable = source.getCohortTargetTable();
         target.setCohortTargetTable(StringUtils.isEmpty(cohortTargetTable) ? defaultCohortTargetTable : cohortTargetTable);
-
-        DataSourceUtils.masqueradePassword(target);
 
         return target;
     }
