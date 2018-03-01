@@ -56,7 +56,6 @@ public class CreateDataSourceDTOToDataSourceConverter implements Converter<Creat
         }
         DataSource dataSource = new DataSource();
         dataSource.setName(createDataSourceDTO.getName());
-        dataSource.setUuid(createDataSourceDTO.getUuid());
         dataSource.setDescription(createDataSourceDTO.getDescription());
         dataSource.setType(DBMSType.valueOf(createDataSourceDTO.getDbmsType()));
         dataSource.setConnectionString(createDataSourceDTO.getConnectionString());

@@ -55,7 +55,6 @@ public class DataSourceDTOToDataSourceConverter implements Converter<CommonDataS
         }
         DataSource dataSource = new DataSource();
         dataSource.setName(commonDataSourceDTO.getName());
-        dataSource.setUuid(commonDataSourceDTO.getUuid());
         return dataSource;
 
     }

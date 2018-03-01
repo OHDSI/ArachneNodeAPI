@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.service.impl;
 
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import com.google.common.base.Functions;
@@ -135,7 +136,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
-    public JsonResult<DTO> sendDataSourceCreationRequest(
+    public DTO sendDataSourceCreationRequest(
             User user, DataNode dataNode,
             DTO commonCreateDataSourceDTO) {
 
@@ -152,17 +153,22 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                         HttpMethod.POST, requestEntity,
                         getParameterizedTypeReferenceJsonResultDTO());
 
-        return exchange.getBody();
+        JsonResult<DTO> jsonResult = exchange.getBody();
+        if (jsonResult == null || !NO_ERROR.getCode().equals(jsonResult.getErrorCode())) {
+            throw new IllegalStateException("Unable to create data source on central." + (jsonResult == null
+                    ? "" : jsonResult.getErrorMessage()));
+        }
+        return jsonResult.getResult();
     }
 
     @Override
-    public JsonResult<DTO> sendDataSourceUpdateRequest(
-            User user, DataSource dataSource,
+    public DTO sendDataSourceUpdateRequest(
+            User user, Long centralDataSourceId,
             DTO commonCreateDataSourceDTO) {
 
         String url = centralUtil.getCentralUrl() + Constants.CentralApi.DataSource.UPDATE;
         Map<String, Object> uriParams = new HashMap<>();
-        uriParams.put("id", dataSource.getCentralId());
+        uriParams.put("id", centralDataSourceId);
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
 
         HttpEntity<DTO> requestEntity =
@@ -173,7 +179,12 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                         HttpMethod.PUT, requestEntity,
                         getParameterizedTypeReferenceJsonResultDTO());
 
-        return exchange.getBody();
+        JsonResult<DTO> jsonResult = exchange.getBody();
+        if (jsonResult == null || !NO_ERROR.getCode().equals(jsonResult.getErrorCode())) {
+            throw new IllegalStateException("Unable to update data source on central." + (jsonResult == null
+                    ? "" : jsonResult.getErrorMessage()));
+        }
+        return jsonResult.getResult();
     }
 
     @Override

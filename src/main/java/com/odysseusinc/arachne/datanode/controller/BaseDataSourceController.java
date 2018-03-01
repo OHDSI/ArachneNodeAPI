@@ -23,10 +23,8 @@
 package com.odysseusinc.arachne.datanode.controller;
 
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
-import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.OptionDTO;
@@ -36,8 +34,6 @@ import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
-import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
-import com.odysseusinc.arachne.datanode.model.datasource.AutoDetectedFields;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
@@ -110,30 +106,10 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         }
         final User user = getAdmin(principal);
         DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
-        AutoDetectedFields autoDetectedFields = checkDataSource(dataSource);
-
-        DataNode currentDataNode = dataNodeService.findCurrentDataNodeOrCreate(user);
-        dataSource.setDataNode(currentDataNode);
-
-        CommonDTO commonDataSourceDTO = conversionService.convert(dataSource, getCommonDataSourceDTOClass());
-        commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
-        commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
-        CommonDTO centralDTO = integrationService.sendDataSourceCreationRequest(
-                user,
-                dataSource.getDataNode(),
-                commonDataSourceDTO
-        ).getResult();
-        dataSource.setCentralId(centralDTO.getId());
-
-        DataSource optional = dataSourceService.create(user, dataSource, currentDataNode).get();
+        DataSource optional = dataSourceService.create(user, dataSource);
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
         result.setResult(conversionService.convert(optional, DataSourceDTO.class));
         return result;
-    }
-
-    protected AutoDetectedFields checkDataSource(DataSource dataSource) {
-
-        return new AutoDetectedFields(CommonModelType.CDM);
     }
 
     @ApiOperation(value = "Returns all data sources for current data node")
@@ -157,23 +133,28 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                 .collect(Collectors.toList());
 
         if (!CollectionUtils.isEmpty(dtos)) {
-
-            JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs =
-                    integrationService.getDataSources(getUser(principal),
-                    dtos.stream().map(DataSourceDTO::getCentralId).collect(Collectors.toList()));
-
-            Map<Long, CommonDataSourceDTO> idToDto = centralCommonDTOs.getResult()
-                    .stream()
-                    .collect(Collectors.toMap(CommonDataSourceDTO::getId, e -> e));
-
-            dtos.forEach(e -> {
-                CommonDataSourceDTO dto = idToDto.get(e.getCentralId());
-                e.setPublished(dto.getPublished());
-                e.setModelType(dto.getModelType());
-            });
+            dtos = setAutoDetectedFields(getUser(principal), dtos);
         }
         result.setResult(dtos);
         return result;
+    }
+
+    private List<DataSourceDTO> setAutoDetectedFields(User user, List<DataSourceDTO> dtos) {
+
+        JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs =
+                integrationService.getDataSources(user,
+                        dtos.stream().map(DataSourceDTO::getCentralId).collect(Collectors.toList()));
+
+        Map<Long, CommonDataSourceDTO> idToDto = centralCommonDTOs.getResult()
+                .stream()
+                .collect(Collectors.toMap(CommonDataSourceDTO::getId, e -> e));
+
+        dtos.forEach(e -> {
+            CommonDataSourceDTO dto = idToDto.get(e.getCentralId());
+            e.setPublished(dto.getPublished());
+            e.setModelType(dto.getModelType());
+        });
+        return dtos;
     }
 
     @ApiOperation(value = "Get data source")
@@ -190,13 +171,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
         DataSource dataSource = dataSourceService.getById(id);
 
-        JsonResult<List<CommonDataSourceDTO>> centralCommonDTO =
-                integrationService.getDataSources(getUser(principal),
-                        Collections.singletonList(dataSource.getCentralId()));
         DataSourceDTO resultDTO = modelMapper.map(dataSource, DataSourceDTO.class);
-
-        resultDTO.setPublished(centralCommonDTO.getResult().get(0).getPublished());
-        resultDTO.setModelType(centralCommonDTO.getResult().get(0).getModelType());
+        resultDTO = setAutoDetectedFields(getUser(principal), Collections.singletonList(resultDTO)).get(0);
         result.setResult(conversionService.convert(resultDTO, DataSourceDTO.class));
         return result;
     }
@@ -243,29 +219,9 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
         dataSource.setId(id);
 
-        String inputPassword = dataSourceDTO.getDbPassword();
-        dataSource.setPassword(isNotDummyPassword(inputPassword)? inputPassword: dataSourceService.getById(id).getPassword());
-
-        AutoDetectedFields autoDetectedFields = checkDataSource(dataSource);
         final DataSource savedDataSource = dataSourceService.update(user, dataSource);
-
-        CommonDTO commonDataSourceDTO = conversionService.convert(savedDataSource, getCommonDataSourceDTOClass());
-        commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
-        commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
-        final JsonResult<CommonDTO> res = integrationService.sendDataSourceUpdateRequest(
-                user,
-                savedDataSource,
-                commonDataSourceDTO
-        );
-
-        JsonResult<DataSourceDTO> result = new JsonResult<>();
-        result.setErrorCode(res.getErrorCode());
-        if (NO_ERROR.getCode().equals(res.getErrorCode())) {
-            result.setResult(conversionService.convert(savedDataSource, DataSourceDTO.class));
-        } else {
-            result.setValidatorErrors(res.getValidatorErrors());
-            result.setErrorMessage(res.getErrorMessage());
-        }
+        JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
+        result.setResult(conversionService.convert(savedDataSource, DataSourceDTO.class));
         return result;
     }
 
@@ -285,7 +241,5 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                 .map(dbms -> conversionService.convert(dbms, OptionDTO.class))
                 .collect(Collectors.toList());
     }
-
-    protected abstract Class<CommonDTO> getCommonDataSourceDTOClass();
 
 }

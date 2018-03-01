@@ -43,8 +43,6 @@ import java.util.Objects;
 @RestController
 public class DataSourceController extends BaseDataSourceController<DataSource, DataSourceBusinessDTO, CommonDataSourceDTO> {
 
-    private static final String CDM_VERSION_FILENAME = "cdm_version.txt";
-
     @Autowired
     public DataSourceController(DataSourceService dataSourceService,
                                 CentralIntegrationService integrationService,
@@ -63,12 +61,6 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
                 centralClient,
                 jmsTemplate,
                 dataNodeService);
-    }
-
-    @Override
-    protected Class<CommonDataSourceDTO> getCommonDataSourceDTOClass() {
-
-        return CommonDataSourceDTO.class;
     }
 
 }

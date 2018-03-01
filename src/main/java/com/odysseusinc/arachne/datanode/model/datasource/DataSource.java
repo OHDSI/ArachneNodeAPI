@@ -54,7 +54,6 @@ public class DataSource {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "datasource_id_seq_generator")
     private Long id;
 
-    @NotBlank
     @Column(name = "sid", nullable = false)
     private String uuid;
 

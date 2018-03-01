@@ -26,14 +26,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
 
 import com.google.common.base.Preconditions;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
-import com.odysseusinc.arachne.datanode.Constants;
-import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import com.odysseusinc.arachne.datanode.model.datasource.AutoDetectedFields;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
+import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
@@ -42,10 +44,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import javax.annotation.PostConstruct;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,13 +60,19 @@ public class DataSourceServiceImpl implements DataSourceService {
     private final DataSourceRepository dataSourceRepository;
     private final DataNodeService dataNodeService;
     private final Map<String, String> dsSortPath = new HashMap<>();
+    protected final GenericConversionService conversionService;
+    protected final BaseCentralIntegrationService<DataSource, CommonDataSourceDTO> integrationService;
 
     @Autowired
     public DataSourceServiceImpl(DataSourceRepository dataSourceRepository,
-                                 DataNodeService dataNodeService) {
+                                 DataNodeService dataNodeService,
+                                 BaseCentralIntegrationService<DataSource, CommonDataSourceDTO>  integrationService,
+                                 GenericConversionService conversionService) {
 
         this.dataSourceRepository = dataSourceRepository;
         this.dataNodeService = dataNodeService;
+        this.integrationService = integrationService;
+        this.conversionService = conversionService;
     }
 
     @PostConstruct
@@ -81,15 +88,27 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Optional<DataSource> create(User owner, DataSource dataSource, DataNode dataNode) throws NotExistException {
+    public DataSource create(User owner, DataSource dataSource) throws NotExistException {
 
+        AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
+
+        DataNode currentDataNode = dataNodeService.findCurrentDataNodeOrCreate(owner);
+        dataSource.setDataNode(currentDataNode);
+
+        CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
+        commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
+        commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
+
+        CommonDataSourceDTO centralDTO = integrationService.sendDataSourceCreationRequest(
+                owner,
+                dataSource.getDataNode(),
+                commonDataSourceDTO
+        );
+        dataSource.setCentralId(centralDTO.getId());
 
         checkNotNull(dataSource, "given datasource is null");
         checkNotNull(owner, "given owner is null");
-        checkNotNull(dataNode, "given datenode is null");
-        dataSource.setUuid(UUID.randomUUID().toString());
-        dataSource.setDataNode(dataNode);
-        return Optional.of(dataSourceRepository.save(dataSource));
+        return dataSourceRepository.save(dataSource);
     }
 
     @Override
@@ -120,13 +139,6 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<DataSource> findBySid(String sid) {
-
-        Preconditions.checkArgument(StringUtils.isNotBlank(sid), "given data source surrogate sid is blank ");
-        return dataSourceRepository.findByUuid(sid);
-    }
-    @Override
-    @Transactional(readOnly = true)
     public Optional<DataSource> findByCentralId(Long centralId) {
 
         Preconditions.checkArgument(Objects.nonNull(centralId), "given data source centralId is null");
@@ -145,6 +157,8 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public DataSource update(User user, DataSource dataSource) {
+
+        AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
 
         final DataSource exists = getById(dataSource.getId());
 
@@ -188,7 +202,18 @@ public class DataSourceServiceImpl implements DataSourceService {
         if (Objects.nonNull(atlasTargetCohortTable)) {
             exists.setCohortTargetTable(atlasTargetCohortTable);
         }
-        return dataSourceRepository.save(exists);
+        DataSource updated = dataSourceRepository.save(exists);
+
+        CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(updated, CommonDataSourceDTO.class);
+        commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
+        commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
+        integrationService.sendDataSourceUpdateRequest(
+                user,
+                updated.getCentralId(),
+                commonDataSourceDTO
+        );
+
+        return updated;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -200,6 +225,12 @@ public class DataSourceServiceImpl implements DataSourceService {
             dataSource.setHealthStatusDescription(description);
             dataSourceRepository.save(dataSource);
         });
+    }
+
+    @Override
+    public AutoDetectedFields autoDetectFields(DataSource dataSource) {
+
+        return new AutoDetectedFields(CommonModelType.CDM);
     }
 
     protected final Sort getSort(String sortBy, Boolean sortAsc) {

@@ -29,7 +29,6 @@ public class CreateDataSourceDTO {
 
     private Long id;
 
-    private String uuid;
     @NotBlank
     private String name;
     private String description;
@@ -60,16 +59,6 @@ public class CreateDataSourceDTO {
     public void setId(Long id) {
 
         this.id = id;
-    }
-
-    public String getUuid() {
-
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-
-        this.uuid = uuid;
     }
 
     public String getName() {

@@ -33,15 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 public interface DataSourceRepository extends JpaRepository<DataSource, Long> {
 
     @Modifying
-    @Transactional
-    @Query("delete from DataSource ds where ds.uuid = ?1")
-    void deleteByUuid(String uuid);
-
-    @Modifying
     void deleteByCentralId(Long centralId);
-
-    @Query("from DataSource ds where ds.uuid = ?1")
-    Optional<DataSource> findByUuid(String uuid);
 
     Optional<DataSource> findByCentralId(Long centralId);
 
