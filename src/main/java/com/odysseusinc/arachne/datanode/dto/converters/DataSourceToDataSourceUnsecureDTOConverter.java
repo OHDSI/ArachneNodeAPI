@@ -34,7 +34,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataSourceToDataSourceDTOConverter implements Converter<DataSource, DataSourceUnsecureDTO>, InitializingBean {
+public class DataSourceToDataSourceUnsecureDTOConverter implements Converter<DataSource, DataSourceUnsecureDTO>, InitializingBean {
 
     private GenericConversionService conversionService;
     @Value("${cohorts.result.defaultTargetTable}")
@@ -42,7 +42,7 @@ public class DataSourceToDataSourceDTOConverter implements Converter<DataSource,
 
     @Autowired
     @SuppressWarnings("SpringJavaAutowiringInspection")
-    public DataSourceToDataSourceDTOConverter(GenericConversionService conversionService) {
+    public DataSourceToDataSourceUnsecureDTOConverter(GenericConversionService conversionService) {
 
         this.conversionService = conversionService;
 
