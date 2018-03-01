@@ -158,8 +158,6 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Transactional(rollbackFor = Exception.class)
     public DataSource update(User user, DataSource dataSource) {
 
-        AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
-
         final DataSource exists = getById(dataSource.getId());
 
         final String name = dataSource.getName();
@@ -202,6 +200,8 @@ public class DataSourceServiceImpl implements DataSourceService {
         if (Objects.nonNull(atlasTargetCohortTable)) {
             exists.setCohortTargetTable(atlasTargetCohortTable);
         }
+
+        AutoDetectedFields autoDetectedFields = autoDetectFields(exists);
         DataSource updated = dataSourceRepository.save(exists);
 
         CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(updated, CommonDataSourceDTO.class);

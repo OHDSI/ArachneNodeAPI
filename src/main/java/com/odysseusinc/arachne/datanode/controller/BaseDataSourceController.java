@@ -133,13 +133,13 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                 .collect(Collectors.toList());
 
         if (!CollectionUtils.isEmpty(dtos)) {
-            dtos = setAutoDetectedFields(getUser(principal), dtos);
+            dtos = setFieldsFromCentral(getUser(principal), dtos);
         }
         result.setResult(dtos);
         return result;
     }
 
-    private List<DataSourceDTO> setAutoDetectedFields(User user, List<DataSourceDTO> dtos) {
+    private List<DataSourceDTO> setFieldsFromCentral(User user, List<DataSourceDTO> dtos) {
 
         JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs =
                 integrationService.getDataSources(user,
@@ -170,10 +170,9 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         }
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
         DataSource dataSource = dataSourceService.getById(id);
-
-        DataSourceDTO resultDTO = modelMapper.map(dataSource, DataSourceDTO.class);
-        resultDTO = setAutoDetectedFields(getUser(principal), Collections.singletonList(resultDTO)).get(0);
-        result.setResult(conversionService.convert(resultDTO, DataSourceDTO.class));
+        DataSourceDTO resultDTO = conversionService.convert(dataSource, DataSourceDTO.class);
+        resultDTO = setFieldsFromCentral(getUser(principal), Collections.singletonList(resultDTO)).get(0);
+        result.setResult(resultDTO);
         return result;
     }
 
