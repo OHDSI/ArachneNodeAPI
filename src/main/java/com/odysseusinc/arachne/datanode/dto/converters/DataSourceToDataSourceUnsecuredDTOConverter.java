@@ -24,7 +24,7 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecureDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceUnsecuredDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataSourceToDataSourceUnsecureDTOConverter implements Converter<DataSource, DataSourceUnsecureDTO>, InitializingBean {
+public class DataSourceToDataSourceUnsecuredDTOConverter implements Converter<DataSource, DataSourceUnsecuredDTO>, InitializingBean {
 
     private GenericConversionService conversionService;
     @Value("${cohorts.result.defaultTargetTable}")
@@ -42,7 +42,7 @@ public class DataSourceToDataSourceUnsecureDTOConverter implements Converter<Dat
 
     @Autowired
     @SuppressWarnings("SpringJavaAutowiringInspection")
-    public DataSourceToDataSourceUnsecureDTOConverter(GenericConversionService conversionService) {
+    public DataSourceToDataSourceUnsecuredDTOConverter(GenericConversionService conversionService) {
 
         this.conversionService = conversionService;
 
@@ -56,9 +56,9 @@ public class DataSourceToDataSourceUnsecureDTOConverter implements Converter<Dat
     }
 
     @Override
-    public DataSourceUnsecureDTO convert(DataSource source) {
+    public DataSourceUnsecuredDTO convert(DataSource source) {
 
-        DataSourceUnsecureDTO target = new DataSourceUnsecureDTO();
+        DataSourceUnsecuredDTO target = new DataSourceUnsecuredDTO();
         target.setConnectionString(source.getConnectionString());
         target.setUsername(source.getUsername());
         target.setPassword(source.getPassword());
