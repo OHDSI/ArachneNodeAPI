@@ -155,3 +155,6 @@ cohorts:
     countEnabled: false
     summaryEnabled: false
     defaultTargetTable: cohort
+tmp:
+  holder:
+    cron: 0 * * ? * *
