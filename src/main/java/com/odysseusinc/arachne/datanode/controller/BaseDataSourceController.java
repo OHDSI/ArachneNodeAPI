@@ -48,6 +48,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.modelmapper.ModelMapper;
@@ -143,7 +144,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
         JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs =
                 integrationService.getDataSources(user,
-                        dtos.stream().map(DataSourceDTO::getCentralId).collect(Collectors.toList()));
+                        dtos.stream().filter(e -> e.getCentralId() != null).map(DataSourceDTO::getCentralId)
+                                .collect(Collectors.toList()));
 
         Map<Long, CommonDataSourceDTO> idToDto = centralCommonDTOs.getResult()
                 .stream()
@@ -151,8 +153,10 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
         dtos.forEach(e -> {
             CommonDataSourceDTO dto = idToDto.get(e.getCentralId());
-            e.setPublished(dto.getPublished());
-            e.setModelType(dto.getModelType());
+            if (!Objects.isNull(dto)) {
+                e.setPublished(dto.getPublished());
+                e.setModelType(dto.getModelType());
+            }
         });
         return dtos;
     }
