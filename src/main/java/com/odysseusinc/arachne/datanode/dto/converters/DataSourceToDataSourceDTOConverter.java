@@ -30,15 +30,11 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
-/**
- * @author vkoulakov
- * @since 4/19/17.
- */
 @Component
-public class DataSourceToDataNodeDataSourceDTOConverter implements Converter<DataSource, DataSourceDTO> {
+public class DataSourceToDataSourceDTOConverter implements Converter<DataSource, DataSourceDTO> {
 
     @Autowired
-    public DataSourceToDataNodeDataSourceDTOConverter(GenericConversionService conversionService) {
+    public DataSourceToDataSourceDTOConverter(GenericConversionService conversionService) {
         conversionService.addConverter(this);
     }
 
