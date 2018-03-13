@@ -22,10 +22,12 @@
 
 package com.odysseusinc.arachne.datanode.service;
 
-import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType.MS_SQL_SERVER;
-import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType.ORACLE;
-import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType.POSTGRESQL;
-import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType.REDSHIFT;
+
+
+import static com.odysseusinc.arachne.commons.types.DBMSType.MS_SQL_SERVER;
+import static com.odysseusinc.arachne.commons.types.DBMSType.ORACLE;
+import static com.odysseusinc.arachne.commons.types.DBMSType.POSTGRESQL;
+import static com.odysseusinc.arachne.commons.types.DBMSType.REDSHIFT;
 
 import com.odysseusinc.arachne.datanode.service.impl.CohortServiceImpl;
 import java.io.IOException;
