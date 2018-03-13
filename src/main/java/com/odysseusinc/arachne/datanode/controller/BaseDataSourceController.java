@@ -41,10 +41,8 @@ import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -240,9 +238,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     )
     public List<OptionDTO> getDBMSTypes() {
 
-        return Arrays.stream(DBMSType.values())
-                .map(dbms -> conversionService.convert(dbms, OptionDTO.class))
-                .collect(Collectors.toList());
+        return integrationService.getDbmsTypes();
     }
 
 }
