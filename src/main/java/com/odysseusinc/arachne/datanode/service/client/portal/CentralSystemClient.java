@@ -22,7 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.service.client.portal;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.AtlasInfoDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityRequestDTO;
@@ -52,9 +52,9 @@ public interface CentralSystemClient {
     @Headers("Content-Type: multipart/form-data")
     void sendCommonEntityResponse(@Param("id") String id, @Param("files") MultipartFile[] files);
 
-    @RequestLine("POST /api/v1/data-nodes/atlas")
+    @RequestLine("POST /api/v1/data-nodes/atlases")
     @Headers("Content-Type: application/json")
-    void sendAtlasInformation(AtlasInfoDTO atlasInfo);
+    AtlasShortDTO updateAtlasInfo(AtlasShortDTO atlasInfo);
 
     @RequestLine("POST /api/v1/achilles/datanode/datasource/{id}")
     @Headers("Content-Type: multipart/form-data")

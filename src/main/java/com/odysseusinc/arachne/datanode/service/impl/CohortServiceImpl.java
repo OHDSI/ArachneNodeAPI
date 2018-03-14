@@ -29,6 +29,8 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonListEntityRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonListEntityResponseDTO;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.CohortService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
@@ -38,6 +40,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +50,7 @@ import org.ohdsi.sql.SqlRender;
 import org.ohdsi.sql.SqlTranslate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -64,6 +68,9 @@ public class CohortServiceImpl implements CohortService {
     private Map<CommonAnalysisType,
             AtlasRequestHandler<? extends CommonEntityDTO, ? extends CommonEntityDTO>> handlerMap =
             new HashMap<>();
+
+    @Autowired
+    private AtlasRepository atlasRepository;
 
     public CohortServiceImpl(CentralSystemClient centralClient,
                              ConfigurableListableBeanFactory beanFactory) {
@@ -99,15 +106,18 @@ public class CohortServiceImpl implements CohortService {
             if (CollectionUtils.isEmpty(requests.getRequestMap())) {
                 return;
             }
-            requests.getRequestMap().forEach((id, type) -> {
-                if (handlerMap.containsKey(type)) {
-                    AtlasRequestHandler<? extends CommonEntityDTO, ? extends CommonEntityDTO> handler = handlerMap.get(type);
-                    List<? extends CommonEntityDTO> list = handler.getObjectsList();
+            requests.getRequestMap().forEach((id, requestObject) -> {
+                if (handlerMap.containsKey(requestObject.getEntityType())) {
+
+                    List<Atlas> requestAtlasList = atlasRepository.findByCentralIdIn(requestObject.getAtlasIdList());
+
+                    AtlasRequestHandler<? extends CommonEntityDTO, ? extends CommonEntityDTO> handler = handlerMap.get(requestObject.getEntityType());
+                    List<? extends CommonEntityDTO> list = handler.getObjectsList(requestAtlasList);
                     CommonListEntityResponseDTO result =
                             new CommonListEntityResponseDTO(Sets.newHashSet(id), list);
                     centralClient.sendListEntityResponse(result);
                 } else {
-                    LOGGER.warn("Handler of type {} was not registered", type);
+                    LOGGER.warn("Handler of type {} was not registered", requestObject.getEntityType());
                 }
             });
         } catch (Exception ex) {

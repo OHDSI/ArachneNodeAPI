@@ -27,7 +27,9 @@ import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonIncidenceRatesDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.IRAnalysis;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
+import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
@@ -56,14 +58,13 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
     private static final Logger logger = LoggerFactory.getLogger(IncidenceRatesRequestHandler.class);
     public static final String IR_BUILD_ERROR = "Failed to build IR data";
     public static final String ID_PROPERTY_SUFFIX = "Ids";
-    private final AtlasClient atlasClient;
     private final GenericConversionService conversionService;
     private final CentralSystemClient centralClient;
     private final CommonEntityService commonEntityService;
     private Template incidenceRatesTemplate;
 
     @Autowired
-    public IncidenceRatesRequestHandler(AtlasClient atlasClient,
+    public IncidenceRatesRequestHandler(AtlasService atlasService,
                                         GenericConversionService conversionService,
                                         CentralSystemClient centralClient,
                                         CommonEntityService commonEntityService,
@@ -71,8 +72,7 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
                                         @Qualifier("incidenceRatesRunnerTemplate")
                                         Template incidenceRatesTemplate) {
 
-        super(sqlRenderService, atlasClient);
-        this.atlasClient = atlasClient;
+        super(sqlRenderService, atlasService);
         this.conversionService = conversionService;
         this.centralClient = centralClient;
         this.commonEntityService = commonEntityService;
@@ -80,9 +80,9 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
     }
 
     @Override
-    public List<CommonIncidenceRatesDTO> getObjectsList() {
+    public List<CommonIncidenceRatesDTO> getObjectsList(List<Atlas> atlasList) {
 
-        List<IRAnalysis> irAnalyses = atlasClient.getIncidenceRates();
+        List<IRAnalysis> irAnalyses = atlasService.execute(atlasList, AtlasClient::getIncidenceRates);
         return irAnalyses.stream()
                 .map(ir -> conversionService.convert(ir, CommonIncidenceRatesDTO.class))
                 .collect(Collectors.toList());
@@ -92,7 +92,7 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
     public List<MultipartFile> getAtlasObject(String guid) {
 
         return commonEntityService.findByGuid(guid).map(entity -> {
-            Map<String, Object> analysis = atlasClient.getIncidenceRate(entity.getLocalId());
+            Map<String, Object> analysis = atlasService.execute(entity.getOrigin(), atlasClient -> atlasClient.getIncidenceRate(entity.getLocalId()));
             String analysisName = (String) analysis.getOrDefault("name", "ir_analysis");
             List<MultipartFile> files = new ArrayList<>();
             try {
@@ -101,8 +101,8 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
                 Map<String, Object> expression = mapper.readValue(expressionValue, Map.class);
                 files.add(getAnalysisDescription(analysis));
                 List<MultipartFile> cohortFiles = new LinkedList<>();
-                cohortFiles.addAll(getCohortFiles(analysisName, expression, "target"));
-                cohortFiles.addAll(getCohortFiles(analysisName, expression, "outcome"));
+                cohortFiles.addAll(getCohortFiles(entity.getOrigin(), analysisName, expression, "target"));
+                cohortFiles.addAll(getCohortFiles(entity.getOrigin(), analysisName, expression, "outcome"));
                 files.addAll(cohortFiles);
                 List<String> cohortFileNames = cohortFiles.stream().map(MultipartFile::getName).collect(Collectors.toList());
                 files.add(getRunner(analysis, cohortFileNames));
@@ -114,7 +114,7 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
         }).orElse(null);
     }
 
-    private List<MultipartFile> getCohortFiles(String analysisName, Map<String, Object> analysisInfo,
+    private List<MultipartFile> getCohortFiles(Atlas origin, String analysisName, Map<String, Object> analysisInfo,
                                                String property) {
 
         Objects.requireNonNull(analysisInfo, "Analysis should not be NULL");
@@ -123,7 +123,7 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
         if (value instanceof List){
             for(Integer cohortId : ((List<Integer>)value)){
                 String name = String.format("%s_%d_%s.sql", analysisName, cohortId, property);
-                files.add(getCohortFile(cohortId, name, new String[]{"target_cohort_id"},
+                files.add(getCohortFile(origin, cohortId, name, new String[]{"target_cohort_id"},
                         new String[]{ cohortId.toString() }));
             }
         }

@@ -27,6 +27,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.UserService;
@@ -194,11 +195,12 @@ public abstract class BaseAdminController {
     }
 
     @ApiOperation("Check Atlas Connection")
-    @RequestMapping(value = "/api/v1/admin/atlas-connection", method = RequestMethod.POST)
-    public JsonResult checkAtlasConnection() {
+    @RequestMapping(value = "/api/v1/admin/atlases/{id}/connection", method = RequestMethod.POST)
+    public JsonResult checkAtlasConnection(@PathVariable("id") Long id) {
 
         JsonResult result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-        String atlasVersion = atlasService.checkConnection();
+        Atlas atlas = atlasService.getById(id);
+        String atlasVersion = atlasService.checkConnection(atlas);
         result.setErrorMessage("Atlas version: " + atlasVersion);
         return result;
     }

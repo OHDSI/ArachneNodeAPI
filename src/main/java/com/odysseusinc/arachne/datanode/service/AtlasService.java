@@ -22,6 +22,25 @@
 
 package com.odysseusinc.arachne.datanode.service;
 
+import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
+import java.util.List;
+import java.util.function.Function;
+
 public interface AtlasService {
-    String checkConnection();
+
+    String checkConnection(Atlas atlas);
+
+    List<Atlas> findAll();
+
+    Atlas getById(Long id);
+
+    Atlas updateVersion(Long atlasId, String version);
+
+    Atlas save(Atlas atlas);
+
+    <R extends BaseAtlasEntity> List<R> execute(List<Atlas> atlasList, Function<? super AtlasClient, ? extends List<R>> sendAtlasRequest);
+
+    <R> R execute(Atlas atlas, Function<? super AtlasClient, R> sendAtlasRequest);
 }

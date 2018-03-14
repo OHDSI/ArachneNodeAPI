@@ -44,6 +44,7 @@ public class CohortDefinitionToCommonCohortShortDTOConverter implements Converte
     public CommonCohortShortDTO convert(CohortDefinition source) {
 
         CommonCohortShortDTO cohort = new CommonCohortShortDTO();
+        cohort.setOriginId(source.getOrigin().getId());
         cohort.setLocalId(source.getId());
         cohort.setDescription(source.getDescription());
         cohort.setModified(source.getModifiedDate());

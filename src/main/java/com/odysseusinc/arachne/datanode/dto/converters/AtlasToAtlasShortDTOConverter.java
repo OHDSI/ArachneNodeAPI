@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,17 +15,15 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: July 27, 2017
+ * Authors: Pavel Grafkin
+ * Created: March 14, 2018
  *
  */
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisType;
-import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
+import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
@@ -33,13 +31,12 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CCAToCommonCohortAnalysisDTOConverter
-        implements Converter<ComparativeCohortAnalysis, CommonCohortAnalysisDTO>, InitializingBean {
+public class AtlasToAtlasShortDTOConverter implements Converter<Atlas, AtlasShortDTO>, InitializingBean {
 
     private GenericConversionService conversionService;
 
     @Autowired
-    public CCAToCommonCohortAnalysisDTOConverter(GenericConversionService conversionService) {
+    public AtlasToAtlasShortDTOConverter(GenericConversionService conversionService) {
 
         this.conversionService = conversionService;
     }
@@ -51,15 +48,14 @@ public class CCAToCommonCohortAnalysisDTOConverter
     }
 
     @Override
-    public CommonCohortAnalysisDTO convert(ComparativeCohortAnalysis source) {
+    public AtlasShortDTO convert(Atlas source) {
 
-        CommonCohortAnalysisDTO result = new CommonCohortAnalysisDTO();
-        result.setOriginId(source.getOrigin().getId());
-        result.setAnalysisType(CommonCohortAnalysisType.ESTIMATION);
-        result.setLocalId(source.getAnalysisId().longValue());
+        AtlasShortDTO result = new AtlasShortDTO();
+
+        result.setCentralId(source.getCentralId());
         result.setName(source.getName());
-        result.setModified(source.getModified());
-        result.setType(CommonAnalysisType.ESTIMATION);
+        result.setVersion(source.getVersion());
+
         return result;
     }
 }

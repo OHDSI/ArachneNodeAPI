@@ -43,6 +43,7 @@ public class IRAnalysisToCommonIncidenceRatesDTOConverter implements Converter<I
     public CommonIncidenceRatesDTO convert(IRAnalysis source) {
 
         CommonIncidenceRatesDTO result = new CommonIncidenceRatesDTO();
+        result.setOriginId(source.getOrigin().getId());
         result.setDescription(source.getDescription());
         result.setLocalId(source.getId().longValue());
         result.setName(source.getName());

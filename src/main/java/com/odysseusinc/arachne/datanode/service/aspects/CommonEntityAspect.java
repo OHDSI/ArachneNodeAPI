@@ -52,7 +52,7 @@ public class CommonEntityAspect {
     }
 
     @AfterReturning(
-            pointcut = "execution(* com.odysseusinc.arachne.datanode.service.AtlasRequestHandler.getObjectsList())",
+            pointcut = "execution(* com.odysseusinc.arachne.datanode.service.AtlasRequestHandler.getObjectsList(..))",
             returning = "entityList"
     )
     public void expandListWithGuid(List<? extends CommonEntityDTO> entityList) {
@@ -60,23 +60,11 @@ public class CommonEntityAspect {
         entityList.forEach(this::expandWithGuid);
     }
 
-    @AfterReturning(
-            pointcut = "execution(* com.odysseusinc.arachne.datanode.service.AtlasRequestHandler.getAtlasObject(..))",
-            returning = "commonEntity"
-    )
-    public void expandCommonObjectWithGuid(CommonEntityDTO commonEntity) {
-
-        LOGGER.debug("expanding Guid for {}", commonEntity);
-        if (commonEntity != null) {
-            expandWithGuid(commonEntity);
-        }
-    }
-
     private void expandWithGuid(CommonEntityDTO commonEntityDTO) {
 
         Objects.requireNonNull(commonEntityDTO);
         if (commonEntityDTO.getType() != null) {
-            CommonEntity entity = commonEntityService.getOrCreate(commonEntityDTO.getLocalId().intValue(),
+            CommonEntity entity = commonEntityService.getOrCreate(commonEntityDTO.getOriginId(), commonEntityDTO.getLocalId().intValue(),
                     commonEntityDTO.getType());
             commonEntityDTO.setGuid(entity.getGuid());
         }

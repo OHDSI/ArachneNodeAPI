@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.io.Serializable;
 import java.util.Date;
 
-public class PatientLevelPredictionInfo implements Serializable {
+public class PatientLevelPredictionInfo extends BaseAtlasEntity implements Serializable {
     private Integer analysisId;
     private String name;
     private String modelType;

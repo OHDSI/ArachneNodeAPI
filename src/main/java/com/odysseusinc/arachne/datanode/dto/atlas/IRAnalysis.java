@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.util.Date;
 
-public class IRAnalysis {
+public class IRAnalysis extends BaseAtlasEntity {
     private Integer id;
     private String name;
     private String description;

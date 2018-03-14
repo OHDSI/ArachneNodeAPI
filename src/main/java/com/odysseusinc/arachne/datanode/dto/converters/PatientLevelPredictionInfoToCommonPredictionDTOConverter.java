@@ -41,6 +41,7 @@ public class PatientLevelPredictionInfoToCommonPredictionDTOConverter implements
     public CommonPredictionDTO convert(PatientLevelPredictionInfo source) {
 
         CommonPredictionDTO dto = new CommonPredictionDTO();
+        dto.setOriginId(source.getOrigin().getId());
         dto.setLocalId(source.getAnalysisId().longValue());
         dto.setName(source.getName());
         dto.setModified(source.getModifiedDate());
