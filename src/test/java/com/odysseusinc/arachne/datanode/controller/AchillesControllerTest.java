@@ -32,6 +32,7 @@ import com.github.springtestdbunit.DbUnitTestExecutionListener;
 import com.github.springtestdbunit.annotation.DatabaseOperation;
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DbUnitConfiguration;
+import com.odysseusinc.arachne.commons.utils.ConverterUtils;
 import com.odysseusinc.arachne.datanode.model.achilles.AchillesJob;
 import com.odysseusinc.arachne.datanode.repository.AchillesJobRepository;
 import org.junit.Before;
@@ -39,6 +40,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
@@ -78,6 +80,9 @@ public class AchillesControllerTest {
     private AchillesJobRepository achillesJobRepository;
 
     private MockMvc mvc;
+
+    @MockBean
+    private ConverterUtils converterUtils;
 
     @Before
     public void setUp() throws Exception {
