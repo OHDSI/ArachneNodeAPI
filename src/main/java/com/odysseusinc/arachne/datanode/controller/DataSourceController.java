@@ -23,8 +23,7 @@
 package com.odysseusinc.arachne.datanode.controller;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
-import com.odysseusinc.arachne.datanode.dto.datasource.CreateDataSourceDTO;
+import com.odysseusinc.arachne.commons.utils.ConverterUtils;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceBusinessDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
@@ -38,8 +37,6 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Objects;
-
 @RestController
 public class DataSourceController extends BaseDataSourceController<DataSource, DataSourceBusinessDTO, CommonDataSourceDTO> {
 
@@ -51,7 +48,8 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
                                 GenericConversionService conversionService,
                                 JmsTemplate jmsTemplate,
                                 CentralClient centralClient,
-                                DataNodeService dataNodeService) {
+                                DataNodeService dataNodeService,
+                                ConverterUtils converterUtils) {
 
         super(userService,
                 modelMapper,
@@ -60,7 +58,8 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
                 conversionService,
                 centralClient,
                 jmsTemplate,
-                dataNodeService);
+                dataNodeService,
+                converterUtils);
     }
 
 }
