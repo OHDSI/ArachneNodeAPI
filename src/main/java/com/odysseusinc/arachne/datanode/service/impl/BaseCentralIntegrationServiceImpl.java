@@ -39,7 +39,6 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.Constants;
-import com.odysseusinc.arachne.datanode.dto.OptionDTO;
 import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
 import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
@@ -260,18 +259,6 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
         ResponseEntity<JsonResult> exchange =
                 centralRestTemplate.exchange(url, HttpMethod.GET, request, JsonResult.class);
         return (JsonResult<CommonProfessionalTypeDTO>) exchange.getBody();
-    }
-
-    @Override
-    public List<OptionDTO> getDbmsTypes() {
-
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-        headers.add("Content-Type", "application/json");
-        HttpEntity request = new HttpEntity(headers);
-        String url = centralUtil.getCentralUrl() + Constants.CentralApi.User.DBMS_TYPES;
-        ResponseEntity<List> exchange =
-                centralRestTemplate.exchange(url, HttpMethod.GET, request, List.class);
-        return (List<OptionDTO>) exchange.getBody();
     }
 
     @Override

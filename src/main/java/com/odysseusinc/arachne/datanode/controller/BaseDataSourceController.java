@@ -25,9 +25,11 @@ package com.odysseusinc.arachne.datanode.controller;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.OptionDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
+import com.odysseusinc.arachne.commons.types.DBMSType;
+import com.odysseusinc.arachne.commons.utils.ConverterUtils;
 import com.odysseusinc.arachne.datanode.Constants;
-import com.odysseusinc.arachne.datanode.dto.OptionDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.CreateDataSourceDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceBusinessDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
@@ -43,6 +45,7 @@ import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +75,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     protected final DestinationResolver destinationResolver;
     protected final CentralClient centralClient;
     protected final DataNodeService dataNodeService;
+    protected final ConverterUtils converterUtils;
 
     protected BaseDataSourceController(UserService userService,
                                        ModelMapper modelMapper,
@@ -80,7 +84,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                                        GenericConversionService conversionService,
                                        CentralClient centralClient,
                                        JmsTemplate jmsTemplate,
-                                       DataNodeService dataNodeService) {
+                                       DataNodeService dataNodeService,
+                                       ConverterUtils converterUtils) {
 
         super(userService);
         this.modelMapper = modelMapper;
@@ -91,6 +96,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         this.centralClient = centralClient;
         this.jmsTemplate = jmsTemplate;
         this.dataNodeService = dataNodeService;
+        this.converterUtils = converterUtils;
     }
 
     @ApiOperation(value = "Add data source")
@@ -238,7 +244,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     )
     public List<OptionDTO> getDBMSTypes() {
 
-        return integrationService.getDbmsTypes();
+        return converterUtils.convertList(Arrays.asList(DBMSType.values()), OptionDTO.class);
     }
 
 }

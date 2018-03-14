@@ -60,7 +60,6 @@ public interface Constants {
             String AUTH_METHOD = "/api/v1/auth/method";
             String LOGIN = "/api/v1/auth/login";
             String PROFESSIONAL_TYPES = "/api/v1/user-management/professional-types";
-            String DBMS_TYPES = "/api/v1/data-sources/dbms-types";
             String REGISTER_USER = "/api/v1/auth/registration";
             String LOGOUT = "/api/v1/auth/logout";
             String REGISTRATION = "/api/v1/auth/registration";
