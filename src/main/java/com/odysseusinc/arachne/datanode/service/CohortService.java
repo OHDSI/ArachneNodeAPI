@@ -22,8 +22,8 @@
 
 package com.odysseusinc.arachne.datanode.service;
 
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.service.impl.CohortServiceImpl;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import java.io.File;
 import java.util.Map;
 
