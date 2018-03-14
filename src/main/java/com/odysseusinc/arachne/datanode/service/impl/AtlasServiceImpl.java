@@ -124,15 +124,50 @@ public class AtlasServiceImpl implements AtlasService {
         Atlas atlas = atlasRepository.findOne(atlasId);
         atlas.setVersion(version);
 
-        AtlasShortDTO atlasShortDTO = conversionService.convert(atlas, AtlasShortDTO.class);
-        AtlasShortDTO updatedDTO = centralSystemClient.updateAtlasInfo(atlasShortDTO);
+        AtlasShortDTO updatedDTO = syncWithCentral(atlas);
 
         atlas.setCentralId(updatedDTO.getCentralId());
 
         return save(atlas);
     }
 
+    @Override
     public Atlas save(Atlas atlas) {
+
+        return atlasRepository.saveAndFlush(atlas);
+    }
+
+    @Override
+    @Transactional
+    public Atlas update(Long atlasId, Atlas atlas) {
+
+        Atlas existing = atlasRepository.findOne(atlasId);
+        boolean shouldSyncWithCentral = false;
+
+        if (atlas.getName() != null) {
+            existing.setName(atlas.getName());
+            shouldSyncWithCentral = true;
+        }
+
+        if (atlas.getUrl() != null) {
+            existing.setUrl(atlas.getUrl());
+        }
+
+        if (atlas.getAuthType() != null) {
+            existing.setAuthType(atlas.getAuthType());
+        }
+
+        if (atlas.getUsername() != null) {
+            existing.setUsername(atlas.getUsername());
+        }
+
+        if (atlas.getPassword() != null) {
+            existing.setPassword(atlas.getPassword());
+        }
+
+        if (shouldSyncWithCentral) {
+            syncWithCentral(atlas);
+        }
 
         return atlasRepository.saveAndFlush(atlas);
     }
@@ -156,6 +191,12 @@ public class AtlasServiceImpl implements AtlasService {
 
         AtlasClient client = getOrCreate(atlas);
         return sendAtlasRequest.apply(client);
+    }
+
+    private AtlasShortDTO syncWithCentral(Atlas atlas) {
+
+        AtlasShortDTO atlasShortDTO = conversionService.convert(atlas, AtlasShortDTO.class);
+        return centralSystemClient.updateAtlasInfo(atlasShortDTO);
     }
 
     private AtlasClient getOrCreate(Atlas atlas) {

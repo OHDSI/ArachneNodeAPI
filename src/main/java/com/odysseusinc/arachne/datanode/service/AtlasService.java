@@ -40,6 +40,8 @@ public interface AtlasService {
 
     Atlas save(Atlas atlas);
 
+    Atlas update(Long atlasId, Atlas atlas);
+
     <R extends BaseAtlasEntity> List<R> execute(List<Atlas> atlasList, Function<? super AtlasClient, ? extends List<R>> sendAtlasRequest);
 
     <R> R execute(Atlas atlas, Function<? super AtlasClient, R> sendAtlasRequest);

@@ -42,12 +42,6 @@ public class Atlas {
     @Column
     private String password;
 
-    @Column
-    private Boolean cohortLogEnabled;
-
-    @Column
-    private Boolean cohortCountEnabled;
-
     @Override
     public boolean equals(Object o) {
 
@@ -152,25 +146,5 @@ public class Atlas {
     public void setPassword(String password) {
 
         this.password = password;
-    }
-
-    public Boolean getCohortLogEnabled() {
-
-        return cohortLogEnabled;
-    }
-
-    public void setCohortLogEnabled(Boolean cohortLogEnabled) {
-
-        this.cohortLogEnabled = cohortLogEnabled;
-    }
-
-    public Boolean getCohortCountEnabled() {
-
-        return cohortCountEnabled;
-    }
-
-    public void setCohortCountEnabled(Boolean cohortCountEnabled) {
-
-        this.cohortCountEnabled = cohortCountEnabled;
     }
 }

@@ -22,21 +22,21 @@
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
+import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDetailedDTO;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AtlasToAtlasShortDTOConverter extends BaseAtlasToAtlasShortDTOConverter<AtlasShortDTO> {
+public class AtlasToAtlasDetailedDTOConverter extends BaseAtlasToAtlasDTOConverter<AtlasDetailedDTO> {
 
-    public AtlasToAtlasShortDTOConverter(GenericConversionService conversionService) {
+    public AtlasToAtlasDetailedDTOConverter(GenericConversionService conversionService) {
 
         super(conversionService);
     }
 
     @Override
-    public AtlasShortDTO getDTOClass() {
+    public AtlasDetailedDTO getDTOClass() {
 
-        return new AtlasShortDTO();
+        return new AtlasDetailedDTO();
     }
 }

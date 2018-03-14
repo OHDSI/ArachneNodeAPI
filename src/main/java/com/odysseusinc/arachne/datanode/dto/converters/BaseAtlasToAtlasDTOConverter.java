@@ -22,21 +22,30 @@
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
+import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.masqueradePassword;
+
+import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDetailedDTO;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.stereotype.Component;
 
-@Component
-public class AtlasToAtlasShortDTOConverter extends BaseAtlasToAtlasShortDTOConverter<AtlasShortDTO> {
+public abstract class BaseAtlasToAtlasDTOConverter<T extends AtlasDetailedDTO> extends BaseAtlasToAtlasShortDTOConverter<T> {
 
-    public AtlasToAtlasShortDTOConverter(GenericConversionService conversionService) {
+    public BaseAtlasToAtlasDTOConverter(GenericConversionService conversionService) {
 
         super(conversionService);
     }
 
     @Override
-    public AtlasShortDTO getDTOClass() {
+    public T convert(Atlas source) {
 
-        return new AtlasShortDTO();
+        T result = super.convert(source);
+        result.setUrl(source.getUrl());
+        result.setAuthType(source.getAuthType().name());
+        result.setUsername(source.getUsername());
+        result.setPassword(source.getPassword());
+
+        masqueradePassword(result);
+
+        return result;
     }
 }
