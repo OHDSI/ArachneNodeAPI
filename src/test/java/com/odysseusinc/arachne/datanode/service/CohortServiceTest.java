@@ -29,6 +29,7 @@ import static com.odysseusinc.arachne.commons.types.DBMSType.ORACLE;
 import static com.odysseusinc.arachne.commons.types.DBMSType.POSTGRESQL;
 import static com.odysseusinc.arachne.commons.types.DBMSType.REDSHIFT;
 
+import com.odysseusinc.arachne.commons.utils.ConverterUtils;
 import com.odysseusinc.arachne.datanode.service.impl.CohortServiceImpl;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -39,6 +40,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
@@ -58,6 +60,10 @@ public class CohortServiceTest {
 
     @Autowired
     private CohortService cohortService;
+
+    @MockBean
+    private ConverterUtils converterUtils;
+
 
     public CohortServiceTest() throws IOException {
 
