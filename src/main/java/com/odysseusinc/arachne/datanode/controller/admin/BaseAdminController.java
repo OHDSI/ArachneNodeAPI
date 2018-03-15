@@ -24,6 +24,7 @@ package com.odysseusinc.arachne.datanode.controller.admin;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
+import com.odysseusinc.arachne.commons.utils.UserIdUtils;
 import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
@@ -97,11 +98,11 @@ public abstract class BaseAdminController {
         return result;
     }
 
-    @RequestMapping(value = "/api/v1/admin/admins/{id}", method = RequestMethod.POST)
-    public JsonResult addAdminRole(Principal principal, @PathVariable Long id) {
+    @RequestMapping(value = "/api/v1/admin/admins/{uuid}", method = RequestMethod.POST)
+    public JsonResult addAdminRole(Principal principal, @PathVariable String uuid) {
 
         userService.findByUsername(principal.getName()).ifPresent(user -> {
-            userService.addUserToAdmins(user, id);
+            userService.addUserToAdmins(user, UserIdUtils.uuidToId(uuid));
         });
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
     }
@@ -152,24 +153,24 @@ public abstract class BaseAdminController {
     }
 
     @ApiOperation("Remove admin role")
-    @RequestMapping(value = "/api/v1/admin/admins/{id}", method = RequestMethod.DELETE)
-    public JsonResult removeAdminRole(@PathVariable Long id) {
+    @RequestMapping(value = "/api/v1/admin/admins/{uuid}", method = RequestMethod.DELETE)
+    public JsonResult removeAdminRole(@PathVariable String uuid) {
 
-        userService.removeUserFromAdmins(id);
+        userService.removeUserFromAdmins(UserIdUtils.uuidToId(uuid));
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
     }
 
     @ApiOperation("Add user from central")
-    @RequestMapping(value = "/api/v1/admin/users/{centralId}", method = RequestMethod.POST)
+    @RequestMapping(value = "/api/v1/admin/users/{uuid}", method = RequestMethod.POST)
     public JsonResult addUserFromCentral(
             Principal principal,
-            @PathVariable Long centralId) {
+            @PathVariable String uuid) {
 
         JsonResult<UserDTO> result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
         userService
                 .findByUsername(principal.getName())
                 .ifPresent(loginedUser -> {
-                    User user = userService.addUserFromCentral(loginedUser, centralId);
+                    User user = userService.addUserFromCentral(loginedUser, UserIdUtils.uuidToId(uuid));
                     result.setResult(conversionService.convert(user, UserDTO.class));
                 });
         return result;
@@ -186,10 +187,10 @@ public abstract class BaseAdminController {
     }
 
     @ApiOperation("Remove user")
-    @RequestMapping(value = "/api/v1/admin/users/{id}", method = RequestMethod.DELETE)
-    public JsonResult removeUser(@PathVariable Long id) throws NotExistException {
+    @RequestMapping(value = "/api/v1/admin/users/{uuid}", method = RequestMethod.DELETE)
+    public JsonResult removeUser(@PathVariable String uuid) throws NotExistException {
 
-        userService.remove(id);
+        userService.remove(UserIdUtils.uuidToId(uuid));
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
     }
 
