@@ -56,6 +56,9 @@ public interface CentralSystemClient {
     @Headers("Content-Type: application/json")
     AtlasShortDTO updateAtlasInfo(AtlasShortDTO atlasInfo);
 
+    @RequestLine("DELETE /api/v1/data-nodes/atlases/{id}")
+    void deleteAtlas(@Param("id") Long atlasId);
+
     @RequestLine("POST /api/v1/achilles/datanode/datasource/{id}")
     @Headers("Content-Type: multipart/form-data")
     void sendAchillesResults(@Param("id") Long centralId, @Param("file") MultipartFile file);

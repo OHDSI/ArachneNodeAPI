@@ -27,12 +27,16 @@ import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import java.util.List;
 import java.util.function.Function;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface AtlasService {
 
     String checkConnection(Atlas atlas);
 
     List<Atlas> findAll();
+
+    Page<Atlas> findAll(Pageable pageable);
 
     Atlas getById(Long id);
 
@@ -41,6 +45,8 @@ public interface AtlasService {
     Atlas save(Atlas atlas);
 
     Atlas update(Long atlasId, Atlas atlas);
+
+    void delete(Long atlasId);
 
     <R extends BaseAtlasEntity> List<R> execute(List<Atlas> atlasList, Function<? super AtlasClient, ? extends List<R>> sendAtlasRequest);
 

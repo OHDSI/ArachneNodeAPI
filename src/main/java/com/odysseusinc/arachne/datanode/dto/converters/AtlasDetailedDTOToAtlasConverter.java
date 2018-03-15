@@ -29,8 +29,10 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.stereotype.Component;
 
-public abstract class AtlasDetailedDTOToAtlasConverter implements Converter<AtlasDetailedDTO, Atlas>, InitializingBean {
+@Component
+public class AtlasDetailedDTOToAtlasConverter implements Converter<AtlasDetailedDTO, Atlas>, InitializingBean {
 
     private GenericConversionService conversionService;
 

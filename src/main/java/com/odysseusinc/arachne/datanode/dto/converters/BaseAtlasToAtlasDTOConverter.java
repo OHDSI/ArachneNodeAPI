@@ -22,13 +22,11 @@
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
-import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.masqueradePassword;
-
-import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDetailedDTO;
+import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDTO;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import org.springframework.core.convert.support.GenericConversionService;
 
-public abstract class BaseAtlasToAtlasDTOConverter<T extends AtlasDetailedDTO> extends BaseAtlasToAtlasShortDTOConverter<T> {
+public abstract class BaseAtlasToAtlasDTOConverter<T extends AtlasDTO> extends BaseAtlasToAtlasShortDTOConverter<T> {
 
     public BaseAtlasToAtlasDTOConverter(GenericConversionService conversionService) {
 
@@ -39,12 +37,9 @@ public abstract class BaseAtlasToAtlasDTOConverter<T extends AtlasDetailedDTO> e
     public T convert(Atlas source) {
 
         T result = super.convert(source);
-        result.setUrl(source.getUrl());
-        result.setAuthType(source.getAuthType().name());
-        result.setUsername(source.getUsername());
-        result.setPassword(source.getPassword());
 
-        masqueradePassword(result);
+        result.setId(source.getId());
+        result.setUrl(source.getUrl());
 
         return result;
     }

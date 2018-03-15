@@ -22,40 +22,30 @@
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
+import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.masqueradePassword;
+
+import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDetailedDTO;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 
-public abstract class BaseAtlasToAtlasShortDTOConverter<T extends AtlasShortDTO> implements Converter<Atlas, T>, InitializingBean {
+public abstract class BaseAtlasToAtlasDetailedDTOConverter<T extends AtlasDetailedDTO> extends BaseAtlasToAtlasDTOConverter<T> {
 
-    private GenericConversionService conversionService;
+    public BaseAtlasToAtlasDetailedDTOConverter(GenericConversionService conversionService) {
 
-    @Autowired
-    public BaseAtlasToAtlasShortDTOConverter(GenericConversionService conversionService) {
-
-        this.conversionService = conversionService;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-
-        conversionService.addConverter(this);
+        super(conversionService);
     }
 
     @Override
     public T convert(Atlas source) {
 
-        T result = getDTOClass();
+        T result = super.convert(source);
 
-        result.setCentralId(source.getCentralId());
-        result.setName(source.getName());
-        result.setVersion(source.getVersion());
+        result.setAuthType(source.getAuthType().name());
+        result.setUsername(source.getUsername());
+        result.setPassword(source.getPassword());
+
+        masqueradePassword(result);
 
         return result;
     }
-
-    public abstract T getDTOClass();
 }

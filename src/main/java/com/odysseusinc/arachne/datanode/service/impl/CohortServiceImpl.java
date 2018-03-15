@@ -33,6 +33,7 @@ import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
+import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CohortService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import java.io.File;
@@ -64,18 +65,18 @@ public class CohortServiceImpl implements CohortService {
     private static final String PROCESS_REQUEST_FAILURE_LOG = "Process request checking failure, {}";
     private final CentralSystemClient centralClient;
     private final ConfigurableListableBeanFactory beanFactory;
+    private final AtlasRepository atlasRepository;
     private Map<CommonAnalysisType,
             AtlasRequestHandler<? extends CommonEntityDTO, ? extends CommonEntityDTO>> handlerMap =
             new HashMap<>();
 
-    @Autowired
-    private AtlasRepository atlasRepository;
-
     public CohortServiceImpl(CentralSystemClient centralClient,
-                             ConfigurableListableBeanFactory beanFactory) {
+                             ConfigurableListableBeanFactory beanFactory,
+                             AtlasRepository atlasRepository) {
 
         this.centralClient = centralClient;
         this.beanFactory = beanFactory;
+        this.atlasRepository = atlasRepository;
     }
 
     @PostConstruct

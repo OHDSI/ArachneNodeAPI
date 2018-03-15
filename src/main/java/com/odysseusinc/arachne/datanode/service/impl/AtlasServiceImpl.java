@@ -56,6 +56,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -93,6 +95,12 @@ public class AtlasServiceImpl implements AtlasService {
     }
 
     @Override
+    public Page<Atlas> findAll(Pageable pageable) {
+
+        return atlasRepository.findAll(pageable);
+    }
+
+    @Override
     public Atlas getById(Long id) {
 
         return atlasRepository.findOne(id);
@@ -118,7 +126,7 @@ public class AtlasServiceImpl implements AtlasService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Atlas updateVersion(Long atlasId, String version) {
 
         Atlas atlas = atlasRepository.findOne(atlasId);
@@ -138,7 +146,7 @@ public class AtlasServiceImpl implements AtlasService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Atlas update(Long atlasId, Atlas atlas) {
 
         Atlas existing = atlasRepository.findOne(atlasId);
@@ -165,11 +173,22 @@ public class AtlasServiceImpl implements AtlasService {
             existing.setPassword(atlas.getPassword());
         }
 
+        Atlas updated = atlasRepository.saveAndFlush(existing);
+
         if (shouldSyncWithCentral) {
-            syncWithCentral(atlas);
+            syncWithCentral(updated);
         }
 
-        return atlasRepository.saveAndFlush(atlas);
+        return updated;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(Long atlasId) {
+
+        Atlas atlas = atlasRepository.findOne(atlasId);
+        atlasRepository.delete(atlas.getId());
+        centralSystemClient.deleteAtlas(atlas.getCentralId());
     }
 
     @Override
