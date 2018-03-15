@@ -38,6 +38,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonProfessionalTypeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
+import com.odysseusinc.arachne.commons.types.SuggestionTarget;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
 import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
@@ -313,7 +314,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
-    public JsonResult<List<CommonUserDTO>> suggestUsersFromCentral(
+    public List<CommonUserDTO> suggestUsersFromCentral(
             User user,
             String query,
             Set<String> emails,
@@ -323,15 +324,15 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                 UriComponentsBuilder.fromUriString(centralUtil.getCentralUrl()
                         + Constants.CentralApi.User.SUGGEST);
         uriBuilder.queryParam("query", query);
+        uriBuilder.queryParam("target", SuggestionTarget.DATANODE);
         uriBuilder.queryParam("limit", Integer.toString(limit));
         for (String email : emails) {
-            uriBuilder.queryParam("email", email);
+            uriBuilder.queryParam("excludeEmails", email);
         }
         HttpEntity request = new HttpEntity<>(centralUtil.getCentralAuthHeader(user.getToken()));
-        ParameterizedTypeReference<JsonResult<List<CommonUserDTO>>> responseType
-                = new ParameterizedTypeReference<JsonResult<List<CommonUserDTO>>>() {
-        };
-        ResponseEntity<JsonResult<List<CommonUserDTO>>> exchange = centralRestTemplate.exchange(
+        ParameterizedTypeReference<List<CommonUserDTO>> responseType
+                = new ParameterizedTypeReference<List<CommonUserDTO>>() {};
+        ResponseEntity<List<CommonUserDTO>> exchange = centralRestTemplate.exchange(
                 uriBuilder.buildAndExpand().toUri(),
                 HttpMethod.GET, request, responseType);
         return exchange.getBody();
