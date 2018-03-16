@@ -22,6 +22,8 @@
 
 package com.odysseusinc.arachne.datanode.service.impl;
 
+import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
+
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
@@ -169,7 +171,7 @@ public class AtlasServiceImpl implements AtlasService {
             existing.setUsername(atlas.getUsername());
         }
 
-        if (atlas.getPassword() != null) {
+        if (isNotDummyPassword(atlas.getPassword())) {
             existing.setPassword(atlas.getPassword());
         }
 

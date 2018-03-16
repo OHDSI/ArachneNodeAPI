@@ -10,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import org.hibernate.annotations.Type;
 
 @Entity
 @Table(name = "atlases")
@@ -40,6 +41,7 @@ public class Atlas {
     private String username;
 
     @Column
+    @Type(type = "encryptedString")
     private String password;
 
     @Override
