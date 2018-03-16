@@ -28,7 +28,6 @@ import java.util.Date;
 
 public class IRAnalysis extends BaseAtlasEntity {
     private Integer id;
-    private String name;
     private String description;
     private String createdBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm")
@@ -45,16 +44,6 @@ public class IRAnalysis extends BaseAtlasEntity {
     public void setId(Integer id) {
 
         this.id = id;
-    }
-
-    public String getName() {
-
-        return name;
-    }
-
-    public void setName(String name) {
-
-        this.name = name;
     }
 
     public String getDescription() {

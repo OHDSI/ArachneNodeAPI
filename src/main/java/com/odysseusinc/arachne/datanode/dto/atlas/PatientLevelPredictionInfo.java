@@ -29,7 +29,6 @@ import java.util.Date;
 
 public class PatientLevelPredictionInfo extends BaseAtlasEntity implements Serializable {
     private Integer analysisId;
-    private String name;
     private String modelType;
     private String createdBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm")
@@ -50,16 +49,6 @@ public class PatientLevelPredictionInfo extends BaseAtlasEntity implements Seria
     public void setAnalysisId(Integer analysisId) {
 
         this.analysisId = analysisId;
-    }
-
-    public String getName() {
-
-        return name;
-    }
-
-    public void setName(String name) {
-
-        this.name = name;
     }
 
     public String getModelType() {

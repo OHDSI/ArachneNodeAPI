@@ -28,8 +28,6 @@ public class ComparativeCohortAnalysis extends BaseAtlasEntity {
 
     private Integer analysisId;
 
-    private String name;
-
     private Integer treatmentId;
 
     private Integer comparatorId;
@@ -298,16 +296,6 @@ public class ComparativeCohortAnalysis extends BaseAtlasEntity {
     public void setAnalysisId(Integer id) {
 
         this.analysisId = id;
-    }
-
-    public String getName() {
-
-        return name;
-    }
-
-    public void setName(String name) {
-
-        this.name = name;
     }
 
     public Integer getTreatmentId() {

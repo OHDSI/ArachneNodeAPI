@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.ohdsi.sql.SqlRender;
 import org.ohdsi.sql.SqlTranslate;
@@ -110,9 +111,13 @@ public class CohortServiceImpl implements CohortService {
                 if (handlerMap.containsKey(requestObject.getEntityType())) {
 
                     List<Atlas> requestAtlasList = atlasRepository.findByCentralIdIn(requestObject.getAtlasIdList());
+                    Map<Long, Long> atlasIdMap = requestAtlasList.stream().collect(Collectors.toMap(Atlas::getId, Atlas::getCentralId));
 
                     AtlasRequestHandler<? extends CommonEntityDTO, ? extends CommonEntityDTO> handler = handlerMap.get(requestObject.getEntityType());
                     List<? extends CommonEntityDTO> list = handler.getObjectsList(requestAtlasList);
+
+                    list.forEach(entry -> entry.setOriginId(atlasIdMap.get(entry.getOriginId())));
+
                     CommonListEntityResponseDTO result =
                             new CommonListEntityResponseDTO(Sets.newHashSet(id), list);
                     centralClient.sendListEntityResponse(result);

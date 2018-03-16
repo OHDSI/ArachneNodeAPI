@@ -32,24 +32,28 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CohortDefinitionToCommonCohortShortDTOConverter implements Converter<CohortDefinition, CommonCohortShortDTO> {
+public class CohortDefinitionToCommonCohortShortDTOConverter
+        extends BaseAtlasEntityToCommonEntityDTOConverter<CohortDefinition, CommonCohortShortDTO> {
 
-    @Autowired
     public CohortDefinitionToCommonCohortShortDTOConverter(GenericConversionService conversionService) {
 
-        conversionService.addConverter(this);
+        super(conversionService);
     }
 
     @Override
     public CommonCohortShortDTO convert(CohortDefinition source) {
 
-        CommonCohortShortDTO cohort = new CommonCohortShortDTO();
-        cohort.setOriginId(source.getOrigin().getId());
+        CommonCohortShortDTO cohort = super.convert(source);
         cohort.setLocalId(source.getId());
         cohort.setDescription(source.getDescription());
         cohort.setModified(source.getModifiedDate());
-        cohort.setName(source.getName());
         cohort.setType(COHORT);
         return cohort;
+    }
+
+    @Override
+    protected CommonCohortShortDTO getTargetClass() {
+
+        return new CommonCohortShortDTO();
     }
 }

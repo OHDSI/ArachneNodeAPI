@@ -31,24 +31,28 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class IRAnalysisToCommonIncidenceRatesDTOConverter implements Converter<IRAnalysis, CommonIncidenceRatesDTO> {
+public class IRAnalysisToCommonIncidenceRatesDTOConverter
+        extends BaseAtlasEntityToCommonEntityDTOConverter<IRAnalysis, CommonIncidenceRatesDTO> {
 
-    @Autowired
     public IRAnalysisToCommonIncidenceRatesDTOConverter(GenericConversionService conversionService) {
 
-        conversionService.addConverter(this);
+        super(conversionService);
     }
 
     @Override
     public CommonIncidenceRatesDTO convert(IRAnalysis source) {
 
-        CommonIncidenceRatesDTO result = new CommonIncidenceRatesDTO();
-        result.setOriginId(source.getOrigin().getId());
+        CommonIncidenceRatesDTO result = super.convert(source);
         result.setDescription(source.getDescription());
         result.setLocalId(source.getId().longValue());
-        result.setName(source.getName());
         result.setModified(source.getModifiedDate());
         result.setType(CommonAnalysisType.INCIDENCE);
         return result;
+    }
+
+    @Override
+    protected CommonIncidenceRatesDTO getTargetClass() {
+
+        return new CommonIncidenceRatesDTO();
     }
 }

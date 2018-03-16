@@ -30,22 +30,27 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PatientLevelPredictionInfoToCommonPredictionDTOConverter implements Converter<PatientLevelPredictionInfo, CommonPredictionDTO> {
+public class PatientLevelPredictionInfoToCommonPredictionDTOConverter
+        extends BaseAtlasEntityToCommonEntityDTOConverter<PatientLevelPredictionInfo, CommonPredictionDTO> {
 
     public PatientLevelPredictionInfoToCommonPredictionDTOConverter(GenericConversionService conversionService) {
 
-        conversionService.addConverter(this);
+        super(conversionService);
     }
 
     @Override
     public CommonPredictionDTO convert(PatientLevelPredictionInfo source) {
 
-        CommonPredictionDTO dto = new CommonPredictionDTO();
-        dto.setOriginId(source.getOrigin().getId());
+        CommonPredictionDTO dto = super.convert(source);
         dto.setLocalId(source.getAnalysisId().longValue());
-        dto.setName(source.getName());
         dto.setModified(source.getModifiedDate());
         dto.setType(CommonAnalysisType.PREDICTION);
         return dto;
+    }
+
+    @Override
+    protected CommonPredictionDTO getTargetClass() {
+
+        return new CommonPredictionDTO();
     }
 }
