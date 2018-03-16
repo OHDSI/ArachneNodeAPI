@@ -217,10 +217,9 @@ public class UserServiceImpl implements UserService {
                 .findByRoles_name(ROLE_ADMIN, new Sort(Sort.Direction.ASC, "email")).stream()
                 .map(User::getEmail)
                 .collect(Collectors.toSet());
-        JsonResult<List<CommonUserDTO>> result =
+        List<CommonUserDTO> result =
                 centralIntegrationService.suggestUsersFromCentral(user, query, adminsEmails, limit);
         return result
-                .getResult()
                 .stream()
                 .map(dto -> conversionService.convert(dto, User.class))
                 .collect(Collectors.toList());
@@ -309,9 +308,7 @@ public class UserServiceImpl implements UserService {
     public List<CommonUserDTO> suggestUsersFromCentral(User user, String query, int limit) {
 
         Set<String> emails = userRepository.findAll().stream().map(User::getEmail).collect(Collectors.toSet());
-        JsonResult<List<CommonUserDTO>> result =
-                centralIntegrationService.suggestUsersFromCentral(user, query, emails, limit);
-        return result.getResult();
+        return centralIntegrationService.suggestUsersFromCentral(user, query, emails, limit);
     }
 
     @Override

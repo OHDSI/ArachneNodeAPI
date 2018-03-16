@@ -68,7 +68,7 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     JsonResult<List<CommonDataSourceDTO>> getDataSources(User user, List<Long> ids);
 
-    JsonResult<List<CommonUserDTO>> suggestUsersFromCentral(User user, String query, Set<String> emails, int limit);
+    List<CommonUserDTO> suggestUsersFromCentral(User user, String query, Set<String> emails, int limit);
 
     JsonResult<CommonUserDTO> getUserFromCentral(User user, Long centralUserId);
 
