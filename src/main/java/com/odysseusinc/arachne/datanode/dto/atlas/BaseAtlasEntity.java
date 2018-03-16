@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,20 +15,40 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: July 27, 2017
+ * Authors: Pavel Grafkin
+ * Created: March 15, 2018
  *
  */
 
-package com.odysseusinc.arachne.datanode.service;
+package com.odysseusinc.arachne.datanode.dto.atlas;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
-import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 
-import java.util.Optional;
+public class BaseAtlasEntity {
 
-public interface CommonEntityService {
-    CommonEntity getOrCreate(Long originId, Integer localId, CommonAnalysisType analysisType);
+    @JsonIgnore
+    protected Atlas origin;
 
-    Optional<CommonEntity> findByGuid(String guid);
+    protected String name;
+
+    public Atlas getOrigin() {
+
+        return origin;
+    }
+
+    public void setOrigin(Atlas origin) {
+
+        this.origin = origin;
+    }
+
+    public String getName() {
+
+        return name;
+    }
+
+    public void setName(String name) {
+
+        this.name = name;
+    }
 }

@@ -26,9 +26,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.util.Date;
 
-public class CohortDefinition {
+public class CohortDefinition extends BaseAtlasEntity {
     private Long id;
-    private String name;
     private String description;
     private ExpressionType expressionType;
     private String createdBy;
@@ -47,16 +46,6 @@ public class CohortDefinition {
     public void setId(Long id) {
 
         this.id = id;
-    }
-
-    public String getName() {
-
-        return name;
-    }
-
-    public void setName(String name) {
-
-        this.name = name;
     }
 
     public String getDescription() {

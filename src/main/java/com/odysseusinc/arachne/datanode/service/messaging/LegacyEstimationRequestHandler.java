@@ -33,7 +33,9 @@ import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysisInfo;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
+import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
@@ -67,7 +69,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class LegacyEstimationRequestHandler implements AtlasRequestHandler<CommonCohortAnalysisDTO, List<MultipartFile>> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LegacyEstimationRequestHandler.class);
-    private final AtlasClient atlasClient;
+    private final AtlasService atlasService;
     private final CentralSystemClient centralClient;
     private final GenericConversionService conversionService;
     private final CommonEntityService commonEntityService;
@@ -75,14 +77,14 @@ public class LegacyEstimationRequestHandler implements AtlasRequestHandler<Commo
     private final CohortExpressionQueryBuilder queryBuilder;
 
     @Autowired
-    public LegacyEstimationRequestHandler(AtlasClient atlasClient,
+    public LegacyEstimationRequestHandler(AtlasService atlasService,
                                           CentralSystemClient centralClient,
                                           GenericConversionService conversionService,
                                           CommonEntityService commonEntityService,
                                           @Qualifier("estimationRunnerTemplate") Template runnerTemplate,
                                           CohortExpressionQueryBuilder queryBuilder) {
 
-        this.atlasClient = atlasClient;
+        this.atlasService = atlasService;
         this.centralClient = centralClient;
         this.conversionService = conversionService;
         this.commonEntityService = commonEntityService;
@@ -92,9 +94,9 @@ public class LegacyEstimationRequestHandler implements AtlasRequestHandler<Commo
 
 
     @Override
-    public List<CommonCohortAnalysisDTO> getObjectsList() {
+    public List<CommonCohortAnalysisDTO> getObjectsList(List<Atlas> atlasList) {
 
-        List<ComparativeCohortAnalysis> analyses = atlasClient.getComparativeCohortAnalyses();
+        List<ComparativeCohortAnalysis> analyses = atlasService.execute(atlasList, AtlasClient::getComparativeCohortAnalyses);
         return analyses
                 .stream()
                 .map(analysis -> conversionService.convert(analysis, CommonCohortAnalysisDTO.class))
@@ -107,7 +109,10 @@ public class LegacyEstimationRequestHandler implements AtlasRequestHandler<Commo
         final List<MultipartFile> result = new ArrayList<>();
 
         commonEntityService.findByGuid(guid).ifPresent(entity -> {
-            ComparativeCohortAnalysisInfo analysis = atlasClient.getComparativeCohortAnalysisInfo(entity.getLocalId());
+            ComparativeCohortAnalysisInfo analysis = atlasService.execute(
+                    entity.getOrigin(),
+                    atlasClient -> atlasClient.getComparativeCohortAnalysisInfo(entity.getLocalId())
+            );
             if (analysis != null) {
                 try {
                     String name = analysis.getName().trim();
@@ -115,13 +120,13 @@ public class LegacyEstimationRequestHandler implements AtlasRequestHandler<Commo
                     String estimationJson = buildEstimationDesign(analysis);
                     result.add(new MockMultipartFile(getEstimationFilename(name), estimationJson.getBytes()));
 
-                    String targetCohortSql = getCohortSql(analysis.getTreatmentId());
+                    String targetCohortSql = getCohortSql(entity.getOrigin(), analysis.getTreatmentId());
                     result.add(new MockMultipartFile(getTargetCohortFilename(name), targetCohortSql.getBytes()));
 
-                    String comparatorCohortSql = getCohortSql(analysis.getComparatorId());
+                    String comparatorCohortSql = getCohortSql(entity.getOrigin(), analysis.getComparatorId());
                     result.add(new MockMultipartFile(getComparatorCohortFilename(name), comparatorCohortSql.getBytes()));
 
-                    String outcomeCohortSql = getCohortSql(analysis.getOutcomeId());
+                    String outcomeCohortSql = getCohortSql(entity.getOrigin(), analysis.getOutcomeId());
                     result.add(new MockMultipartFile(getOutcomeCohortFilename(name), outcomeCohortSql.getBytes()));
 
                     String runnerR = buildRunner(name);
@@ -217,9 +222,9 @@ public class LegacyEstimationRequestHandler implements AtlasRequestHandler<Commo
         return prefix + "_" + name;
     }
 
-    private String getCohortSql(Integer cohortId) throws IOException {
+    private String getCohortSql(Atlas origin, Integer cohortId) throws IOException {
 
-        CohortDefinition definition = atlasClient.getCohortDefinition(cohortId);
+        CohortDefinition definition = atlasService.execute(origin, atlasClient -> atlasClient.getCohortDefinition(cohortId));
         ObjectMapper mapper = new ObjectMapper();
         CohortExpression expression = mapper.readValue(definition.getExpression(), CohortExpression.class);
         final CohortExpressionQueryBuilder.BuildExpressionQueryOptions options

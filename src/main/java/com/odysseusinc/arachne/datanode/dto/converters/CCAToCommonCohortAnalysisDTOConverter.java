@@ -34,31 +34,27 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CCAToCommonCohortAnalysisDTOConverter
-        implements Converter<ComparativeCohortAnalysis, CommonCohortAnalysisDTO>, InitializingBean {
+        extends BaseAtlasEntityToCommonEntityDTOConverter<ComparativeCohortAnalysis, CommonCohortAnalysisDTO> {
 
-    private GenericConversionService conversionService;
-
-    @Autowired
     public CCAToCommonCohortAnalysisDTOConverter(GenericConversionService conversionService) {
 
-        this.conversionService = conversionService;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-
-        conversionService.addConverter(this);
+        super(conversionService);
     }
 
     @Override
     public CommonCohortAnalysisDTO convert(ComparativeCohortAnalysis source) {
 
-        CommonCohortAnalysisDTO result = new CommonCohortAnalysisDTO();
+        CommonCohortAnalysisDTO result = super.convert(source);
         result.setAnalysisType(CommonCohortAnalysisType.ESTIMATION);
         result.setLocalId(source.getAnalysisId().longValue());
-        result.setName(source.getName());
         result.setModified(source.getModified());
         result.setType(CommonAnalysisType.ESTIMATION);
         return result;
+    }
+
+    @Override
+    protected CommonCohortAnalysisDTO getTargetClass() {
+
+        return new CommonCohortAnalysisDTO();
     }
 }
