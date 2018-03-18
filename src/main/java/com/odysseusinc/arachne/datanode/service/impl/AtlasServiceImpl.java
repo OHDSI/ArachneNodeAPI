@@ -54,6 +54,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
@@ -105,7 +106,7 @@ public class AtlasServiceImpl implements AtlasService {
     @Override
     public Atlas getById(Long id) {
 
-        return atlasRepository.findOne(id);
+        return atlasRepository.findById(id).orElseThrow(EntityNotFoundException::new);
     }
 
     @Override
@@ -131,7 +132,7 @@ public class AtlasServiceImpl implements AtlasService {
     @Transactional(rollbackFor = Exception.class)
     public Atlas updateVersion(Long atlasId, String version) {
 
-        Atlas atlas = atlasRepository.findOne(atlasId);
+        final Atlas atlas = atlasRepository.findById(atlasId).orElseThrow(NullPointerException::new);
         atlas.setVersion(version);
 
         AtlasShortDTO updatedDTO = syncWithCentral(atlas);
@@ -151,7 +152,7 @@ public class AtlasServiceImpl implements AtlasService {
     @Transactional(rollbackFor = Exception.class)
     public Atlas update(Long atlasId, Atlas atlas) {
 
-        Atlas existing = atlasRepository.findOne(atlasId);
+        final Atlas existing = atlasRepository.findById(atlasId).orElseThrow(NullPointerException::new);
         boolean shouldSyncWithCentral = false;
 
         if (atlas.getName() != null) {
@@ -188,8 +189,8 @@ public class AtlasServiceImpl implements AtlasService {
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long atlasId) {
 
-        Atlas atlas = atlasRepository.findOne(atlasId);
-        atlasRepository.delete(atlas.getId());
+        Atlas atlas = atlasRepository.findById(atlasId).orElseThrow(NullPointerException::new);
+        atlasRepository.deleteById(atlas.getId());
         centralSystemClient.deleteAtlas(atlas.getCentralId());
     }
 

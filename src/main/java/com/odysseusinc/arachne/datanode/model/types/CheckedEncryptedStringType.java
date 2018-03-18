@@ -29,6 +29,7 @@ import java.sql.Types;
 import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.jasypt.hibernate4.type.AbstractEncryptedAsStringType;
 
 public class CheckedEncryptedStringType extends AbstractEncryptedAsStringType {
@@ -43,7 +44,7 @@ public class CheckedEncryptedStringType extends AbstractEncryptedAsStringType {
     }
 
     @Override
-    public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
+    public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 
         checkInitialization();
         if (Objects.nonNull(value)){
@@ -55,7 +56,7 @@ public class CheckedEncryptedStringType extends AbstractEncryptedAsStringType {
     }
 
     @Override
-    public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
+    public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException {
 
         checkInitialization();
         if (rs.wasNull()){

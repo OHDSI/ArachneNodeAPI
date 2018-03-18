@@ -227,7 +227,7 @@ public class AchillesServiceImpl implements AchillesService {
                 .stream()
                 .peek(job -> job.setStatus(AchillesJobStatus.FAILED))
                 .collect(Collectors.toList());
-        achillesJobRepository.save(jobs);
+        achillesJobRepository.saveAll(jobs);
     }
 
     @Async

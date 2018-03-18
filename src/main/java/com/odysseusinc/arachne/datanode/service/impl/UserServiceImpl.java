@@ -48,6 +48,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,7 +97,7 @@ public class UserServiceImpl implements UserService {
                                     .ifPresent(u -> user.setEnabled(u.getEnabled()));
                             return user;
                         }).collect(Collectors.toList());
-                        userRepository.save(mappedUsers);
+                        userRepository.saveAll(mappedUsers);
                     }
             );
         } catch (Exception ex) {
@@ -109,7 +110,7 @@ public class UserServiceImpl implements UserService {
                                       String langKey) {
 
         User newUser = new User();
-        final Role role = roleRepository.findOne("ROLE_USER");
+        final Role role = roleRepository.findById("ROLE_USER").orElseGet(null);
         final List<Role> roles = new LinkedList<>();
         newUser.setFirstName(firstName);
         newUser.setLastName(lastName);
@@ -269,17 +270,13 @@ public class UserServiceImpl implements UserService {
 
     private User findOrAddFromCentral(User currentUser, Long id) {
 
-        User user = userRepository.findOne(id);
-        if (user == null) {
-            user = addUserFromCentral(currentUser, id);
-        }
-        return user;
+        return userRepository.findById(id).orElseGet(() -> addUserFromCentral(currentUser, id));
     }
 
     @Override
     public void removeUserFromAdmins(Long id) {
 
-        User user = userRepository.findOne(id);
+        User user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
         final Optional<Role> firstByName = roleRepository.findFirstByName(ROLE_ADMIN);
         firstByName.ifPresent(role -> {
                     user.getRoles().remove(role);
@@ -298,7 +295,7 @@ public class UserServiceImpl implements UserService {
 
         LOG.info(REMOVING_USER_LOG, id);
         final User user = get(id);
-        userRepository.delete(id);
+        userRepository.deleteById(id);
         dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
                 centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
         );

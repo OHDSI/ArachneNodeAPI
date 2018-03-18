@@ -127,7 +127,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     public void delete(Long id) {
 
         checkNotNull(id, "given data source surrogate id is blank ");
-        dataSourceRepository.delete(id);
+        dataSourceRepository.deleteById(id);
     }
 
     @Override

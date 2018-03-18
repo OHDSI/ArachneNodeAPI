@@ -119,7 +119,7 @@ public class AchillesControllerTest {
     //Should return test string as job log
     public void log() throws Exception {
 
-        AchillesJob job = achillesJobRepository.findOne(2L);
+        AchillesJob job = achillesJobRepository.findById(2L).orElseThrow(NullPointerException::new);
         mvc.perform(get(API.achillesJobLog(DATASOURCE_ID, job.getStarted().getTime()))
         .accept(MediaType.APPLICATION_JSON_UTF8))
         .andExpect(status().isOk())
