@@ -45,7 +45,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -123,7 +122,7 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
                         }
                     } catch (IOException e) {
                         logger.error("Failed to build CC data", e);
-                        throw new RuntimeIOException("Failed to build CC data", e);
+                        throw new RuntimeException("Failed to build CC data", e);
                     }
 
                 } else {

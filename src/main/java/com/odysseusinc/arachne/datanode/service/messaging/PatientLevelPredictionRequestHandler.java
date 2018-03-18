@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,7 +101,7 @@ public class PatientLevelPredictionRequestHandler extends BaseRequestHandler imp
                 files.add(getRunner(initialName, outcomeName));
             }catch (IOException e){
                 logger.error("Failed to build PLP data", e);
-                throw new RuntimeIOException("Failed to build PLP data", e);
+                throw new RuntimeException("Failed to build PLP data", e);
             }
             return files;
         }).orElse(null);
