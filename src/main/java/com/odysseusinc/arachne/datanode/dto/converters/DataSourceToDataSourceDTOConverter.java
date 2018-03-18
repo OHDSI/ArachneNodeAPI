@@ -16,53 +16,45 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: April 20, 2017
+ * Created: April 22, 2017
  *
  */
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
+import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DataSourceDTO;
-import org.springframework.beans.factory.InitializingBean;
+import com.odysseusinc.arachne.datanode.util.DataSourceUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataSourceToDataSourceDTOConverter implements Converter<DataSource, DataSourceDTO>, InitializingBean {
-
-    private GenericConversionService conversionService;
+public class DataSourceToDataSourceDTOConverter implements Converter<DataSource, DataSourceDTO> {
 
     @Autowired
-    @SuppressWarnings("SpringJavaAutowiringInspection")
     public DataSourceToDataSourceDTOConverter(GenericConversionService conversionService) {
-
-        this.conversionService = conversionService;
-
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-
         conversionService.addConverter(this);
-
     }
 
     @Override
-    public DataSourceDTO convert(DataSource source) {
+    public DataSourceDTO convert(DataSource dataSource) {
 
-        DataSourceDTO target = new DataSourceDTO();
-        target.setConnectionString(source.getConnectionString());
-        target.setUsername(source.getUsername());
-        target.setPassword(source.getPassword());
-        target.setCdmSchema(source.getCdmSchema());
-        target.setType(DBMSType.valueOf(source.getType().name()));
-        target.setTargetSchema(source.getTargetSchema());
-        target.setResultSchema(source.getResultSchema());
-        target.setCohortTargetTable(source.getCohortTargetTable());
-        return target;
+        DataSourceDTO dto = new DataSourceDTO();
+        dto.setId(dataSource.getId());
+        dto.setName(dataSource.getName());
+        dto.setCdmSchema(dataSource.getCdmSchema());
+        dto.setConnectionString(dataSource.getConnectionString());
+        dto.setDbmsType(dataSource.getType());
+        dto.setDbUsername(dataSource.getUsername());
+        dto.setDbPassword(dataSource.getPassword());
+        dto.setDescription(dataSource.getDescription());
+        dto.setUuid(dataSource.getUuid());
+        dto.setCentralId(dataSource.getCentralId());
+
+        DataSourceUtils.masqueradePassword(dto);
+
+        return dto;
     }
 }

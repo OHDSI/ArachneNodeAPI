@@ -91,7 +91,7 @@ datanode:
   jwt:
     header: Arachne-Auth-Token
     secret: 129DF19C8A91AFD8375A2826A3353
-    expiration: 604800
+    expiration: 900
   arachneCentral:
     admin.email:
     host: https://community.arachnenetwork.com
@@ -154,3 +154,7 @@ cohorts:
   result:
     countEnabled: false
     summaryEnabled: false
+    defaultTargetTable: cohort
+tmp:
+  holder:
+    cron: 0 * * ? * *

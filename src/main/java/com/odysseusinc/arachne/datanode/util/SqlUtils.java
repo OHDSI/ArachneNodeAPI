@@ -22,10 +22,10 @@
 
 package com.odysseusinc.arachne.datanode.util;
 
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.service.CohortService;
 import com.odysseusinc.arachne.datanode.service.impl.CohortServiceImpl;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;

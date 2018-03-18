@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.service;
 
+import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonBaseDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
@@ -33,6 +34,7 @@ import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Set;
 
@@ -40,13 +42,17 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     JsonResult<CommonAuthMethodDTO> getAuthMethod();
 
-    DataNode sendDataNodeRegistrationRequest(User user, DataNode dataNode);
+    DataNode sendDataNodeCreationRequest(User user, DataNode dataNode);
 
-    DataNode updateDataNodeOnCentral(User user, DataNode dataNode);
-
-    JsonResult<CommonDataSourceDTO> sendDataSourceRegistrationRequest(
+    DTO sendDataSourceCreationRequest(
             User user, DataNode dataNode,
             DTO commonCreateDataSourceDTO);
+
+    DTO sendDataSourceUpdateRequest(
+            User user, Long centralDataSourceId,
+            DTO commonCreateDataSourceDTO);
+
+    ArachnePasswordInfoDTO getPasswordInfo() throws URISyntaxException;
 
     void registerUserOnCentral(CentralRegisterUserDTO registerUserDTO);
 
@@ -60,9 +66,9 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     JsonResult<DTO> getDataSource(User user, Long id);
 
-    JsonResult<DTO> updateDataSource(User user, Long centralId, DTO commonDataSourceDTO);
+    JsonResult<List<CommonDataSourceDTO>> getDataSources(User user, List<Long> ids);
 
-    JsonResult<List<CommonUserDTO>> suggestUsersFromCentral(User user, String query, Set<String> emails, int limit);
+    List<CommonUserDTO> suggestUsersFromCentral(User user, String query, Set<String> emails, int limit);
 
     JsonResult<CommonUserDTO> getUserFromCentral(User user, Long centralUserId);
 

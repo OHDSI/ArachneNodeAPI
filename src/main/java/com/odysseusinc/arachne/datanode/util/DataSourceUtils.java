@@ -22,6 +22,9 @@
 
 package com.odysseusinc.arachne.datanode.util;
 
+import com.odysseusinc.arachne.datanode.Constants;
+import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDetailedDTO;
+import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.util.datasource.QueryProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultSetContainer;
@@ -45,6 +48,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import org.apache.commons.lang3.StringUtils;
 
 public class DataSourceUtils<T> {
 
@@ -59,18 +63,38 @@ public class DataSourceUtils<T> {
         this.dataSource = dataSource;
     }
 
+    public static boolean isNotDummyPassword(String dbPassword) {
+
+        return Objects.nonNull(dbPassword) && !Objects.equals(dbPassword, Constants.DUMMY_PASSWORD);
+    }
+
     public static <T> DataSourceUtils<T> withDataSource(DataSource dataSource) {
 
         return new DataSourceUtils<>(dataSource);
     }
 
-    public DataSourceUtils<T> ifTableNotExists(String tableName, Function<String, RuntimeException> handler) throws SQLException {
+    public static void masqueradePassword(DataSourceDTO dataSource) {
+
+        dataSource.setDbPassword(getMasqueradedPassword(dataSource.getDbPassword()));
+    }
+
+    public static void masqueradePassword(AtlasDetailedDTO atlasDetailedDTO) {
+
+        atlasDetailedDTO.setPassword(getMasqueradedPassword(atlasDetailedDTO.getPassword()));
+    }
+
+    private static String getMasqueradedPassword(String password) {
+
+        return StringUtils.isEmpty(password) ? "" : Constants.DUMMY_PASSWORD;
+    }
+
+    public DataSourceUtils<T> ifTableNotExists(String schema, String tableName, Function<String, RuntimeException> handler) throws SQLException {
 
         Objects.requireNonNull(handler, "Handler function is required");
         createConnection();
         DatabaseMetaData metaData = c.getMetaData();
-        ResultSet resultSet = metaData.getTables(null, dataSource.getCdmSchema(), tableName, null);
-        if (!resultSet.next()){
+        ResultSet resultSet = metaData.getTables(null, schema, tableName, null);
+        if (!resultSet.next()) {
             throw handler.apply(tableName);
         }
         return this;
@@ -121,7 +145,7 @@ public class DataSourceUtils<T> {
         try (ResultSet rs = this.resultSet) {
             Map proceed = processor.process(rs).getValues();
             this.results.merge(key, proceed, (old, value) -> {
-                ((Map)old).putAll((Map) value);
+                ((Map) old).putAll((Map) value);
                 return old;
             });
         } finally {

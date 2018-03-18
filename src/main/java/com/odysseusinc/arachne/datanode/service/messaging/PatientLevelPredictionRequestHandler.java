@@ -27,7 +27,9 @@ import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonPredictionDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
+import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
@@ -60,7 +62,7 @@ public class PatientLevelPredictionRequestHandler extends BaseRequestHandler imp
     private final Template patientLevelPredictionRunnerTemplate;
 
     @Autowired
-    public PatientLevelPredictionRequestHandler(AtlasClient atlasClient,
+    public PatientLevelPredictionRequestHandler(AtlasService atlasService,
                                                 GenericConversionService conversionService,
                                                 CommonEntityService commonEntityService,
                                                 CentralSystemClient centralClient,
@@ -68,7 +70,7 @@ public class PatientLevelPredictionRequestHandler extends BaseRequestHandler imp
                                                 @Qualifier("patientLevelPredictionRunnerTemplate")
                                                             Template patientLevelPredictionRunnerTemplate) {
 
-        super(sqlRenderService, atlasClient);
+        super(sqlRenderService, atlasService);
 
         this.conversionService = conversionService;
         this.commonEntityService = commonEntityService;
@@ -77,9 +79,9 @@ public class PatientLevelPredictionRequestHandler extends BaseRequestHandler imp
     }
 
     @Override
-    public List<CommonPredictionDTO> getObjectsList() {
+    public List<CommonPredictionDTO> getObjectsList(List<Atlas> atlasList) {
 
-        List<PatientLevelPredictionInfo> result = atlasClient.getPatientLevelPredictions();
+        List<PatientLevelPredictionInfo> result = atlasService.execute(atlasList, AtlasClient::getPatientLevelPredictions);
         return result.stream()
                 .map(plp -> conversionService.convert(plp, CommonPredictionDTO.class))
                 .collect(Collectors.toList());
@@ -89,15 +91,18 @@ public class PatientLevelPredictionRequestHandler extends BaseRequestHandler imp
     public List<MultipartFile> getAtlasObject(String guid) {
 
         return commonEntityService.findByGuid(guid).map(entity -> {
-            Map<String, Object> info = atlasClient.getPatientLevelPrediction(entity.getLocalId());
+            Map<String, Object> info = atlasService.execute(
+                    entity.getOrigin(),
+                    atlasClient -> atlasClient.getPatientLevelPrediction(entity.getLocalId())
+            );
             List<MultipartFile> files = new ArrayList<>(6);
             try {
                 String initialName = info.get("name") + INITIAL_SUFFIX;
                 String outcomeName = info.get("name") + OUTCOME_SUFFIX;
 
                 files.add(getAnalysisDescription(info));
-                files.add(getCohortFile((Integer) info.get("treatmentId"), initialName));
-                files.add(getCohortFile((Integer) info.get("outcomeId"), outcomeName));
+                files.add(getCohortFile(entity.getOrigin(), (Integer) info.get("treatmentId"), initialName));
+                files.add(getCohortFile(entity.getOrigin(), (Integer) info.get("outcomeId"), outcomeName));
                 files.add(getRunner(initialName, outcomeName));
             }catch (IOException e){
                 logger.error("Failed to build PLP data", e);

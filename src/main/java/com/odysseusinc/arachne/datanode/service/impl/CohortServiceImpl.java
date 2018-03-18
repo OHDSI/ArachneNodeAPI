@@ -29,10 +29,13 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonListEntityRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonListEntityResponseDTO;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
+import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CohortService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -42,11 +45,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.ohdsi.sql.SqlRender;
 import org.ohdsi.sql.SqlTranslate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -61,15 +66,18 @@ public class CohortServiceImpl implements CohortService {
     private static final String PROCESS_REQUEST_FAILURE_LOG = "Process request checking failure, {}";
     private final CentralSystemClient centralClient;
     private final ConfigurableListableBeanFactory beanFactory;
+    private final AtlasRepository atlasRepository;
     private Map<CommonAnalysisType,
             AtlasRequestHandler<? extends CommonEntityDTO, ? extends CommonEntityDTO>> handlerMap =
             new HashMap<>();
 
     public CohortServiceImpl(CentralSystemClient centralClient,
-                             ConfigurableListableBeanFactory beanFactory) {
+                             ConfigurableListableBeanFactory beanFactory,
+                             AtlasRepository atlasRepository) {
 
         this.centralClient = centralClient;
         this.beanFactory = beanFactory;
+        this.atlasRepository = atlasRepository;
     }
 
     @PostConstruct
@@ -99,15 +107,22 @@ public class CohortServiceImpl implements CohortService {
             if (CollectionUtils.isEmpty(requests.getRequestMap())) {
                 return;
             }
-            requests.getRequestMap().forEach((id, type) -> {
-                if (handlerMap.containsKey(type)) {
-                    AtlasRequestHandler<? extends CommonEntityDTO, ? extends CommonEntityDTO> handler = handlerMap.get(type);
-                    List<? extends CommonEntityDTO> list = handler.getObjectsList();
+            requests.getRequestMap().forEach((id, requestObject) -> {
+                if (handlerMap.containsKey(requestObject.getEntityType())) {
+
+                    List<Atlas> requestAtlasList = atlasRepository.findByCentralIdIn(requestObject.getAtlasIdList());
+                    Map<Long, Long> atlasIdMap = requestAtlasList.stream().collect(Collectors.toMap(Atlas::getId, Atlas::getCentralId));
+
+                    AtlasRequestHandler<? extends CommonEntityDTO, ? extends CommonEntityDTO> handler = handlerMap.get(requestObject.getEntityType());
+                    List<? extends CommonEntityDTO> list = handler.getObjectsList(requestAtlasList);
+
+                    list.forEach(entry -> entry.setOriginId(atlasIdMap.get(entry.getOriginId())));
+
                     CommonListEntityResponseDTO result =
                             new CommonListEntityResponseDTO(Sets.newHashSet(id), list);
                     centralClient.sendListEntityResponse(result);
                 } else {
-                    LOGGER.warn("Handler of type {} was not registered", type);
+                    LOGGER.warn("Handler of type {} was not registered", requestObject.getEntityType());
                 }
             });
         } catch (Exception ex) {

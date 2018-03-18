@@ -28,6 +28,7 @@ public interface Constants {
     String LOGIN_REGEX = "^[_'.@A-Za-z0-9-]*$";
     int PASSWORD_MIN_LENGTH = 6;
     int PASSWORD_MAX_LENGTH = 100;
+    String DUMMY_PASSWORD = "password_was_set";
 
     interface AppConf {
         String PROFILE_DEVELOPMENT = "dev";
@@ -43,15 +44,16 @@ public interface Constants {
 
     interface CentralApi {
         interface DataNode {
-            String REGISTRATION = "/api/v1/data-nodes";
+            String CREATION = "/api/v1/data-nodes";
             String UPDATE = "/api/v1/data-nodes/{uuid}";
         }
 
         interface DataSource {
-            String REGISTRATION = "/api/v1/data-nodes/{id}/data-sources";
+            String CREATION = "/api/v1/data-nodes/{id}/data-sources";
             String GET = "/api/v1/data-sources/{id}";
+            String GET_LIST = "/api/v1/data-sources/commondata";
             String GET_METADATA_SCHEMA = "/api/v1/metadata/data-source/attributes";
-            String UPDATE = "/api/v1/data-sources/{id}";
+            String UPDATE = "/api/v1/data-sources/{id}/from-node";
         }
 
         interface User {
@@ -61,10 +63,11 @@ public interface Constants {
             String REGISTER_USER = "/api/v1/auth/registration";
             String LOGOUT = "/api/v1/auth/logout";
             String REGISTRATION = "/api/v1/auth/registration";
-            String SUGGEST = "/api/v1/user-management/users/suggests-user";
+            String SUGGEST = "/api/v1/user-management/users/suggest";
             String GET_USER = "/api/v1/user-management/users/{id}";
             String LINK_TO_NODE = "/api/v1/user-management/datanodes/{datanodeId}/users";
             String USER_INFO = "/api/v1/auth/me";
+            String PASSWORD_POLICIES = "/api/v1/auth/password-policies";
         }
 
         interface Submission {

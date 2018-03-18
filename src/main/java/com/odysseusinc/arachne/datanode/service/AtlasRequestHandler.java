@@ -25,10 +25,11 @@ package com.odysseusinc.arachne.datanode.service;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityDTO;
 
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import java.util.List;
 
 public interface AtlasRequestHandler<L extends CommonEntityDTO, T> {
-    List<L> getObjectsList();
+    List<L> getObjectsList(List<Atlas> atlasList);
 
     T getAtlasObject(String guid);
 
