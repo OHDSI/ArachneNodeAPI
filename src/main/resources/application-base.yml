@@ -11,16 +11,10 @@ server:
   compression:
     enabled: true
     mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
-logging:
-  level: info
+#logging:
+#  level: info
 #  com.odysseusinc.arachne.datanode.service.AchillesService: DEBUG
-flyway:
-  datasource:
-    driverClassName: org.postgresql.Driver
-    url: ${spring.datasource.url}
-    username: ${spring.datasource.username}
-    password: ${spring.datasource.password}
-  out-of-order: true
+
 api:
   loginEnteryPoint: /api/v1/auth/login
   logoutEntryPoint: /api/v1/auth/logout
@@ -31,6 +25,13 @@ arachne:
     header: Arachne-Auth-Token
 
 spring:
+  flyway:
+    datasource:
+      driverClassName: org.postgresql.Driver
+      jdbcUrl: jdbc:postgresql://localhost:5432/java_9_node
+      username: ohdsi
+      password: ohdsi
+    out-of-order: true
   jpa:
     database: POSTGRESQL
     show-sql: false

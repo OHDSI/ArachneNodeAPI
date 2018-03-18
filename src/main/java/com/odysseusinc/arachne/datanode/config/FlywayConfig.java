@@ -35,7 +35,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class FlywayConfig {
     @Bean
-    @ConfigurationProperties(prefix = "flyway.datasource")
+    @ConfigurationProperties(prefix = "spring.flyway.datasource")
     @FlywayDataSource
     public DataSource secondaryDataSource() {
 
