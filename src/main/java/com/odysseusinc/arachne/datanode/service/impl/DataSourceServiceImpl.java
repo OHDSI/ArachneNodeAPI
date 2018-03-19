@@ -98,6 +98,8 @@ public class DataSourceServiceImpl implements DataSourceService {
         CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
         commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
         commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
+        
+        commonDataSourceDTO.setDbmsType(dataSource.getType());
 
         CommonDataSourceDTO centralDTO = integrationService.sendDataSourceCreationRequest(
                 owner,
