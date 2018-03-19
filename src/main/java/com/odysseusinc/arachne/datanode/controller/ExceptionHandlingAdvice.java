@@ -35,6 +35,7 @@ import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -103,7 +104,7 @@ public class ExceptionHandlingAdvice extends BaseController {
 
     private ResponseEntity<JsonResult> getErrorResponse(final JsonResult result, final Exception ex) {
 
-        final String message = ex.getMessage();
+        final String message = getErrorMessage(result, ex);
         
         result.setErrorMessage(message);
 
@@ -111,11 +112,17 @@ public class ExceptionHandlingAdvice extends BaseController {
             final String errorToken = generateErrorToken();
             LOGGER.error(message + " token: " + errorToken, ex);
             result.setErrorMessage(String.format(ERROR_MESSAGE_WITH_TOKEN, errorToken));
+        } else {
+            LOGGER.error(message, ex);
         }
-
-        LOGGER.error(message, ex);
-        result.setErrorMessage(StringUtils.defaultIfEmpty(message, ERROR_MESSAGE));
+        
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    private String getErrorMessage(final JsonResult result, final Exception ex) {
+
+        // return default ERROR_MESSAGE for all exceptions except Validation error
+        return Objects.equals(result.getErrorCode(), VALIDATION_ERROR.getCode()) ? ex.getMessage() : ERROR_MESSAGE;
     }
 
     @ExceptionHandler(IntegrationValidationException.class)
