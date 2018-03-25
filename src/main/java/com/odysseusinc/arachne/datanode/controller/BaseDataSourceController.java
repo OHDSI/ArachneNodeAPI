@@ -52,7 +52,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
-import org.modelmapper.ModelMapper;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.jms.core.JmsTemplate;
@@ -69,7 +68,6 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
     protected final DataSourceService dataSourceService;
     protected final BaseCentralIntegrationService<DS, CommonDTO> integrationService;
-    protected final ModelMapper modelMapper;
     protected final GenericConversionService conversionService;
     protected final JmsTemplate jmsTemplate;
     protected final DestinationResolver destinationResolver;
@@ -78,7 +76,6 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     protected final ConverterUtils converterUtils;
 
     protected BaseDataSourceController(UserService userService,
-                                       ModelMapper modelMapper,
                                        BaseCentralIntegrationService<DS, CommonDTO> integrationService,
                                        DataSourceService dataSourceService,
                                        GenericConversionService conversionService,
@@ -88,7 +85,6 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                                        ConverterUtils converterUtils) {
 
         super(userService);
-        this.modelMapper = modelMapper;
         this.destinationResolver = jmsTemplate.getDestinationResolver();
         this.integrationService = integrationService;
         this.dataSourceService = dataSourceService;

@@ -31,7 +31,6 @@ import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.jms.core.JmsTemplate;
@@ -44,7 +43,6 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
     public DataSourceController(DataSourceService dataSourceService,
                                 CentralIntegrationService integrationService,
                                 UserService userService,
-                                ModelMapper modelMapper,
                                 GenericConversionService conversionService,
                                 JmsTemplate jmsTemplate,
                                 CentralClient centralClient,
@@ -52,7 +50,6 @@ public class DataSourceController extends BaseDataSourceController<DataSource, D
                                 ConverterUtils converterUtils) {
 
         super(userService,
-                modelMapper,
                 integrationService,
                 dataSourceService,
                 conversionService,

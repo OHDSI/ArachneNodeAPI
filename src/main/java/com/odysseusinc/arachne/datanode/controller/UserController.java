@@ -27,7 +27,6 @@ import com.odysseusinc.arachne.datanode.security.RolesConstants;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import io.swagger.annotations.ApiOperation;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,8 +50,6 @@ public class UserController {
     @Autowired
     private CentralIntegrationService integrationService;
 
-    @Autowired
-    private ModelMapper modelMapper;
 
     @ApiOperation(value = "Delete given user by login.")
     @RequestMapping(value = "/{login:" + Constants.LOGIN_REGEX + "}",

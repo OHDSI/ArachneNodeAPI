@@ -25,7 +25,7 @@
         <start-class>com.odysseusinc.arachne.datanode.WebApplicationStarter</start-class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.9</java.version>
-        <jjwt.version>0.6.0</jjwt.version>
+        <jjwt.version>0.9.0</jjwt.version>
         <postgresql.version>42.2.1</postgresql.version>
         <flywayVersion>4.2.0</flywayVersion>
         <javaDockerVersion>3.0.6</javaDockerVersion>
@@ -47,6 +47,11 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.0</version>
+        </dependency>
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
@@ -113,11 +118,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.modelmapper.extensions</groupId>
-            <artifactId>modelmapper-spring</artifactId>
-            <version>1.1.2</version>
         </dependency>
         <dependency>
             <groupId>com.github.docker-java</groupId>
@@ -403,6 +403,25 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.7.0</version>
+                <configuration>
+                    <source>1.9</source>
+                    <target>1.9</target>
+                    <compilerArgs>
+                        <arg>--add-modules</arg>
+                        <arg>java.xml.bind</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.20.1</version>
+                <configuration>
+                    <argLine>--add-modules java.xml.bind</argLine>
+                </configuration>
             </plugin>
         </plugins>
         <finalName>datanode</finalName>
