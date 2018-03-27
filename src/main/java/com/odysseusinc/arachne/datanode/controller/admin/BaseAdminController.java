@@ -178,10 +178,10 @@ public abstract class BaseAdminController {
     }
 
     @ApiOperation("Update datanode user")
-    @RequestMapping(value = "/api/v1/admin/users/{id}", method = RequestMethod.PUT)
-    public JsonResult updateUser(@PathVariable("id") Long id, @RequestBody UserDTO updatedDTO) throws NotExistException {
+    @RequestMapping(value = "/api/v1/admin/users/{uuid}", method = RequestMethod.PUT)
+    public JsonResult updateUser(@PathVariable("uuid") String uuid, @RequestBody UserDTO updatedDTO) throws NotExistException {
 
-        User original = userService.get(id);
+        User original = userService.get(UserIdUtils.uuidToId(uuid));
         User updated = conversionService.convert(updatedDTO, User.class);
         userService.updateUser(original, updated);
         return new JsonResult(JsonResult.ErrorCode.NO_ERROR);
