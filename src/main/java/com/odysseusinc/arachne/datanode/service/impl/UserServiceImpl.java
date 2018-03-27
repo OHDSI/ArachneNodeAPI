@@ -110,7 +110,7 @@ public class UserServiceImpl implements UserService {
                                       String langKey) {
 
         User newUser = new User();
-        final Role role = roleRepository.findById("ROLE_USER").orElseGet(null);
+        final Role role = roleRepository.findById("ROLE_USER").orElse(null);
         final List<Role> roles = new LinkedList<>();
         newUser.setFirstName(firstName);
         newUser.setLastName(lastName);
