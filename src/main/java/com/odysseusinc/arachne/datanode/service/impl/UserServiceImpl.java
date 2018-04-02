@@ -61,6 +61,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
     private static final Logger LOG = LoggerFactory.getLogger(UserServiceImpl.class);
     private static final String USER_NOT_FOUND_EXCEPTION = "User with id='$s' is not found";
+    private static final String ROLE_ADMIN_IS_NOT_FOUND_EXCEPTION = "ROLE_ADMIN is not found";
     private static final String RELINKING_ALL_USERS_LOG = "Relinking all DataNode users on Central";
     private static final String RELINKING_ALL_USERS_ERROR_LOG = "Relinking users on Central error: {}";
     private static final String ADDING_USER_FROM_CENTRAL_LOG = "Adding User from central with centralUserId='{}'";
@@ -198,11 +199,18 @@ public class UserServiceImpl implements UserService {
             user.setFirstName(centralUser.getFirstName());
             user.setLastName(centralUser.getLastName());
             user.setEnabled(true);
+            user.getRoles().add(getAdminRole());
             return userRepository.save(user);
         }
         else {
             throw new AlreadyExistsException("user not registered");
         }
+    }
+
+    private Role getAdminRole() {
+
+        return roleRepository.findFirstByName(ROLE_ADMIN)
+                .orElseThrow(() -> new NotExistException(ROLE_ADMIN_IS_NOT_FOUND_EXCEPTION, Role.class));
     }
 
     @Override
@@ -246,9 +254,10 @@ public class UserServiceImpl implements UserService {
         CommonUserDTO userDTO = jsonResult.getResult();
         User savedUser = null;
         if (userDTO != null) {
-            Optional<User> localuser = userRepository.findOneByEmail(userDTO.getEmail());
-            if (!localuser.isPresent()) {
+            final Optional<User> localUser = userRepository.findOneByEmail(userDTO.getEmail());
+            if (!localUser.isPresent()) {
                 final User user = conversionService.convert(userDTO, User.class);
+                user.getRoles().add(getAdminRole());
                 dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
                         centralIntegrationService.linkUserToDataNodeOnCentral(
                                 dataNode,

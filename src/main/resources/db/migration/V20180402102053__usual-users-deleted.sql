@@ -1,2 +1,6 @@
-DELETE FROM users u WHERE NOT EXISTS (SELECT 1 FROM users_roles ur WHERE ur.user_id = u.id);
 DELETE FROM roles r WHERE r.name = 'ROLE_USER';
+
+DELETE FROM users_roles;
+
+INSERT INTO users_roles (user_id, role_id)
+  SELECT u.id, (SELECT r.id FROM roles r WHERE r.name = 'ROLE_ADMIN') FROM users u;
