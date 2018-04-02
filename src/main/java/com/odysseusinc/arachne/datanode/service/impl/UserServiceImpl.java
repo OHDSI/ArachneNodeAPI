@@ -28,9 +28,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.converters.CommonUserDTOToUserConverter;
 import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
-import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
-import com.odysseusinc.arachne.datanode.exception.LastAdminDisableException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.user.Role;
@@ -43,7 +41,6 @@ import com.odysseusinc.arachne.datanode.service.UserService;
 import java.security.Principal;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -202,7 +199,7 @@ public class UserServiceImpl implements UserService {
             user.setFirstName(centralUser.getFirstName());
             user.setLastName(centralUser.getLastName());
             user.setEnabled(true);
-            roleRepository.findFirstByName(ROLE_ADMIN).ifPresent(role -> user.getRoles().add(role));
+            user.getRoles().add(getAdminRole());
             return userRepository.save(user);
         }
         else {
@@ -210,32 +207,10 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    @Override
-    public List<User> suggestNotAdmin(User user, final String query, Integer limit) {
+    private Role getAdminRole() {
 
-        final Set<String> adminsEmails = userRepository
-                .findByRoles_name(ROLE_ADMIN, new Sort(Sort.Direction.ASC, "email")).stream()
-                .map(User::getEmail)
-                .collect(Collectors.toSet());
-        List<CommonUserDTO> result =
-                centralIntegrationService.suggestUsersFromCentral(user, query, adminsEmails, limit);
-        return result
-                .stream()
-                .map(dto -> conversionService.convert(dto, User.class))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<User> getAllAdmins(final String sortBy, final Boolean sortAsc) {
-
-        Sort.Direction direction = sortAsc != null && sortAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
-        final Sort sort;
-        if (sortBy == null || sortBy.isEmpty() || sortBy.equals("name")) {
-            sort = new Sort(direction, "firstName", "lastName");
-        } else {
-            sort = new Sort(direction, sortBy);
-        }
-        return userRepository.findByRoles_name(ROLE_ADMIN, sort);
+        return roleRepository.findFirstByName(ROLE_ADMIN)
+                .orElseThrow(() -> new NotExistException(ROLE_ADMIN_IS_NOT_FOUND_EXCEPTION, Role.class));
     }
 
     @Override
@@ -249,47 +224,6 @@ public class UserServiceImpl implements UserService {
             sort = new Sort(direction, sortBy);
         }
         return userRepository.findAll(sort);
-    }
-
-    @Override
-    public void addUserToAdmins(User currentUser, Long id) {
-
-        User user = findOrAddFromCentral(currentUser, id);
-        final Optional<Role> firstByName = roleRepository.findFirstByName(ROLE_ADMIN);
-        firstByName.ifPresent(role -> {
-                    user.getRoles().add(role);
-                    dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
-                            centralIntegrationService.linkUserToDataNodeOnCentral(dataNode, user)
-                    );
-                    userRepository.save(user);
-                }
-        );
-        firstByName.orElseThrow(() -> new ArachneSystemRuntimeException(ROLE_ADMIN_IS_NOT_FOUND_EXCEPTION));
-    }
-
-    private User findOrAddFromCentral(User currentUser, Long id) {
-
-        User user = userRepository.findOne(id);
-        if (user == null) {
-            user = addUserFromCentral(currentUser, id);
-        }
-        return user;
-    }
-
-    @Override
-    public void removeUserFromAdmins(Long id) {
-
-        User user = userRepository.findOne(id);
-        final Optional<Role> firstByName = roleRepository.findFirstByName(ROLE_ADMIN);
-        firstByName.ifPresent(role -> {
-                    user.getRoles().remove(role);
-                    dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
-                            centralIntegrationService.linkUserToDataNodeOnCentral(dataNode, user)
-                    );
-                    userRepository.save(user);
-                }
-        );
-        firstByName.orElseThrow(() -> new ArachneSystemRuntimeException(ROLE_ADMIN_IS_NOT_FOUND_EXCEPTION));
     }
 
     @Override
@@ -320,9 +254,10 @@ public class UserServiceImpl implements UserService {
         CommonUserDTO userDTO = jsonResult.getResult();
         User savedUser = null;
         if (userDTO != null) {
-            Optional<User> localuser = userRepository.findOneByEmail(userDTO.getEmail());
-            if (!localuser.isPresent()) {
+            final Optional<User> localUser = userRepository.findOneByEmail(userDTO.getEmail());
+            if (!localUser.isPresent()) {
                 final User user = conversionService.convert(userDTO, User.class);
+                user.getRoles().add(getAdminRole());
                 dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
                         centralIntegrationService.linkUserToDataNodeOnCentral(
                                 dataNode,
@@ -342,27 +277,5 @@ public class UserServiceImpl implements UserService {
             throw new PermissionDeniedException();
         }
         return findByUsername(principal.getName()).orElseThrow(PermissionDeniedException::new);
-    }
-
-    @Override
-    public void updateUser(User original, User updated) {
-
-        if (!Objects.equals(original.getEnabled(), updated.getEnabled())) {
-            Optional<Role> roleByName = roleRepository.findFirstByName(ROLE_ADMIN);
-            //Prevent to disable single admin user
-            if (roleByName.isPresent()) {
-                Role adminRole = roleByName.get();
-                if (original.getRoles()
-                        .stream()
-                        .anyMatch(r -> Objects.equals(r.getName(), adminRole.getName()))){
-                   int adminsCount = userRepository.countByRoles_nameAndEnabled(ROLE_ADMIN, true);
-                   if (adminsCount < 2 && !Objects.equals(updated.getEnabled(), Boolean.TRUE)) {
-                       throw new LastAdminDisableException();
-                   }
-                }
-            }
-            original.setEnabled(updated.getEnabled());
-            userRepository.save(original);
-        }
     }
 }
