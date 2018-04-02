@@ -67,7 +67,7 @@ public class DataSourceConfig extends HikariConfig {
         encryptor.setProviderName("BC");
         encryptor.setAlgorithm(algorythm);
         encryptor.setKeyObtentionIterations(1000);
-        encryptor.setPassword(password);
+        encryptor.setPassword("arachne");
         HibernatePBEEncryptorRegistry.getInstance()
                 .registerPBEStringEncryptor("defaultStringEncryptor", encryptor);
         return new StrongPasswordEncryptor();

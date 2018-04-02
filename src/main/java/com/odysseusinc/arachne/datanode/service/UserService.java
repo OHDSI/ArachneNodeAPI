@@ -52,15 +52,7 @@ public interface UserService extends UserDetailsService {
 
     User createIfFirst(User centralUserDto) throws AlreadyExistsException;
 
-    List<User> suggestNotAdmin(User user, String query, Integer limit);
-
-    List<User> getAllAdmins(String sortBy, Boolean sortAsc);
-
     List<User> getAllUsers(String sortBy, Boolean sortAsc);
-
-    void addUserToAdmins(User currentUser, Long id);
-
-    void removeUserFromAdmins(Long id);
 
     void remove(Long id) throws NotExistException;
 
@@ -69,6 +61,4 @@ public interface UserService extends UserDetailsService {
     User addUserFromCentral(User user, Long centralId);
 
     User getUser(Principal principal) throws PermissionDeniedException;
-
-    void updateUser(User original, User updated);
 }

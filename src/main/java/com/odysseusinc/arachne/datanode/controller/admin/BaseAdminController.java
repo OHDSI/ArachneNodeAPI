@@ -65,23 +65,6 @@ public abstract class BaseAdminController {
         this.atlasService = atlasService;
     }
 
-    @ApiOperation(value = "Get all admins", hidden = true)
-    @RequestMapping(value = "/api/v1/admin/admins", method = RequestMethod.GET)
-    public JsonResult<List<UserDTO>> getAdmins(
-            @RequestParam(name = "sortBy", required = false) String sortBy,
-            @RequestParam(name = "sortAsc", required = false) Boolean sortAsc
-    ) throws PermissionDeniedException {
-
-        JsonResult<List<UserDTO>> result;
-        List<User> users = userService.getAllAdmins(sortBy, sortAsc);
-        List<UserDTO> dtos = users.stream()
-                .map(user -> conversionService.convert(user, UserDTO.class))
-                .collect(Collectors.toList());
-        result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-        result.setResult(dtos);
-        return result;
-    }
-
     @ApiOperation(value = "Get all users", hidden = true)
     @RequestMapping(value = "/api/v1/admin/users", method = RequestMethod.GET)
     public JsonResult<List<UserDTO>> getUsers(
@@ -97,15 +80,6 @@ public abstract class BaseAdminController {
         result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
         result.setResult(dtos);
         return result;
-    }
-
-    @RequestMapping(value = "/api/v1/admin/admins/{uuid}", method = RequestMethod.POST)
-    public JsonResult addAdminRole(Principal principal, @PathVariable String uuid) {
-
-        userService.findByUsername(principal.getName()).ifPresent(user -> {
-            userService.addUserToAdmins(user, UserIdUtils.uuidToId(uuid));
-        });
-        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
     }
 
     @ApiOperation("Suggests new user from central")
@@ -132,35 +106,6 @@ public abstract class BaseAdminController {
         return result;
     }
 
-    @ApiOperation("Suggests user according to query to add admin role")
-    @RequestMapping(value = "/api/v1/admin/admins/suggest", method = RequestMethod.GET)
-    public JsonResult<List<UserDTO>> suggestUsersForAddAdminRole(
-            Principal principal,
-            @RequestParam("query") String query,
-            @RequestParam(value = "limit", required = false) Integer limit
-    ) {
-
-        JsonResult<List<UserDTO>> result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-        userService
-                .findByUsername(principal.getName())
-                .ifPresent(user -> {
-                    List<User> users = userService.suggestNotAdmin(user, query, limit == null ? SUGGEST_LIMIT : limit);
-                    result.setResult(users.stream().map(u -> conversionService
-                            .convert(u, UserDTO.class))
-                            .collect(Collectors.toList())
-                    );
-                });
-        return result;
-    }
-
-    @ApiOperation("Remove admin role")
-    @RequestMapping(value = "/api/v1/admin/admins/{uuid}", method = RequestMethod.DELETE)
-    public JsonResult removeAdminRole(@PathVariable String uuid) {
-
-        userService.removeUserFromAdmins(UserIdUtils.uuidToId(uuid));
-        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-    }
-
     @ApiOperation("Add user from central")
     @RequestMapping(value = "/api/v1/admin/users/{uuid}", method = RequestMethod.POST)
     public JsonResult addUserFromCentral(
@@ -175,16 +120,6 @@ public abstract class BaseAdminController {
                     result.setResult(conversionService.convert(user, UserDTO.class));
                 });
         return result;
-    }
-
-    @ApiOperation("Update datanode user")
-    @RequestMapping(value = "/api/v1/admin/users/{uuid}", method = RequestMethod.PUT)
-    public JsonResult updateUser(@PathVariable("uuid") String uuid, @RequestBody UserDTO updatedDTO) throws NotExistException {
-
-        User original = userService.get(UserIdUtils.uuidToId(uuid));
-        User updated = conversionService.convert(updatedDTO, User.class);
-        userService.updateUser(original, updated);
-        return new JsonResult(JsonResult.ErrorCode.NO_ERROR);
     }
 
     @ApiOperation("Remove user")

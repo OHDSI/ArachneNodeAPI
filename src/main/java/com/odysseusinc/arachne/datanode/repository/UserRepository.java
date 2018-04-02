@@ -22,16 +22,12 @@
 
 package com.odysseusinc.arachne.datanode.repository;
 
-import static com.odysseusinc.arachne.datanode.security.RolesConstants.ROLE_ADMIN;
 
 import com.odysseusinc.arachne.datanode.model.user.User;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
@@ -44,15 +40,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByRoles_name(String roleName, Sort sort);
 
     int countByRoles_nameAndEnabled(String roleAdmin, Boolean enabled);
-
-    @Query(nativeQuery = true, value = "select * from users u "
-            + " where (lower(u.first_name) similar to :suggestRequest or\n"
-            + "                            lower(u.last_name) similar to :suggestRequest) "
-            + " and u.id not in\n"
-            + "                            (select user_id from users_roles ur\n"
-            + "                              LEFT JOIN roles r on ur.role_id=r.id\n"
-            + "                              WHERE  r.name='" + ROLE_ADMIN + "'\n"
-            + "                            )"
-            + " limit :limit")
-    List<User> suggestNotAdmin(@Param("suggestRequest") String suggestRequest, @Param("limit") Integer limit);
 }
