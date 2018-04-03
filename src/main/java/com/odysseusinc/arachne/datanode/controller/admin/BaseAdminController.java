@@ -22,29 +22,24 @@
 
 package com.odysseusinc.arachne.datanode.controller.admin;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.commons.utils.UserIdUtils;
 import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
-import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import io.swagger.annotations.ApiOperation;
+import java.security.Principal;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.security.Principal;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public abstract class BaseAdminController {
 
@@ -65,15 +60,15 @@ public abstract class BaseAdminController {
         this.atlasService = atlasService;
     }
 
-    @ApiOperation(value = "Get all users", hidden = true)
-    @RequestMapping(value = "/api/v1/admin/users", method = RequestMethod.GET)
-    public JsonResult<List<UserDTO>> getUsers(
+    @ApiOperation(value = "Get all admins", hidden = true)
+    @RequestMapping(value = "/api/v1/admin/admins", method = RequestMethod.GET)
+    public JsonResult<List<UserDTO>> getAdmins(
             @RequestParam(name = "sortBy", required = false) String sortBy,
             @RequestParam(name = "sortAsc", required = false) Boolean sortAsc
     ) throws PermissionDeniedException {
 
         JsonResult<List<UserDTO>> result;
-        List<User> users = userService.getAllUsers(sortBy, sortAsc);
+        List<User> users = userService.getAllAdmins(sortBy, sortAsc);
         List<UserDTO> dtos = users.stream()
                 .map(user -> conversionService.convert(user, UserDTO.class))
                 .collect(Collectors.toList());
@@ -82,9 +77,9 @@ public abstract class BaseAdminController {
         return result;
     }
 
-    @ApiOperation("Suggests new user from central")
-    @RequestMapping(value = "/api/v1/admin/users/suggest", method = RequestMethod.GET)
-    public JsonResult<List<UserDTO>> suggestNewUsers(
+    @ApiOperation("Suggests user according to query to add admin")
+    @RequestMapping(value = "/api/v1/admin/admins/suggest", method = RequestMethod.GET)
+    public JsonResult<List<UserDTO>> suggestAdmins(
             Principal principal,
             @RequestParam("query") String query,
             @RequestParam(value = "limit", required = false) Integer limit
@@ -94,21 +89,26 @@ public abstract class BaseAdminController {
         userService
                 .findByUsername(principal.getName())
                 .ifPresent(user -> {
-                    List<CommonUserDTO> users = userService
-                            .suggestUsersFromCentral(user, query, limit == null ? SUGGEST_LIMIT : limit);
-                    List<UserDTO> userDTOs = new LinkedList<>();
-                    for (CommonUserDTO commonUserDTO : users) {
-                        userDTOs.add(conversionService.convert(commonUserDTO, UserDTO.class));
-                    }
-                    result.setResult(userDTOs);
+                    List<User> users = userService.suggestNotAdmin(user, query, limit == null ? SUGGEST_LIMIT : limit);
+                    result.setResult(users.stream().map(u -> conversionService
+                            .convert(u, UserDTO.class))
+                            .collect(Collectors.toList())
+                    );
                 });
-
         return result;
     }
 
-    @ApiOperation("Add user from central")
-    @RequestMapping(value = "/api/v1/admin/users/{uuid}", method = RequestMethod.POST)
-    public JsonResult addUserFromCentral(
+    @ApiOperation("Remove admin")
+    @RequestMapping(value = "/api/v1/admin/admins/{uuid}", method = RequestMethod.DELETE)
+    public JsonResult removeAdmin(@PathVariable String uuid) {
+
+        userService.remove(UserIdUtils.uuidToId(uuid));
+        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+    }
+
+    @ApiOperation("Add admin from central")
+    @RequestMapping(value = "/api/v1/admin/admins/{uuid}", method = RequestMethod.POST)
+    public JsonResult addAdminFromCentral(
             Principal principal,
             @PathVariable String uuid) {
 
@@ -116,18 +116,10 @@ public abstract class BaseAdminController {
         userService
                 .findByUsername(principal.getName())
                 .ifPresent(loginedUser -> {
-                    User user = userService.addUserFromCentral(loginedUser, UserIdUtils.uuidToId(uuid));
+                    final User user = userService.addUserFromCentral(loginedUser, UserIdUtils.uuidToId(uuid));
                     result.setResult(conversionService.convert(user, UserDTO.class));
                 });
         return result;
-    }
-
-    @ApiOperation("Remove user")
-    @RequestMapping(value = "/api/v1/admin/users/{uuid}", method = RequestMethod.DELETE)
-    public JsonResult removeUser(@PathVariable String uuid) throws NotExistException {
-
-        userService.remove(UserIdUtils.uuidToId(uuid));
-        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
     }
 
     @ApiOperation("Check Atlas Connection")

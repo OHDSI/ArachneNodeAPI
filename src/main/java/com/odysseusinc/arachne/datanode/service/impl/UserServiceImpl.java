@@ -28,6 +28,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.converters.CommonUserDTOToUserConverter;
 import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
+import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
@@ -99,23 +100,6 @@ public class UserServiceImpl implements UserService {
         } catch (Exception ex) {
             LOG.error(RELINKING_ALL_USERS_ERROR_LOG, ex.getMessage());
         }
-    }
-
-    @Override
-    public User createUserInformation(String login, String password, String firstName, String lastName, String email,
-                                      String langKey) {
-
-        User newUser = new User();
-        final Role role = roleRepository.findOne("ROLE_USER");
-        final List<Role> roles = new LinkedList<>();
-        newUser.setFirstName(firstName);
-        newUser.setLastName(lastName);
-        newUser.setEmail(email);
-        roles.add(role);
-        newUser.setRoles(roles);
-        userRepository.save(newUser);
-        LOG.debug("Created Information for User: {}", newUser);
-        return newUser;
     }
 
     @Override
@@ -214,19 +198,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getAllUsers(final String sortBy, final Boolean sortAsc) {
-
-        Sort.Direction direction = sortAsc != null && sortAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
-        final Sort sort;
-        if (sortBy == null || sortBy.isEmpty() || sortBy.equals("name")) {
-            sort = new Sort(direction, "firstName", "lastName");
-        } else {
-            sort = new Sort(direction, sortBy);
-        }
-        return userRepository.findAll(sort);
-    }
-
-    @Override
     @Transactional
     public void remove(Long id) throws NotExistException {
 
@@ -236,13 +207,6 @@ public class UserServiceImpl implements UserService {
         dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
                 centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
         );
-    }
-
-    @Override
-    public List<CommonUserDTO> suggestUsersFromCentral(User user, String query, int limit) {
-
-        Set<String> emails = userRepository.findAll().stream().map(User::getEmail).collect(Collectors.toSet());
-        return centralIntegrationService.suggestUsersFromCentral(user, query, emails, limit);
     }
 
     @Override
@@ -277,5 +241,42 @@ public class UserServiceImpl implements UserService {
             throw new PermissionDeniedException();
         }
         return findByUsername(principal.getName()).orElseThrow(PermissionDeniedException::new);
+    }
+
+    private User findOrAddFromCentral(User currentUser, Long id) {
+
+        User user = userRepository.findOne(id);
+        if (user == null) {
+            user = addUserFromCentral(currentUser, id);
+        }
+        return user;
+    }
+
+    @Override
+    public List<User> suggestNotAdmin(User user, final String query, Integer limit) {
+
+        final Set<String> adminsEmails = userRepository
+                .findAll(new Sort(Sort.Direction.ASC, "email")).stream()
+                .map(User::getEmail)
+                .collect(Collectors.toSet());
+        final List<CommonUserDTO> result =
+                centralIntegrationService.suggestUsersFromCentral(user, query, adminsEmails, limit);
+        return result
+                .stream()
+                .map(dto -> conversionService.convert(dto, User.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<User> getAllAdmins(final String sortBy, final Boolean sortAsc) {
+
+        final Sort.Direction direction = sortAsc != null && sortAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
+        final Sort sort;
+        if (sortBy == null || sortBy.isEmpty() || sortBy.equals("name")) {
+            sort = new Sort(direction, "firstName", "lastName");
+        } else {
+            sort = new Sort(direction, sortBy);
+        }
+        return userRepository.findAll(sort);
     }
 }
