@@ -22,7 +22,6 @@
 
 package com.odysseusinc.arachne.datanode.repository;
 
-
 import com.odysseusinc.arachne.datanode.model.user.User;
 import java.util.List;
 import java.util.Optional;
@@ -35,9 +34,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findOneByEmailAndEnabled(String email, boolean enabled);
 
-    Optional<User> findOneById(Long userId);
-
-    List<User> findByRoles_name(String roleName, Sort sort);
-
-    int countByRoles_nameAndEnabled(String roleAdmin, Boolean enabled);
+    List<User> findAll(Sort sort);
 }
