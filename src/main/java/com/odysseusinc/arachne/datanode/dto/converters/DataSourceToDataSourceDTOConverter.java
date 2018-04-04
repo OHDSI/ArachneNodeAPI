@@ -53,6 +53,10 @@ public class DataSourceToDataSourceDTOConverter implements Converter<DataSource,
         dto.setUuid(dataSource.getUuid());
         dto.setCentralId(dataSource.getCentralId());
 
+        dto.setResultSchema(dataSource.getResultSchema());
+        dto.setTargetSchema(dataSource.getTargetSchema());
+        dto.setCohortTargetTable(dataSource.getCohortTargetTable());
+
         DataSourceUtils.masqueradePassword(dto);
 
         return dto;
