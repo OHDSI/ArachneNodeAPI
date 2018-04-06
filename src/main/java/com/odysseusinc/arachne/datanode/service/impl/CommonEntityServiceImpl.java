@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
 import com.odysseusinc.arachne.datanode.repository.CommonEntityRepository;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
@@ -48,10 +49,11 @@ public class CommonEntityServiceImpl implements CommonEntityService {
     }
 
     @Override
-    public CommonEntity getOrCreate(Integer localId, CommonAnalysisType analysisType) {
+    public CommonEntity getOrCreate(Long originId, Integer localId, CommonAnalysisType analysisType) {
 
-        return repository.getByLocalIdAndAnalysisType(localId, analysisType).orElseGet(() -> {
+        return repository.getByOriginIdAndLocalIdAndAnalysisType(originId, localId, analysisType).orElseGet(() -> {
             CommonEntity entity = new CommonEntity();
+            entity.setOrigin(new Atlas(originId));
             entity.setLocalId(localId);
             entity.setAnalysisType(analysisType);
             entity.setGuid(newGuid());

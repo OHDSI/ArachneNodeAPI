@@ -24,8 +24,8 @@ package com.odysseusinc.arachne.datanode.model.datasource;
 
 import com.google.common.base.MoreObjects;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -54,7 +54,6 @@ public class DataSource {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "datasource_id_seq_generator")
     private Long id;
 
-    @NotBlank
     @Column(name = "sid", nullable = false)
     private String uuid;
 
@@ -89,9 +88,6 @@ public class DataSource {
 
     @ManyToOne(fetch = FetchType.EAGER)
     private DataNode dataNode;
-
-    @Column
-    private Boolean registred;
 
     @Column
     @Enumerated(value = EnumType.STRING)
@@ -214,16 +210,6 @@ public class DataSource {
         this.dataNode = dataNode;
     }
 
-    public Boolean getRegistred() {
-
-        return registred;
-    }
-
-    public void setRegistred(Boolean registred) {
-
-        this.registred = registred;
-    }
-
     public CommonHealthStatus getHealthStatus() {
 
         return healthStatus;
@@ -297,7 +283,6 @@ public class DataSource {
                 .add("username", "***")
                 .add("password", "***")
                 .add("dataNode", dataNode)
-                .add("registred", registred)
                 .add("healthStatus", healthStatus)
                 .add("healthStatusDescription", healthStatusDescription)
                 .add("targetSchema", targetSchema)

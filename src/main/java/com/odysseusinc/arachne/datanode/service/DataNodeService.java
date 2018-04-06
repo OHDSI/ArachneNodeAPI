@@ -24,19 +24,17 @@ package com.odysseusinc.arachne.datanode.service;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
-import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.user.User;
-import java.util.List;
 import java.util.Optional;
 
 public interface DataNodeService {
 
     Optional<DataNode> findCurrentDataNode();
 
-    DataNode create(User user, DataNode dataNode, List<User> users) throws AlreadyExistsException;
+    DataNode findCurrentDataNodeOrCreate(User user);
 
-    DataNode update(User user, DataNode dataNode) throws NotExistException;
+    DataNode create(User user, DataNode dataNode) throws AlreadyExistsException;
 
     void updateHealthStatus(Long id, CommonHealthStatus healthStatus, String healthStatusDescription);
 }

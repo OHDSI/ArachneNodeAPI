@@ -29,7 +29,9 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
+import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
@@ -63,29 +65,30 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
             .build();
     private static final Logger LOGGER = LoggerFactory.getLogger(LegacyCohortRequestHandler.class);
     private final CentralSystemClient centralClient;
-    private final AtlasClient atlasClient;
     private final GenericConversionService conversionService;
     private final CommonEntityService commonEntityService;
     private final SqlRenderService sqlRenderService;
+    private final AtlasService atlasService;
 
     @Autowired
     public LegacyCohortRequestHandler(CentralSystemClient centralClient,
-                                      AtlasClient atlasClient,
                                       GenericConversionService conversionService,
                                       CommonEntityService commonEntityService,
-                                      SqlRenderService sqlRenderService) {
+                                      SqlRenderService sqlRenderService,
+                                      AtlasService atlasService) {
 
         this.centralClient = centralClient;
-        this.atlasClient = atlasClient;
         this.conversionService = conversionService;
         this.commonEntityService = commonEntityService;
         this.sqlRenderService = sqlRenderService;
+        this.atlasService = atlasService;
     }
 
     @Override
-    public List<CommonCohortShortDTO> getObjectsList() {
+    public List<CommonCohortShortDTO> getObjectsList(List<Atlas> atlasList) {
 
-        List<CohortDefinition> definitions = atlasClient.getCohortDefinitions();
+        List<CohortDefinition> definitions = atlasService.execute(atlasList, AtlasClient::getCohortDefinitions);
+
         return definitions
                 .stream()
                 .map(cohort -> conversionService.convert(cohort, CommonCohortShortDTO.class))
@@ -96,7 +99,10 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
     public MultipartFile[] getAtlasObject(String guid) {
 
         return commonEntityService.findByGuid(guid).map(entity -> {
-            CohortDefinition definition = atlasClient.getCohortDefinition(entity.getLocalId());
+            CohortDefinition definition = atlasService.execute(
+                    entity.getOrigin(),
+                    atlasClient -> atlasClient.getCohortDefinition(entity.getLocalId())
+            );
             if (Objects.nonNull(definition)) {
                 String content = sqlRenderService.renderSql(definition);
                 if (Objects.nonNull(content)) {

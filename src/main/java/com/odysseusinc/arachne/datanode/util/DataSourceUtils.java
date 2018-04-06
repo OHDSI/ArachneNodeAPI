@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.util;
 
 import com.odysseusinc.arachne.datanode.Constants;
+import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDetailedDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.util.datasource.QueryProcessor;
@@ -62,6 +63,11 @@ public class DataSourceUtils<T> {
         this.dataSource = dataSource;
     }
 
+    public static boolean isNotDummyPassword(String dbPassword) {
+
+        return Objects.nonNull(dbPassword) && !Objects.equals(dbPassword, Constants.DUMMY_PASSWORD);
+    }
+
     public static <T> DataSourceUtils<T> withDataSource(DataSource dataSource) {
 
         return new DataSourceUtils<>(dataSource);
@@ -70,6 +76,11 @@ public class DataSourceUtils<T> {
     public static void masqueradePassword(DataSourceDTO dataSource) {
 
         dataSource.setDbPassword(getMasqueradedPassword(dataSource.getDbPassword()));
+    }
+
+    public static void masqueradePassword(AtlasDetailedDTO atlasDetailedDTO) {
+
+        atlasDetailedDTO.setPassword(getMasqueradedPassword(atlasDetailedDTO.getPassword()));
     }
 
     private static String getMasqueradedPassword(String password) {

@@ -23,35 +23,22 @@
 package com.odysseusinc.arachne.datanode.repository;
 
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
+import java.util.Optional;
+import java.util.stream.Stream;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
-
 public interface DataSourceRepository extends JpaRepository<DataSource, Long> {
 
     @Modifying
-    @Transactional
-    @Query("delete from DataSource ds where ds.uuid = ?1")
-    void deleteByUuid(String uuid);
-
-    @Modifying
     void deleteByCentralId(Long centralId);
-
-    @Query("from DataSource ds where ds.uuid = ?1")
-    Optional<DataSource> findByUuid(String uuid);
 
     Optional<DataSource> findByCentralId(Long centralId);
 
     @Query("from DataSource ds where ds.id = ?1")
     Optional<DataSource> findById(Long id);
-
-    @Query("select ds from DataSource ds where ds.registred = true")
-    List<DataSource> findAllRegistered();
 
     Stream<DataSource> findAllByCentralIdIsNull();
 }

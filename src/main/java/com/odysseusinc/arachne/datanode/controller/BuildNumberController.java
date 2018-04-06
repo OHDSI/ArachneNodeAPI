@@ -22,8 +22,10 @@
 
 package com.odysseusinc.arachne.datanode.controller;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonBuildNumberDTO;
+import com.odysseusinc.arachne.datanode.BuildNumberDTO;
+import com.odysseusinc.arachne.datanode.util.CentralUtil;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -39,14 +41,23 @@ public class BuildNumberController {
     @Value("${project.version}")
     private String projectVersion;
 
+    private CentralUtil centralUtil;
+
+    @Autowired
+    public BuildNumberController(CentralUtil centralUtil) {
+
+        this.centralUtil = centralUtil;
+    }
+
     @ApiOperation(value = "Get build number")
     @RequestMapping(value = "/api/v1/build-number", method = RequestMethod.GET)
-    public CommonBuildNumberDTO buildNumber() {
+    public BuildNumberDTO buildNumber() {
 
-        CommonBuildNumberDTO buildNumberDTO = new CommonBuildNumberDTO();
+        BuildNumberDTO buildNumberDTO = new BuildNumberDTO();
         buildNumberDTO.setBuildNumber(getBuildNumber());
         buildNumberDTO.setBuildId(getBuildId());
         buildNumberDTO.setProjectVersion(getProjectVersion());
+        buildNumberDTO.setCentralUrl(centralUtil.getCentralUrl());
         return buildNumberDTO;
     }
 

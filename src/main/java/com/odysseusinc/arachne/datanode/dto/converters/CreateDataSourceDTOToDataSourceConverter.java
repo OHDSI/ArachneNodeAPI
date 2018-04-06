@@ -22,9 +22,9 @@
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.dto.datasource.CreateDataSourceDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
@@ -56,13 +56,15 @@ public class CreateDataSourceDTOToDataSourceConverter implements Converter<Creat
         }
         DataSource dataSource = new DataSource();
         dataSource.setName(createDataSourceDTO.getName());
-        dataSource.setUuid(createDataSourceDTO.getUuid());
         dataSource.setDescription(createDataSourceDTO.getDescription());
         dataSource.setType(DBMSType.valueOf(createDataSourceDTO.getDbmsType()));
         dataSource.setConnectionString(createDataSourceDTO.getConnectionString());
         dataSource.setUsername(createDataSourceDTO.getDbUsername());
         dataSource.setPassword(createDataSourceDTO.getDbPassword());
         dataSource.setCdmSchema(createDataSourceDTO.getCdmSchema());
+        dataSource.setCohortTargetTable(createDataSourceDTO.getCohortTargetTable());
+        dataSource.setTargetSchema(createDataSourceDTO.getTargetSchema());
+        dataSource.setResultSchema(createDataSourceDTO.getResultSchema());
         return dataSource;
 
     }

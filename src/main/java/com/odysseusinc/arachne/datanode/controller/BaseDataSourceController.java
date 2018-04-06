@@ -25,10 +25,11 @@ package com.odysseusinc.arachne.datanode.controller;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
+import com.odysseusinc.arachne.commons.api.v1.dto.OptionDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
+import com.odysseusinc.arachne.commons.types.DBMSType;
+import com.odysseusinc.arachne.commons.utils.ConverterUtils;
 import com.odysseusinc.arachne.datanode.Constants;
-import com.odysseusinc.arachne.datanode.dto.OptionDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.CreateDataSourceDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceBusinessDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
@@ -38,15 +39,17 @@ import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.modelmapper.ModelMapper;
@@ -54,6 +57,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.destination.DestinationResolver;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -70,6 +74,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     protected final JmsTemplate jmsTemplate;
     protected final DestinationResolver destinationResolver;
     protected final CentralClient centralClient;
+    protected final DataNodeService dataNodeService;
+    protected final ConverterUtils converterUtils;
 
     protected BaseDataSourceController(UserService userService,
                                        ModelMapper modelMapper,
@@ -77,7 +83,9 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                                        DataSourceService dataSourceService,
                                        GenericConversionService conversionService,
                                        CentralClient centralClient,
-                                       JmsTemplate jmsTemplate) {
+                                       JmsTemplate jmsTemplate,
+                                       DataNodeService dataNodeService,
+                                       ConverterUtils converterUtils) {
 
         super(userService);
         this.modelMapper = modelMapper;
@@ -87,6 +95,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         this.conversionService = conversionService;
         this.centralClient = centralClient;
         this.jmsTemplate = jmsTemplate;
+        this.dataNodeService = dataNodeService;
+        this.converterUtils = converterUtils;
     }
 
     @ApiOperation(value = "Add data source")
@@ -100,21 +110,11 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
-        final DataSource dataSource = convert(dataSourceDTO);
+        DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
+        DataSource optional = dataSourceService.create(user, dataSource);
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
-        dataSourceService.create(user, dataSource)
-                .ifPresent(ds -> result.setResult(modelMapper.map(ds, DataSourceDTO.class)));
+        result.setResult(conversionService.convert(optional, DataSourceDTO.class));
         return result;
-    }
-
-    protected DataSource convert(CreateDataSourceDTO dataSourceDTO) {
-
-        return conversionService.convert(dataSourceDTO, DataSource.class);
-    }
-
-    protected CommonModelType checkDataSource(DataSource dataSource) {
-
-        return CommonModelType.CDM;
     }
 
     @ApiOperation(value = "Returns all data sources for current data node")
@@ -127,7 +127,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             @RequestParam(name = "sortBy", required = false) String sortBy,
             @RequestParam(name = "sortAsc", required = false) Boolean sortAsc,
             Principal principal
-    ) {
+    ) throws PermissionDeniedException {
 
         if (principal == null) {
             throw new AuthException("user not found");
@@ -136,8 +136,33 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         List<DataSourceDTO> dtos = dataSourceService.findAll(sortBy, sortAsc).stream()
                 .map(dataSource -> conversionService.convert(dataSource, DataSourceDTO.class))
                 .collect(Collectors.toList());
+
+        if (!CollectionUtils.isEmpty(dtos)) {
+            dtos = setFieldsFromCentral(getUser(principal), dtos);
+        }
         result.setResult(dtos);
         return result;
+    }
+
+    private List<DataSourceDTO> setFieldsFromCentral(User user, List<DataSourceDTO> dtos) {
+
+        JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs =
+                integrationService.getDataSources(user,
+                        dtos.stream().filter(e -> e.getCentralId() != null).map(DataSourceDTO::getCentralId)
+                                .collect(Collectors.toList()));
+
+        Map<Long, CommonDataSourceDTO> idToDto = centralCommonDTOs.getResult()
+                .stream()
+                .collect(Collectors.toMap(CommonDataSourceDTO::getId, e -> e));
+
+        dtos.forEach(e -> {
+            CommonDataSourceDTO dto = idToDto.get(e.getCentralId());
+            if (!Objects.isNull(dto)) {
+                e.setPublished(dto.getPublished());
+                e.setModelType(dto.getModelType());
+            }
+        });
+        return dtos;
     }
 
     @ApiOperation(value = "Get data source")
@@ -146,14 +171,16 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public JsonResult<DataSourceDTO> get(Principal principal, @PathVariable("id") Long id) {
+    public JsonResult<DataSourceDTO> get(Principal principal, @PathVariable("id") Long id) throws PermissionDeniedException {
 
         if (principal == null) {
             throw new AuthException("user not found");
         }
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
         DataSource dataSource = dataSourceService.getById(id);
-        result.setResult(conversionService.convert(dataSource, DataSourceDTO.class));
+        DataSourceDTO resultDTO = conversionService.convert(dataSource, DataSourceDTO.class);
+        resultDTO = setFieldsFromCentral(getUser(principal), Collections.singletonList(resultDTO)).get(0);
+        result.setResult(resultDTO);
         return result;
     }
 
@@ -167,9 +194,16 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         if (principal == null) {
             throw new AuthException("user not found");
         }
-        dataSourceService.delete(id);
-        JsonResult<Boolean> result = new JsonResult<>(NO_ERROR);
-        result.setResult(Boolean.TRUE);
+        JsonResult centralResult = unpublishAndDeleteOnCentral(id);
+        JsonResult<Boolean> result = new JsonResult<>();
+        result.setErrorCode(centralResult.getErrorCode());
+
+        if (NO_ERROR.getCode().equals(centralResult.getErrorCode())) {
+            dataSourceService.delete(id);
+            result.setResult(Boolean.TRUE);
+        } else {
+            result.setResult(Boolean.FALSE);
+        }
         return result;
     }
 
@@ -189,102 +223,20 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
-        final DataSource dataSource = convert(dataSourceDTO);
+        DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
         dataSource.setId(id);
+
         final DataSource savedDataSource = dataSourceService.update(user, dataSource);
-        return new JsonResult<>(NO_ERROR, conversionService.convert(savedDataSource, DataSourceDTO.class));
-    }
-
-    @ApiOperation(value = "Register datasource on arachne central")
-    @RequestMapping(
-            value = Constants.Api.DataSource.CENTRAL_REGISTER,
-            method = RequestMethod.POST,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public JsonResult<BusinessDTO> register(
-            Principal principal,
-            @PathVariable("id") Long id,
-            @Valid @RequestBody BusinessDTO dataSourceBusinessDTO
-    ) throws PermissionDeniedException {
-
-        return processDataSource(principal, id, dataSourceBusinessDTO, (parameters) -> {
-            final JsonResult<CommonDTO> res = integrationService.sendDataSourceRegistrationRequest(
-                    parameters.user,
-                    parameters.dataSource.getDataNode(),
-                    parameters.commonDTO
-            );
-            if (NO_ERROR.getCode().equals(res.getErrorCode())) {
-                dataSourceService.markDataSourceAsRegistered(parameters.dataSource, res.getResult().getId());
-            }
-            return res;
-        });
-    }
-
-
-    @ApiOperation(value = "Unregister datasource on arachne central")
-    @RequestMapping(
-            value = Constants.Api.DataSource.CENTRAL_REGISTER,
-            method = RequestMethod.DELETE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public JsonResult unregister(@PathVariable("id") Long id) {
-
-        DataSource dataSource = dataSourceService.getById(id);
-        final Long dataNodeCentralId = dataSource.getDataNode().getCentralId();
-        final JsonResult result = centralClient.unregisterDataSource(dataNodeCentralId, dataSource.getCentralId());
-        if (NO_ERROR.getCode().equals(result.getErrorCode())) {
-            dataSourceService.markDataSourceAsUnregistered(dataSource.getCentralId());
-        }
+        JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
+        result.setResult(conversionService.convert(savedDataSource, DataSourceDTO.class));
         return result;
     }
 
-    @ApiOperation(value = "Get business data of data source")
-    @RequestMapping(
-            value = Constants.Api.DataSource.GET_BUSINESS,
-            method = RequestMethod.GET,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public JsonResult<BusinessDTO> getBusiness(
-            Principal principal,
-            @PathVariable("id") Long id
-    ) throws AuthException, NotExistException {
+    public JsonResult unpublishAndDeleteOnCentral(Long dataSourceId) {
 
-        DataSource dataSource = dataSourceService.getById(id);
-        User user = userService.findByUsername(principal.getName())
-                .orElseThrow(() -> new AuthException("user not found"));
-
-        final BusinessDTO dataSourceBusinessDTO = conversionService.convert(dataSource, getDataSourceBusinessDTOClass());
-        if (dataSource.getRegistred()) {
-            final CommonDTO commonDataSourceDTO
-                    = integrationService.getDataSource(user, dataSource.getCentralId()).getResult();
-            enrichBusinessFromCommon(dataSourceBusinessDTO, commonDataSourceDTO);
-        } else {
-            dataSourceBusinessDTO.setModelType(checkDataSource(dataSource));
-        }
-        return new JsonResult<>(NO_ERROR, dataSourceBusinessDTO);
+        DataSource dataSource = dataSourceService.getById(dataSourceId);
+        return centralClient.unpublishAndSoftDeleteDataSource(dataSource.getCentralId());
     }
-
-    @ApiOperation(value = "Update business data of data source")
-    @RequestMapping(
-            value = Constants.Api.DataSource.UPDATE_BUSINESS,
-            method = RequestMethod.PUT,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public JsonResult<BusinessDTO> updateBusiness(
-            Principal principal,
-            @PathVariable("id") Long id,
-            @RequestBody BusinessDTO dataSourceBusinessDTO
-    ) throws AuthException, NotExistException, PermissionDeniedException {
-
-        return processDataSource(principal, id, dataSourceBusinessDTO, (parameters) ->
-                integrationService.updateDataSource(
-                        parameters.user,
-                        parameters.dataSource.getCentralId(),
-                        parameters.commonDTO
-                ));
-    }
-
-    protected abstract BusinessDTO enrichBusinessFromCommon(BusinessDTO businessDTO, CommonDTO commonDTO);
 
     @RequestMapping(
             value = "/api/v1/data-sources/dbms-types",
@@ -292,60 +244,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     )
     public List<OptionDTO> getDBMSTypes() {
 
-        return Arrays.stream(DBMSType.values())
-                .map(dbms -> conversionService.convert(dbms, OptionDTO.class))
-                .collect(Collectors.toList());
+        return converterUtils.convertList(Arrays.asList(DBMSType.values()), OptionDTO.class);
     }
 
-    protected abstract Class<CommonDTO> getCommonDataSourceDTOClass();
-
-    protected abstract Class<BusinessDTO> getDataSourceBusinessDTOClass();
-
-    protected JsonResult<BusinessDTO> processDataSource(Principal principal,
-                                                        Long id,
-                                                        BusinessDTO dataSourceBusinessDTO,
-                                                        Function<PortalInteractionParams, JsonResult<CommonDTO>> portalInteractionFunc
-    ) throws PermissionDeniedException {
-
-        final User user = getAdmin(principal);
-        final DataSource dataSource = conversionService.convert(dataSourceBusinessDTO, DataSource.class);
-        dataSource.setId(id);
-        final DataSource updatedDataSource = dataSourceService.update(user, dataSource);
-        dataSourceBusinessDTO.setUuid(updatedDataSource.getUuid());
-        final CommonDTO commonDataSourceDTO
-                = conversionService.convert(dataSourceBusinessDTO, getCommonDataSourceDTOClass());
-        processBusinessDTO(updatedDataSource, commonDataSourceDTO);
-
-        JsonResult<CommonDTO> centralJsonResult
-                = portalInteractionFunc.apply(new PortalInteractionParams(user, updatedDataSource, commonDataSourceDTO));
-
-        final BusinessDTO updatedDataSourceBusinessDTO
-                = conversionService.convert(updatedDataSource, getDataSourceBusinessDTOClass());
-        enrichBusinessFromCommon(updatedDataSourceBusinessDTO, centralJsonResult.getResult());
-        final JsonResult<BusinessDTO> result = new JsonResult<>();
-        result.setErrorCode(centralJsonResult.getErrorCode());
-        result.setErrorMessage(centralJsonResult.getErrorMessage());
-        result.setResult(updatedDataSourceBusinessDTO);
-        result.setValidatorErrors(centralJsonResult.getValidatorErrors());
-        return result;
-    }
-
-    private class PortalInteractionParams {
-        private final User user;
-        private final DataSource dataSource;
-        private final CommonDTO commonDTO;
-
-        public PortalInteractionParams(User user, DataSource dataSource, CommonDTO commonDTO) {
-
-            this.user = user;
-            this.dataSource = dataSource;
-            this.commonDTO = commonDTO;
-        }
-    }
-
-    protected void processBusinessDTO(DataSource dataSource, CommonDTO commonDataSourceDTO) {
-
-        commonDataSourceDTO.setId(dataSource.getCentralId());
-        commonDataSourceDTO.setUuid(dataSource.getUuid());
-    }
 }

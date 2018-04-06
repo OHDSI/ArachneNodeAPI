@@ -74,7 +74,6 @@ public class MappersConfig {
                 map(source.getCdmSchema(), destination.getCdmSchema());
                 map(source.getUsername(), destination.getDbUsername());
                 map(source.getPassword(), destination.getDbPassword());
-                map(source.getRegistred(), destination.getIsRegistred());
                 map(source.getHealthStatus(), destination.getHealthStatus());
                 map(source.getHealthStatusDescription(), destination.getHealthStatusDescription());
             }
