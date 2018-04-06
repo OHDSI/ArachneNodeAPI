@@ -22,6 +22,8 @@
 
 package com.odysseusinc.arachne.datanode.service.client.atlas;
 
+import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
+import feign.Client;
 import feign.Feign;
 import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
@@ -34,6 +36,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Configuration
 public class AtlasClientConfig {
+
+    private final ArachneHttpClientBuilder arachneHttpClientBuilder;
 
     @Value("${atlas.host}")
     private String atlasHost;
@@ -48,12 +52,18 @@ public class AtlasClientConfig {
     @Value("${atlas.auth.password}")
     private String password;
 
+    public AtlasClientConfig(ArachneHttpClientBuilder arachneHttpClientBuilder) {
+
+        this.arachneHttpClientBuilder = arachneHttpClientBuilder;
+    }
+
     @Bean
     public AtlasClient atlasClient(@Value("${atlas.auth.schema}") String authSchemaParam) {
 
         this.authSchema = AtlasAuthSchema.valueOf(authSchemaParam);
 
         return Feign.builder()
+                .client(arachneHttpClientBuilder.build())
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder())
                 .logger(new Slf4jLogger(AtlasClient.class))
@@ -62,9 +72,10 @@ public class AtlasClientConfig {
                 .target(AtlasClient.class, getAtlasUrl());
     }
 
-    public static AtlasLoginClient buildAtlasLoginClient(String url) {
+    public static AtlasLoginClient buildAtlasLoginClient(String url, Client httpClient) {
 
         return Feign.builder()
+                .client(httpClient)
                 .encoder(new FormEncoder(new JacksonEncoder()))
                 .decoder(new TokenDecoder())
                 .logger(new Slf4jLogger(AtlasLoginClient.class))
@@ -74,7 +85,7 @@ public class AtlasClientConfig {
     @Bean
     public AtlasLoginClient atlasLoginClient() {
 
-        return buildAtlasLoginClient(getAtlasUrl());
+        return buildAtlasLoginClient(getAtlasUrl(), arachneHttpClientBuilder.build());
     }
 
     public static String getAtlasUrl(String atlasHost, Integer atlasPort, String atlasUrlContext) {

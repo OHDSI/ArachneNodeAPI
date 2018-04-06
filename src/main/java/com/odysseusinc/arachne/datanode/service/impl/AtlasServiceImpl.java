@@ -24,6 +24,7 @@ package com.odysseusinc.arachne.datanode.service.impl;
 
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
+import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthRequestInterceptor;
 
 
@@ -59,6 +60,7 @@ public class AtlasServiceImpl implements AtlasService {
     private final RestTemplate atlasRestTemplate;
     private final GenericConversionService conversionService;
     private final SystemSettingsGroupRepository systemSettingsGroupRepository;
+    private final ArachneHttpClientBuilder arachneHttpClientBuilder;
     private HttpHeaders headers;
 
     private static final String ATLAS_SETTINGS_GROUP_NAME = "atlas";
@@ -72,11 +74,13 @@ public class AtlasServiceImpl implements AtlasService {
     @Autowired
     public AtlasServiceImpl(GenericConversionService genericConversionService,
                             SystemSettingsGroupRepository settingsGroupRepository,
-                            @Qualifier("atlasRestTemplate") RestTemplate atlasRestTemplate) {
+                            @Qualifier("atlasRestTemplate") RestTemplate atlasRestTemplate,
+                            ArachneHttpClientBuilder arachneHttpClientBuilder) {
 
         this.conversionService = genericConversionService;
         this.systemSettingsGroupRepository = settingsGroupRepository;
         this.atlasRestTemplate = atlasRestTemplate;
+        this.arachneHttpClientBuilder = arachneHttpClientBuilder;
     }
 
 
@@ -119,7 +123,7 @@ public class AtlasServiceImpl implements AtlasService {
     private String authToAtlas(String url, String authSchema, String login, String password) {
 
         String atlasToken = null;
-        AtlasLoginClient atlasLoginClient = AtlasClientConfig.buildAtlasLoginClient(url);
+        AtlasLoginClient atlasLoginClient = AtlasClientConfig.buildAtlasLoginClient(url, arachneHttpClientBuilder.build());
         if (!StringUtils.isBlank(authSchema)) {
             try {
                 switch (AtlasAuthSchema.valueOf(authSchema)) {
