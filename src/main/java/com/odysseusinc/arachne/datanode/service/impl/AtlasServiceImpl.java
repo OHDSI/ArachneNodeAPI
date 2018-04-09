@@ -245,7 +245,7 @@ public class AtlasServiceImpl implements AtlasService {
     private String authToAtlas(String url, AtlasAuthSchema authSchema, String login, String password) {
 
         String atlasToken = null;
-        AtlasLoginClient atlasLoginClient = AtlasClientConfig.buildAtlasLoginClient(url, arachneHttpClientBuilder);
+        AtlasLoginClient atlasLoginClient = AtlasClientConfig.buildAtlasLoginClient(url, arachneHttpClientBuilder.build());
         if (Objects.nonNull(authSchema)) {
             try {
                 switch (authSchema) {
