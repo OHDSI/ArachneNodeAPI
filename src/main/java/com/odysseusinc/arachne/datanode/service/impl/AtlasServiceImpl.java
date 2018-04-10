@@ -30,6 +30,7 @@ import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
+import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthRequestInterceptor;
 
 
@@ -38,6 +39,7 @@ import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthSchema;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
+import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClientConfig;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasLoginClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.TokenDecoder;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
@@ -74,6 +76,7 @@ public class AtlasServiceImpl implements AtlasService {
     private final GenericConversionService conversionService;
     private final AtlasRepository atlasRepository;
     private final CentralSystemClient centralSystemClient;
+    private final ArachneHttpClientBuilder arachneHttpClientBuilder;
     private HttpHeaders headers;
 
     private Map<Atlas, AtlasClient> atlasClientPool = new HashMap<>();
@@ -81,6 +84,7 @@ public class AtlasServiceImpl implements AtlasService {
     @Autowired
     public AtlasServiceImpl(GenericConversionService genericConversionService,
                             @Qualifier("atlasRestTemplate") RestTemplate atlasRestTemplate,
+                            ArachneHttpClientBuilder arachneHttpClientBuilder,
                             AtlasRepository atlasRepository,
                             CentralSystemClient centralSystemClient) {
 
@@ -88,6 +92,7 @@ public class AtlasServiceImpl implements AtlasService {
         this.atlasRestTemplate = atlasRestTemplate;
         this.atlasRepository = atlasRepository;
         this.centralSystemClient = centralSystemClient;
+        this.arachneHttpClientBuilder = arachneHttpClientBuilder;
     }
 
     @Override
@@ -240,7 +245,7 @@ public class AtlasServiceImpl implements AtlasService {
     private String authToAtlas(String url, AtlasAuthSchema authSchema, String login, String password) {
 
         String atlasToken = null;
-        AtlasLoginClient atlasLoginClient = AtlasServiceImpl.buildAtlasLoginClient(url);
+        AtlasLoginClient atlasLoginClient = AtlasClientConfig.buildAtlasLoginClient(url, arachneHttpClientBuilder.build());
         if (Objects.nonNull(authSchema)) {
             try {
                 switch (authSchema) {
