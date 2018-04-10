@@ -102,6 +102,7 @@ swagger:
   enabled: false
 proxy:
   enabled: false
+  enabledForEngine: false
   host:
   port:
   auth:
