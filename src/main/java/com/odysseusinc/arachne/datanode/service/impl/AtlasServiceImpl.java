@@ -42,6 +42,7 @@ import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasLoginClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.TokenDecoder;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
+import feign.Client;
 import feign.Feign;
 import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
@@ -226,7 +227,7 @@ public class AtlasServiceImpl implements AtlasService {
 
     private AtlasClient getOrCreate(Atlas atlas) {
 
-        return atlasClientPool.computeIfAbsent(atlas, AtlasServiceImpl::buildAtlasClient);
+        return atlasClientPool.computeIfAbsent(atlas, this::buildAtlasClient);
     }
 
     private String checkVersion(String url) {
@@ -244,8 +245,8 @@ public class AtlasServiceImpl implements AtlasService {
     private String authToAtlas(String url, AtlasAuthSchema authSchema, String login, String password) {
 
         String atlasToken = null;
-        AtlasLoginClient atlasLoginClient = AtlasClientConfig.buildAtlasLoginClient(url, arachneHttpClientBuilder.build());
-        if (!StringUtils.isBlank(authSchema)) {
+        AtlasLoginClient atlasLoginClient = buildAtlasLoginClient(url, arachneHttpClientBuilder.build());
+        if (!Objects.nonNull(authSchema)) {
             try {
                 switch (authSchema) {
                     case DATABASE:
@@ -266,20 +267,23 @@ public class AtlasServiceImpl implements AtlasService {
         return Optional.ofNullable(atlasToken).orElseThrow(() -> new AuthException("Atlas token is null"));
     }
 
-    private static AtlasClient buildAtlasClient(Atlas atlas) {
+    private AtlasClient buildAtlasClient(Atlas atlas) {
 
+        Client httpClient  = arachneHttpClientBuilder.build();
         return Feign.builder()
+                .client(httpClient)
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder())
                 .logger(new Slf4jLogger(AtlasClient.class))
                 .logLevel(feign.Logger.Level.FULL)
-                .requestInterceptor(new AtlasAuthRequestInterceptor(buildAtlasLoginClient(atlas.getUrl()), atlas.getAuthType(), atlas.getUsername(), atlas.getPassword()))
+                .requestInterceptor(new AtlasAuthRequestInterceptor(buildAtlasLoginClient(atlas.getUrl(), httpClient), atlas.getAuthType(), atlas.getUsername(), atlas.getPassword()))
                 .target(AtlasClient.class, atlas.getUrl());
     }
 
-    private static AtlasLoginClient buildAtlasLoginClient(String url) {
+    private static AtlasLoginClient buildAtlasLoginClient(String url, Client httpClient) {
 
         return Feign.builder()
+                .client(httpClient)
                 .encoder(new FormEncoder(new JacksonEncoder()))
                 .decoder(new TokenDecoder())
                 .logger(new Slf4jLogger(AtlasLoginClient.class))
