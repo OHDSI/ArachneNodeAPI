@@ -91,7 +91,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/img/**").permitAll()
                 .antMatchers("/auth/login**").permitAll()
                 .antMatchers("/auth/register**").permitAll()
-                .antMatchers("/api/v1/build-number/**").permitAll()
+                .antMatchers("/api/v1/build-number**").permitAll()
                 .antMatchers("/data-catalog**").permitAll()
                 .antMatchers("/cdm-source-list/data-sources**").permitAll()
                 .antMatchers("/cdm-source-list/data-sources/**").permitAll()
