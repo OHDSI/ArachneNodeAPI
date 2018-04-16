@@ -37,6 +37,8 @@ public interface DataSourceService {
 
     List<DataSource> findAll(String sortBy, Boolean sortAsc);
 
+    List<DataSource> findAllNotDeleted(String sortBy, Boolean sortAsc);
+
     void delete(Long id);
 
     void delete(DataSource dataSource);
