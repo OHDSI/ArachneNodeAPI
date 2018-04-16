@@ -246,7 +246,7 @@ public class AtlasServiceImpl implements AtlasService {
 
         String atlasToken = null;
         AtlasLoginClient atlasLoginClient = buildAtlasLoginClient(url, arachneHttpClientBuilder.build());
-        if (!Objects.nonNull(authSchema)) {
+        if (Objects.nonNull(authSchema)) {
             try {
                 switch (authSchema) {
                     case DATABASE:
