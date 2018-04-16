@@ -126,6 +126,12 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     @Override
+    public List<DataSource> findAllNotDeleted(String sortBy, Boolean sortAsc) {
+
+        return dataSourceRepository.findAllByDeletedAtIsNull(getSort(sortBy, sortAsc));
+    }
+
+    @Override
     public void delete(Long id) {
 
         checkNotNull(id, "given data source surrogate id is blank ");
