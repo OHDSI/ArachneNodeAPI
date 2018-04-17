@@ -133,7 +133,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             throw new AuthException("user not found");
         }
         JsonResult<List<DataSourceDTO>> result = new JsonResult<>(NO_ERROR);
-        List<DataSourceDTO> dtos = dataSourceService.findAll(sortBy, sortAsc).stream()
+        List<DataSourceDTO> dtos = dataSourceService.findAllNotDeleted(sortBy, sortAsc).stream()
                 .map(dataSource -> conversionService.convert(dataSource, DataSourceDTO.class))
                 .collect(Collectors.toList());
 
