@@ -26,6 +26,7 @@ import com.google.common.base.MoreObjects;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -45,7 +46,6 @@ import org.hibernate.validator.constraints.NotBlank;
 
 @Entity
 @Table(name = "datasource")
-@Where(clause = "deleted_at IS NULL")
 @SQLDelete(sql = "UPDATE datasource SET deleted_at = current_timestamp WHERE id = ?")
 public class DataSource {
 
@@ -93,6 +93,9 @@ public class DataSource {
     @Enumerated(value = EnumType.STRING)
     private CommonHealthStatus healthStatus = CommonHealthStatus.NOT_COLLECTED;
 
+    @Column
+    private Date deletedAt;
+    
     @Column
     private String healthStatusDescription;
 
@@ -292,4 +295,13 @@ public class DataSource {
                 .toString();
     }
 
+    public Date getDeletedAt() {
+
+        return deletedAt;
+    }
+
+    public void setDeletedAt(final Date deletedAt) {
+
+        this.deletedAt = deletedAt;
+    }
 }
