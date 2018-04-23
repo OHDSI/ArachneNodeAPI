@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.service.client.portal;
 
+import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.encoders.MultipartEncoder;
 import feign.Feign;
@@ -42,18 +43,22 @@ public class CentralClientConfig {
 
     private final CentralSystemRequestInterceptor centralSystemRequestInterceptor;
     private final CentralRequestInterceptor centralRequestInterceptor;
+    private final ArachneHttpClientBuilder arachneHttpClientBuilder;
 
     public CentralClientConfig(CentralSystemRequestInterceptor centralSystemRequestInterceptor,
-                               CentralRequestInterceptor centralRequestInterceptor) {
+                               CentralRequestInterceptor centralRequestInterceptor,
+                               ArachneHttpClientBuilder arachneHttpClientBuilder) {
 
         this.centralSystemRequestInterceptor = centralSystemRequestInterceptor;
         this.centralRequestInterceptor = centralRequestInterceptor;
+        this.arachneHttpClientBuilder = arachneHttpClientBuilder;
     }
 
     @Bean
     public CentralSystemClient centralSystemClient() {
 
         return Feign.builder()
+                .client(arachneHttpClientBuilder.build())
                 .encoder(new MultipartEncoder(new JacksonEncoder()))
                 .decoder(new JacksonDecoder())
                 .requestInterceptor(centralSystemRequestInterceptor)
@@ -66,6 +71,7 @@ public class CentralClientConfig {
     public CentralClient centralClient() {
 
         return Feign.builder()
+                .client(arachneHttpClientBuilder.build())
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder())
                 .requestInterceptor(centralRequestInterceptor)
