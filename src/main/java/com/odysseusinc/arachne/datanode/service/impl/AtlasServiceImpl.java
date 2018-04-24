@@ -72,7 +72,6 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 public class AtlasServiceImpl implements AtlasService {
-    private final RestTemplate atlasRestTemplate;
     private final GenericConversionService conversionService;
     private final ArachneHttpClientBuilder arachneHttpClientBuilder;
     private final AtlasRepository atlasRepository;
@@ -83,13 +82,11 @@ public class AtlasServiceImpl implements AtlasService {
 
     @Autowired
     public AtlasServiceImpl(GenericConversionService genericConversionService,
-                            @Qualifier("atlasRestTemplate") RestTemplate atlasRestTemplate,
                             AtlasRepository atlasRepository,
                             CentralSystemClient centralSystemClient,
                             ArachneHttpClientBuilder arachneHttpClientBuilder) {
 
         this.conversionService = genericConversionService;
-        this.atlasRestTemplate = atlasRestTemplate;
         this.atlasRepository = atlasRepository;
         this.centralSystemClient = centralSystemClient;
         this.arachneHttpClientBuilder = arachneHttpClientBuilder;
@@ -119,14 +116,14 @@ public class AtlasServiceImpl implements AtlasService {
         headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_FORM_URLENCODED_VALUE));
 
-        String atlasVersion = checkVersion(atlas.getUrl());
+        String atlasVersion = checkVersion(atlas);
 
         if (!Objects.equals(AtlasAuthSchema.NONE, atlas.getAuthType())) {
             String atlasToken = authToAtlas(atlas.getUrl(), atlas.getAuthType(), atlas.getUsername(), atlas.getPassword());
             headers.add(AtlasAuthRequestInterceptor.AUTHORIZATION_HEADER, AtlasAuthRequestInterceptor.BEARER_PREFIX + atlasToken);
         }
 
-        getCohortDefinitionCount(atlas.getUrl());
+        getCohortDefinitionCount(atlas);
 
         return Optional.ofNullable(atlasVersion).orElseThrow(
                 () -> new ServiceNotAvailableException("Atlas version is null"));
@@ -230,12 +227,11 @@ public class AtlasServiceImpl implements AtlasService {
         return atlasClientPool.computeIfAbsent(atlas, this::buildAtlasClient);
     }
 
-    private String checkVersion(String url) {
+    private String checkVersion(Atlas atlas) {
 
         AtlasClient.Info info;
         try {
-            info = atlasRestTemplate.getForObject(
-                    new URI(url + Constants.Atlas.INFO), AtlasClient.Info.class);
+            info = getOrCreate(atlas).getInfo();
         } catch (Exception e) {
             throw new ServiceNotAvailableException("Incorrect Atlas address");
         }
@@ -290,15 +286,10 @@ public class AtlasServiceImpl implements AtlasService {
                 .target(AtlasLoginClient.class, url);
     }
 
-    private void getCohortDefinitionCount(String url) {
+    private void getCohortDefinitionCount(Atlas atlas) {
 
         try {
-            HttpEntity request = new HttpEntity(headers);
-            atlasRestTemplate.exchange(
-                    new URI(url + Constants.Atlas.COHORT_DEFINITION),
-                    HttpMethod.GET, request,
-                    new ParameterizedTypeReference<List<CohortDefinition>>() {
-                    });
+            getOrCreate(atlas).getCohortDefinitions();
         } catch (Exception e) {
             throw new ServiceNotAvailableException("Failed to get Cohort Definitions");
         }
