@@ -26,11 +26,13 @@ import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import feign.RequestTemplate;
+import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -42,12 +44,13 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
     @Value("${arachne.token.header}")
     private String authHeader;
 
-    private final UserService userService;
+    private ApplicationContext applicationContext;
+    private UserService userService;
 
     @Autowired
-    public CentralRequestInterceptor(UserService userService) {
+    public CentralRequestInterceptor(ApplicationContext applicationContext) {
 
-        this.userService = userService;
+        this.applicationContext = applicationContext;
     }
 
 
@@ -67,12 +70,20 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
 
         final String token;
         try {
+            init();
             token = getToken();
             if (!StringUtils.isEmpty(token)) {
                 template.header(authHeader, token);
             }
         } catch (PermissionDeniedException e) {
             log.error(e.getMessage());
+        }
+    }
+
+    private void init(){
+
+        if (Objects.isNull(this.userService)){
+            this.userService = applicationContext.getBean(UserService.class);
         }
     }
 }
