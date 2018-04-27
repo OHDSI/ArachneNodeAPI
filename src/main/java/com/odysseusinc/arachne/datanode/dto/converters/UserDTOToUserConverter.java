@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
+import com.odysseusinc.arachne.commons.utils.UserIdUtils;
 import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +43,7 @@ public class UserDTOToUserConverter implements Converter<UserDTO, User>{
     public User convert(UserDTO source) {
 
         User user = new User();
-        user.setId(source.getId());
+        user.setId(UserIdUtils.uuidToId(source.getId()));
         user.setEnabled(source.getEnabled());
         user.setEmail(source.getEmail());
         user.setFirstName(source.getFirstname());

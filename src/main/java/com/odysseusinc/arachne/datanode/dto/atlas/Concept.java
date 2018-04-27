@@ -29,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(Include.ALWAYS)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Concept {
+public class Concept extends BaseAtlasEntity {
     @JsonProperty("CONCEPT_ID")
     public Long conceptId;
 

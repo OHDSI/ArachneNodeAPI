@@ -24,8 +24,9 @@ package com.odysseusinc.arachne.datanode.model.datasource;
 
 import com.google.common.base.MoreObjects;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.DBMSType;
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -45,7 +46,6 @@ import org.hibernate.validator.constraints.NotBlank;
 
 @Entity
 @Table(name = "datasource")
-@Where(clause = "deleted_at IS NULL")
 @SQLDelete(sql = "UPDATE datasource SET deleted_at = current_timestamp WHERE id = ?")
 public class DataSource {
 
@@ -54,7 +54,6 @@ public class DataSource {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "datasource_id_seq_generator")
     private Long id;
 
-    @NotBlank
     @Column(name = "sid", nullable = false)
     private String uuid;
 
@@ -91,12 +90,12 @@ public class DataSource {
     private DataNode dataNode;
 
     @Column
-    private Boolean registred;
-
-    @Column
     @Enumerated(value = EnumType.STRING)
     private CommonHealthStatus healthStatus = CommonHealthStatus.NOT_COLLECTED;
 
+    @Column
+    private Date deletedAt;
+    
     @Column
     private String healthStatusDescription;
 
@@ -214,16 +213,6 @@ public class DataSource {
         this.dataNode = dataNode;
     }
 
-    public Boolean getRegistred() {
-
-        return registred;
-    }
-
-    public void setRegistred(Boolean registred) {
-
-        this.registred = registred;
-    }
-
     public CommonHealthStatus getHealthStatus() {
 
         return healthStatus;
@@ -297,7 +286,6 @@ public class DataSource {
                 .add("username", "***")
                 .add("password", "***")
                 .add("dataNode", dataNode)
-                .add("registred", registred)
                 .add("healthStatus", healthStatus)
                 .add("healthStatusDescription", healthStatusDescription)
                 .add("targetSchema", targetSchema)
@@ -307,4 +295,13 @@ public class DataSource {
                 .toString();
     }
 
+    public Date getDeletedAt() {
+
+        return deletedAt;
+    }
+
+    public void setDeletedAt(final Date deletedAt) {
+
+        this.deletedAt = deletedAt;
+    }
 }

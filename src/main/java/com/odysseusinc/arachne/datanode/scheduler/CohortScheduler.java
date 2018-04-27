@@ -22,7 +22,9 @@
 
 package com.odysseusinc.arachne.datanode.scheduler;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.AtlasInfoDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CohortService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
@@ -30,8 +32,10 @@ import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClien
 import feign.RetryableException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,14 +53,14 @@ public class CohortScheduler {
 
     private static final String ATLAS_VERSION_CHECKING_LOG = "Checking version of installed atlas";
     private static final String ATLAS_VERSION_PASSED_LOG
-            = "Atlas version='{}' allow to build cohort, adding scheduled task";
+            = "Atlas allowing to import entities was found, adding scheduled task";
     private static final String ATLAS_VERSION_NOT_PASSED_LOG
-            = "Atlas version='{}' does not allow to build cohort";
+            = "Atlas allowing to import entities was NOT found";
     private static final String ATLAS_NOT_INSTALLED_LOG
             = "Atlas is not installed on specified host/port. Error: {}";
 
     private final DataNodeService dataNodeService;
-    private final AtlasClient atlasClient;
+    private final AtlasService atlasService;
     private final CentralSystemClient centralClient;
     private final TaskScheduler scheduler;
     private final CohortService cohortService;
@@ -68,13 +72,13 @@ public class CohortScheduler {
 
     @Autowired
     public CohortScheduler(DataNodeService dataNodeService,
-                           AtlasClient atlasClient,
+                           AtlasService atlasService,
                            CentralSystemClient centralClient,
                            TaskScheduler scheduler,
                            CohortService cohortService) {
 
         this.dataNodeService = dataNodeService;
-        this.atlasClient = atlasClient;
+        this.atlasService = atlasService;
         this.centralClient = centralClient;
         this.scheduler = scheduler;
         this.cohortService = cohortService;
@@ -85,38 +89,50 @@ public class CohortScheduler {
     @Scheduled(fixedRateString = "${atlas.scheduler.checkInterval}")
     public void checkAtlas() {
 
-        dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
-            Boolean atlasInsalled = false;
-            String atlasVersion = null;
-            LOGGER.debug(ATLAS_VERSION_CHECKING_LOG);
-            try {
-                final AtlasClient.Info info = atlasClient.getInfo();
-                atlasVersion = info.version;
-            } catch (RetryableException e) {
-                LOGGER.debug(ATLAS_NOT_INSTALLED_LOG, e.getMessage());
-            }
-            if (atlasVersion != null && atlasVersion.matches(AtlasInfoDTO.ATLAS_VERSION_REGEX)) {
-                LOGGER.debug(ATLAS_VERSION_PASSED_LOG, atlasVersion);
-                atlasInsalled = true;
-                if (cohortTask.isEmpty()) {
-                    final CohortListRequestTask cohortListRequestTask = new CohortListRequestTask(cohortService);
-                    final CohortRequestTask cohortRequestTask = new CohortRequestTask(cohortService);
-                    cohortTask.add(scheduler.scheduleWithFixedDelay(cohortListRequestTask, listRequestInterval));
-                    cohortTask.add(scheduler.scheduleWithFixedDelay(cohortRequestTask, requestInterval));
+        Boolean canImport = false;
+
+        if (dataNodeService.findCurrentDataNode().isPresent()) {
+
+            List<Atlas> atlasList = atlasService.findAll();
+
+            for (Atlas atlas: atlasList) {
+                String version = null;
+
+                LOGGER.debug(ATLAS_VERSION_CHECKING_LOG);
+                try {
+                    final AtlasClient.Info info = atlasService.execute(atlas, AtlasClient::getInfo);
+                    version = info.version;
+                } catch (RetryableException e) {
+                    LOGGER.debug(ATLAS_NOT_INSTALLED_LOG, e.getMessage());
                 }
-            } else {
-                LOGGER.debug(ATLAS_VERSION_NOT_PASSED_LOG, atlasVersion);
-                if (!cohortTask.isEmpty()) {
-                    final Iterator<ScheduledFuture> iterator = cohortTask.iterator();
-                    while (iterator.hasNext()) {
-                        final ScheduledFuture scheduledFuture = iterator.next();
-                        scheduledFuture.cancel(false);
-                        iterator.remove();
-                    }
+
+                if (StringUtils.isNotEmpty(version)) {
+                    canImport = true;
+                }
+
+                atlasService.updateVersion(atlas.getId(), version);
+            }
+        }
+
+        if (canImport) {
+            LOGGER.debug(ATLAS_VERSION_PASSED_LOG);
+            if (cohortTask.isEmpty()) {
+                final CohortListRequestTask cohortListRequestTask = new CohortListRequestTask(cohortService);
+                final CohortRequestTask cohortRequestTask = new CohortRequestTask(cohortService);
+                cohortTask.add(scheduler.scheduleWithFixedDelay(cohortListRequestTask, listRequestInterval));
+                cohortTask.add(scheduler.scheduleWithFixedDelay(cohortRequestTask, requestInterval));
+            }
+        } else {
+            LOGGER.debug(ATLAS_VERSION_NOT_PASSED_LOG);
+            if (!cohortTask.isEmpty()) {
+                final Iterator<ScheduledFuture> iterator = cohortTask.iterator();
+                while (iterator.hasNext()) {
+                    final ScheduledFuture scheduledFuture = iterator.next();
+                    scheduledFuture.cancel(false);
+                    iterator.remove();
                 }
             }
-            centralClient.sendAtlasInformation(new AtlasInfoDTO(atlasInsalled, atlasVersion));
-        });
+        }
     }
 
     private class CohortListRequestTask implements Runnable {

@@ -24,11 +24,9 @@ package com.odysseusinc.arachne.datanode.dto.atlas;
 
 import java.util.Date;
 
-public class ComparativeCohortAnalysis {
+public class ComparativeCohortAnalysis extends BaseAtlasEntity {
 
     private Integer analysisId;
-
-    private String name;
 
     private Integer treatmentId;
 
@@ -298,16 +296,6 @@ public class ComparativeCohortAnalysis {
     public void setAnalysisId(Integer id) {
 
         this.analysisId = id;
-    }
-
-    public String getName() {
-
-        return name;
-    }
-
-    public void setName(String name) {
-
-        this.name = name;
     }
 
     public Integer getTreatmentId() {

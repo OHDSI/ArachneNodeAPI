@@ -31,7 +31,9 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
+import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
@@ -39,6 +41,7 @@ import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClien
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +65,7 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 
     private static final Logger logger = LoggerFactory.getLogger(CohortCharacterizationRequestHandler.class);
 
-    private final AtlasClient atlasClient;
+    private final AtlasService atlasService;
     private final GenericConversionService conversionService;
     private final CommonEntityService commonEntityService;
     private final CentralSystemClient centralClient;
@@ -75,7 +78,7 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
     private Boolean summaryEnabled;
 
     @Autowired
-    public CohortCharacterizationRequestHandler(AtlasClient atlasClient,
+    public CohortCharacterizationRequestHandler(AtlasService atlasService,
                                                 GenericConversionService conversionService,
                                                 CommonEntityService commonEntityService,
                                                 CentralSystemClient centralClient,
@@ -83,7 +86,7 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
                                                 @Qualifier("cohortCharacterizationRunnerTemplate")
                                                         Template runnerTemplate) {
 
-        this.atlasClient = atlasClient;
+        this.atlasService = atlasService;
         this.conversionService = conversionService;
         this.commonEntityService = commonEntityService;
         this.centralClient = centralClient;
@@ -92,9 +95,9 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
     }
 
     @Override
-    public List<CommonCohortShortDTO> getObjectsList() {
+    public List<CommonCohortShortDTO> getObjectsList(List<Atlas> atlasList) {
 
-        List<CohortDefinition> definitions = atlasClient.getCohortDefinitions();
+        List<CohortDefinition> definitions = atlasService.execute(atlasList, AtlasClient::getCohortDefinitions);
         return definitions
                 .stream()
                 .map(cohort -> conversionService.convert(cohort, CommonCohortShortDTO.class))
@@ -107,7 +110,7 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
         return commonEntityService.findByGuid(guid).map(entity -> {
             List<MultipartFile> files = new ArrayList<>(2);
 
-            CohortDefinition definition = atlasClient.getCohortDefinition(entity.getLocalId());
+            CohortDefinition definition = atlasService.execute(entity.getOrigin(), atlasClient -> atlasClient.getCohortDefinition(entity.getLocalId()));
             if (Objects.nonNull(definition)) {
                 String content = sqlRenderService.renderSql(definition);
                 if (Objects.nonNull(content)) {
