@@ -22,16 +22,16 @@
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
+import com.odysseusinc.arachne.commons.utils.UserIdUtils;
 import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.model.user.User;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Component
 public class UserToUserDTOConverter implements Converter<User, UserDTO>, InitializingBean {
@@ -43,7 +43,7 @@ public class UserToUserDTOConverter implements Converter<User, UserDTO>, Initial
     public UserDTO convert(User user) {
 
         UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
+        dto.setId(UserIdUtils.idToUuid(user.getId()));
         dto.setFirstname(user.getFirstName());
         dto.setLastname(user.getLastName());
         dto.setEmail(user.getEmail());

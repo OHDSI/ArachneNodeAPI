@@ -28,7 +28,7 @@ import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
 import java.util.Optional;
 
 public interface CommonEntityService {
-    CommonEntity getOrCreate(Integer localId, CommonAnalysisType analysisType);
+    CommonEntity getOrCreate(Long originId, Integer localId, CommonAnalysisType analysisType);
 
     Optional<CommonEntity> findByGuid(String guid);
 }

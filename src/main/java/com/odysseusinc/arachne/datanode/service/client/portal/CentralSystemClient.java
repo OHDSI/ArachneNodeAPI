@@ -22,8 +22,8 @@
 
 package com.odysseusinc.arachne.datanode.service.client.portal;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.AtlasInfoDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeRegisterResponseDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityRequestDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonListEntityRequest;
@@ -32,9 +32,8 @@ import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface CentralSystemClient {
 
@@ -53,9 +52,12 @@ public interface CentralSystemClient {
     @Headers("Content-Type: multipart/form-data")
     void sendCommonEntityResponse(@Param("id") String id, @Param("files") MultipartFile[] files);
 
-    @RequestLine("POST /api/v1/data-nodes/atlas")
+    @RequestLine("POST /api/v1/data-nodes/atlases")
     @Headers("Content-Type: application/json")
-    void sendAtlasInformation(AtlasInfoDTO atlasInfo);
+    AtlasShortDTO updateAtlasInfo(AtlasShortDTO atlasInfo);
+
+    @RequestLine("DELETE /api/v1/data-nodes/atlases/{id}")
+    void deleteAtlas(@Param("id") Long atlasId);
 
     @RequestLine("POST /api/v1/achilles/datanode/datasource/{id}")
     @Headers("Content-Type: multipart/form-data")
@@ -65,8 +67,8 @@ public interface CentralSystemClient {
     JsonResult<CommonDataSourceDTO> getDataSource(@Param("uuid") String dataSourceUuid);
 
     @RequestLine("GET /api/v1/data-nodes/byuuid/{uuid}")
-    JsonResult<CommonDataNodeRegisterResponseDTO> getDataNode(@Param("uuid") String dataNodeUuid);
+    JsonResult<CommonDataNodeDTO> getDataNode(@Param("uuid") String dataNodeUuid);
 
     @RequestLine("GET /api/v1/data-nodes/{id}")
-    JsonResult<CommonDataNodeRegisterResponseDTO> getDataNode(@Param("id") Long centralId);
+    JsonResult<CommonDataNodeDTO> getDataNode(@Param("id") Long centralId);
 }

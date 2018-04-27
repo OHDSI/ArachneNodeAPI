@@ -35,7 +35,9 @@ import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.UUID;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -100,19 +102,27 @@ public class ExceptionHandlingAdvice extends BaseController {
         return  getErrorResponse(result,  ex);
     }
 
-    private ResponseEntity<JsonResult> getErrorResponse(JsonResult result, Exception ex) {
+    private ResponseEntity<JsonResult> getErrorResponse(final JsonResult result, final Exception ex) {
 
-        result.setErrorMessage(ex.getMessage());
+        final String message = getErrorMessage(result, ex);
+        
+        result.setErrorMessage(message);
 
         if (errorsTokenEnabled) {
-            String errorToken = generateErrorToken();
-            LOGGER.error(ex.getMessage() + " token: " + errorToken, ex);
+            final String errorToken = generateErrorToken();
+            LOGGER.error(message + " token: " + errorToken, ex);
             result.setErrorMessage(String.format(ERROR_MESSAGE_WITH_TOKEN, errorToken));
+        } else {
+            LOGGER.error(message, ex);
         }
-
-        LOGGER.error(ex.getMessage(), ex);
-        result.setErrorMessage(ERROR_MESSAGE);
+        
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    private String getErrorMessage(final JsonResult result, final Exception ex) {
+
+        // return default ERROR_MESSAGE for all exceptions except Validation error
+        return Objects.equals(result.getErrorCode(), VALIDATION_ERROR.getCode()) ? ex.getMessage() : ERROR_MESSAGE;
     }
 
     @ExceptionHandler(IntegrationValidationException.class)

@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.repository;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
 
 import java.util.Optional;
@@ -30,7 +31,7 @@ import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 
 public interface CommonEntityRepository extends CrudRepository<CommonEntity, Long> {
-    Optional<CommonEntity> getByLocalIdAndAnalysisType(Integer localId, CommonAnalysisType analysisType);
+    Optional<CommonEntity> getByOriginIdAndLocalIdAndAnalysisType(Long originId, Integer localId, CommonAnalysisType analysisType);
 
     Optional<CommonEntity> findByGuid(String guid);
 }

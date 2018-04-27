@@ -24,8 +24,9 @@ package com.odysseusinc.arachne.datanode.service.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
-import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
@@ -33,13 +34,13 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 public abstract class BaseRequestHandler {
-    protected final AtlasClient atlasClient;
+    protected final AtlasService atlasService;
     protected final SqlRenderService sqlRenderService;
 
-    public BaseRequestHandler(SqlRenderService sqlRenderService, AtlasClient atlasClient) {
+    public BaseRequestHandler(SqlRenderService sqlRenderService, AtlasService atlasService) {
 
         this.sqlRenderService = sqlRenderService;
-        this.atlasClient = atlasClient;
+        this.atlasService = atlasService;
     }
 
     protected MultipartFile getAnalysisDescription(Map<String, Object> info) throws IOException {
@@ -49,13 +50,13 @@ public abstract class BaseRequestHandler {
         return new MockMultipartFile("analysisDescription.json", result.getBytes());
     }
 
-    protected MultipartFile getCohortFile(Integer cohortId, String name){
+    protected MultipartFile getCohortFile(Atlas origin, Integer cohortId, String name){
 
-        return getCohortFile(cohortId, name, null, null);
+        return getCohortFile(origin, cohortId, name, null, null);
     }
 
-    protected MultipartFile getCohortFile(Integer cohortId, String name, String[] parameters, String[] values) {
-         CohortDefinition cohort = atlasClient.getCohortDefinition(cohortId);
+    protected MultipartFile getCohortFile(Atlas origin, Integer cohortId, String name, String[] parameters, String[] values) {
+         CohortDefinition cohort = atlasService.execute(origin, atlasClient -> atlasClient.getCohortDefinition(cohortId));
          if (Objects.nonNull(cohort)) {
              String content = sqlRenderService.renderSql(cohort, parameters, values);
              if (Objects.nonNull(content)) {

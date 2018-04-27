@@ -31,6 +31,9 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -42,13 +45,19 @@ public class CommonEntity {
     @SequenceGenerator(name = "common_entity_id_seq_generator", sequenceName = "common_entity_id_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "common_entity_id_seq_generator")
     private Long id;
+
     @Column(name = "guid")
     @NotNull
     private String guid;
+
+    @ManyToOne
+    private Atlas origin;
+
     @Column(name = "analysis_type")
     @Enumerated(value = EnumType.STRING)
     @NotNull
     private CommonAnalysisType analysisType;
+
     @Column(name = "local_id")
     @NotNull
     private Integer localId;
@@ -71,6 +80,16 @@ public class CommonEntity {
     public void setGuid(String guid) {
 
         this.guid = guid;
+    }
+
+    public Atlas getOrigin() {
+
+        return origin;
+    }
+
+    public void setOrigin(Atlas origin) {
+
+        this.origin = origin;
     }
 
     public CommonAnalysisType getAnalysisType() {

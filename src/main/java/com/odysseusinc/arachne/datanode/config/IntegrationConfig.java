@@ -69,6 +69,9 @@ public class IntegrationConfig {
     @Value("${proxy.auth.password}")
     private String proxyPassword;
 
+    @Value("${proxy.enabledForEngine}")
+    private Boolean proxyEnabledForEngine;
+
     @Bean(name = "centralRestTemplate")
     public RestTemplate centralRestTemplate(@Qualifier("integration") CloseableHttpClient httpClient) {
 
@@ -78,7 +81,7 @@ public class IntegrationConfig {
     }
 
     @Bean(name = "executionEngineRestTemplate")
-    public RestTemplate executionEngineRestTemplate(@Qualifier("integration") CloseableHttpClient httpClient) {
+    public RestTemplate executionEngineRestTemplate(@Qualifier("executionEngine") CloseableHttpClient httpClient) {
 
         HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
         factory.setConnectionRequestTimeout(1000 * 60 * 7);
@@ -99,15 +102,7 @@ public class IntegrationConfig {
     @ConditionalOnProperty(value = "server.ssl.strictMode", havingValue = "false")
     public class nonStrictSSLSecurityConfig {
 
-        @Bean
-        public Client getClient() {
-
-            return new Client.Default(null, NoopHostnameVerifier.INSTANCE);
-        }
-
-        @Bean
-        @Qualifier("integration")
-        public CloseableHttpClient getHttpClient() {
+        private CloseableHttpClient buildHttpClient(ProxyDetails proxyDetails) {
 
             TrustManager[] trustAllCerts = new TrustManager[]{
                     new X509TrustManager() {
@@ -141,13 +136,13 @@ public class IntegrationConfig {
                 HttpHost proxy = null;
                 CredentialsProvider credentialsProvider = null;
 
-                if (proxyEnabled) {
-                    proxy = new HttpHost(proxyHost, proxyPort);
-                    if (proxyAuthEnabled) {
+                if (proxyDetails.isProxyEnabled()) {
+                    proxy = new HttpHost(proxyDetails.getProxyHost(), proxyDetails.getProxyPort());
+                    if (proxyDetails.isProxyAuthEnabled()) {
                         credentialsProvider = new BasicCredentialsProvider();
                         credentialsProvider.setCredentials(
-                                new AuthScope(proxyHost, proxyPort),
-                                new UsernamePasswordCredentials(proxyUsername, proxyPassword));
+                                new AuthScope(proxyDetails.getProxyHost(), proxyDetails.getProxyPort()),
+                                new UsernamePasswordCredentials(proxyDetails.getProxyUsername(), proxyDetails.getProxyPassword()));
                     }
                 }
 
@@ -170,29 +165,120 @@ public class IntegrationConfig {
             }
             return closeableHttpClient;
         }
+
+        @Bean
+        public Client getClient() {
+
+            return new Client.Default(null, NoopHostnameVerifier.INSTANCE);
+        }
+
+        @Bean
+        @Qualifier("integration")
+        public CloseableHttpClient getIntegrationHttpClient() {
+
+            ProxyDetails proxyDetails = new ProxyDetails(proxyEnabled, proxyHost, proxyPort, proxyAuthEnabled, proxyUsername, proxyPassword);
+            return buildHttpClient(proxyDetails);
+        }
+
+        @Bean
+        @Qualifier("executionEngine")
+        public CloseableHttpClient getExecEngineHttpClient() {
+
+            ProxyDetails proxyDetails = new ProxyDetails(proxyEnabledForEngine, proxyHost, proxyPort, proxyAuthEnabled, proxyUsername, proxyPassword);
+            return buildHttpClient(proxyDetails);
+        }
     }
 
     @Configuration
     @ConditionalOnProperty(value = "server.ssl.strictMode", havingValue = "true")
     public class strictSSLSecurityConfig {
 
-        @Bean
-        @Qualifier("integration")
-        public CloseableHttpClient getHttpClient() {
+        private CloseableHttpClient buildHttpClient(ProxyDetails proxyDetails) {
 
             HttpClientBuilder httpClientBuilder = HttpClients.custom();
             CredentialsProvider credentialsProvider = null;
-            if (proxyEnabled) {
-                httpClientBuilder.setProxy(new HttpHost(proxyHost, proxyPort));
-                if (proxyAuthEnabled) {
+            if (proxyDetails.isProxyEnabled()) {
+                httpClientBuilder.setProxy(new HttpHost(proxyDetails.getProxyHost(), proxyDetails.getProxyPort()));
+                if (proxyDetails.isProxyAuthEnabled()) {
                     credentialsProvider = new BasicCredentialsProvider();
                     credentialsProvider.setCredentials(
-                            new AuthScope(proxyHost, proxyPort),
-                            new UsernamePasswordCredentials(proxyUsername, proxyPassword));
+                            new AuthScope(proxyDetails.getProxyHost(), proxyDetails.getProxyPort()),
+                            new UsernamePasswordCredentials(proxyDetails.getProxyUsername(), proxyDetails.getProxyPassword()));
                     httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
                 }
             }
             return httpClientBuilder.build();
+        }
+
+        @Bean
+        @Qualifier("integration")
+        public CloseableHttpClient getIntegrationHttpClient() {
+
+            ProxyDetails proxyDetails = new ProxyDetails(proxyEnabled, proxyHost, proxyPort, proxyAuthEnabled, proxyUsername, proxyPassword);
+            return buildHttpClient(proxyDetails);
+        }
+
+        @Bean
+        @Qualifier("executionEngine")
+        public CloseableHttpClient getExecEngineHttpClient() {
+
+            ProxyDetails proxyDetails = new ProxyDetails(proxyEnabledForEngine, proxyHost, proxyPort, proxyAuthEnabled, proxyUsername, proxyPassword);
+            return buildHttpClient(proxyDetails);
+        }
+    }
+
+    public class ProxyDetails {
+
+        private boolean proxyEnabled;
+        private String proxyHost;
+        private Integer proxyPort;
+        private boolean proxyAuthEnabled;
+        private String proxyUsername;
+        private String proxyPassword;
+
+        public ProxyDetails(boolean proxyEnabled) {
+
+            this.proxyEnabled = proxyEnabled;
+        }
+
+        public ProxyDetails(boolean proxyEnabled, String proxyHost, Integer proxyPort, Boolean proxyAuthEnabled, String proxyUsername, String proxyPassword) {
+
+            this.proxyEnabled = proxyEnabled;
+            this.proxyHost = proxyHost;
+            this.proxyPort = proxyPort;
+            this.proxyAuthEnabled = proxyAuthEnabled;
+            this.proxyUsername = proxyUsername;
+            this.proxyPassword = proxyPassword;
+        }
+
+        public boolean isProxyEnabled() {
+
+            return proxyEnabled;
+        }
+
+        public String getProxyHost() {
+
+            return proxyHost;
+        }
+
+        public Integer getProxyPort() {
+
+            return proxyPort;
+        }
+
+        public boolean isProxyAuthEnabled() {
+
+            return proxyAuthEnabled;
+        }
+
+        public String getProxyUsername() {
+
+            return proxyUsername;
+        }
+
+        public String getProxyPassword() {
+
+            return proxyPassword;
         }
     }
 }

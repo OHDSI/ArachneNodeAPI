@@ -56,7 +56,6 @@ public class DataSourceBusinessDTOToCommonDataSourceDTOConverter implements Conv
         commonDataSourceDTO.setId(source.getId());
         commonDataSourceDTO.setName(source.getName());
         commonDataSourceDTO.setUuid(source.getUuid());
-        commonDataSourceDTO.setOrganization(source.getOrganization());
         return commonDataSourceDTO;
     }
 }
