@@ -6,7 +6,7 @@
 
     <artifactId>datanode</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.12.1-QA</version>
+    <version>1.13.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
 
@@ -399,6 +399,12 @@
                 </executions>
             </plugin>
         </plugins>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+            </testResource>
+        </testResources>
         <finalName>datanode</finalName>
     </build>
 
