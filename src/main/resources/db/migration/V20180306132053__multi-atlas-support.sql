@@ -32,7 +32,7 @@ SELECT
   cohort_log_enabled,
   cohort_count_enabled
 FROM existing_atlases;
---WHERE host IS NOT NULL;
+-- WHERE host IS NOT NULL;
 
 ALTER TABLE common_entity ADD COLUMN origin_id BIGINT REFERENCES atlases (id);
 UPDATE common_entity SET origin_id = 1;
