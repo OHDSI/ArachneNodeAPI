@@ -128,7 +128,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             User user, DataNode dataNode,
             DTO commonCreateDataSourceDTO) {
 
-        JsonResult<DTO> jsonResult = centralSystemClient.createDataSource(dataNode.getCentralId());
+        JsonResult<DTO> jsonResult = centralClient.createDataSource(dataNode.getCentralId(), commonCreateDataSourceDTO);
         if (jsonResult == null || !NO_ERROR.getCode().equals(jsonResult.getErrorCode())) {
             throw new IllegalStateException("Unable to create data source on central." + (jsonResult == null
                     ? "" : jsonResult.getErrorMessage()));
@@ -141,7 +141,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             User user, Long centralDataSourceId,
             DTO commonCreateDataSourceDTO) {
 
-        JsonResult<DTO> jsonResult = centralSystemClient.updateDataSource(centralDataSourceId, commonCreateDataSourceDTO);
+        JsonResult<DTO> jsonResult = centralClient.updateDataSource(centralDataSourceId, commonCreateDataSourceDTO);
         if (jsonResult == null || !NO_ERROR.getCode().equals(jsonResult.getErrorCode())) {
             throw new IllegalStateException("Unable to update data source on central." + (jsonResult == null
                     ? "" : jsonResult.getErrorMessage()));

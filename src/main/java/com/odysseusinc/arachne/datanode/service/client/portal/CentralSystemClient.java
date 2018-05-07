@@ -25,8 +25,6 @@ package com.odysseusinc.arachne.datanode.service.client.portal;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.Achilles.LIST_PERMISSIONS;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.Achilles.LIST_REPORTS;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.Achilles.PERMISSION;
-import static com.odysseusinc.arachne.datanode.Constants.CentralApi.DataSource.CREATION;
-import static com.odysseusinc.arachne.datanode.Constants.CentralApi.DataSource.UPDATE;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.LINK_TO_NODE;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
@@ -81,12 +79,6 @@ public interface CentralSystemClient {
 
     @RequestLine("GET /api/v1/data-nodes/byuuid/{uuid}")
     JsonResult<CommonDataNodeDTO> getDataNode(@Param("uuid") String dataNodeUuid);
-
-    @RequestLine("POST " + CREATION)
-    <T extends CommonDataSourceDTO> JsonResult<T> createDataSource(@Param("id") Long dataNodeId);
-
-    @RequestLine("PUT " + UPDATE)
-    <T extends CommonDataSourceDTO> JsonResult<T> updateDataSource(@Param("id") Long dataSourceId, T dataSource);
 
     @RequestLine("GET " + Constants.CentralApi.DataSource.GET)
     <T extends CommonDataSourceDTO> JsonResult<T> getDataSource(@Param("id") Long dataSourceId);
