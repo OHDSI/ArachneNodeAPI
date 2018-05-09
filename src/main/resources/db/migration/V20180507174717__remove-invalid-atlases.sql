@@ -1,0 +1,2 @@
+DELETE FROM atlases
+WHERE url IS NULL;
