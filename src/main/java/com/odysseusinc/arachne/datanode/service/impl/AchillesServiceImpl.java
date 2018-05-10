@@ -117,6 +117,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
+import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -536,6 +537,9 @@ public class AchillesServiceImpl implements AchillesService {
             centralSystemClient.sendAchillesResults(dataSource.getCentralId(), multipartFile);
 
             LOGGER.debug("Results successfully sent");
+
+        } catch (ZipException zipException) {
+            throw new ArachneSystemRuntimeException(zipException.getMessage());
         } finally {
             FileUtils.deleteQuietly(targetFile);
         }
@@ -607,7 +611,7 @@ public class AchillesServiceImpl implements AchillesService {
                 LOGGER.warn(message);
                 final CopyArchiveFromContainerCmd errorReport
                         = dockerClient.copyArchiveFromContainerCmd(container.getId(), "/opt/app/errorReport.txt");
-                try  {
+                try {
                     logEntries.addAll(IOUtils.readLines(errorReport.exec(), Charset.forName(StandardCharsets.UTF_8.name())));
                 } catch (NotFoundException e) {
                     logEntries.add("errorReport.txt does not exists");
