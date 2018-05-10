@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.util;
 
+import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import java.io.File;
@@ -30,6 +31,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
+import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
@@ -58,6 +60,8 @@ public class RestUtils {
             CommonFileUtils.compressAndSplit(analysisFolder, archive, null);
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
+        } catch (ZipException zipException) {
+            throw new ArachneSystemRuntimeException(zipException.getMessage());
         }
 
         HttpHeaders jsonHeader = new HttpHeaders();
