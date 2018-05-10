@@ -38,6 +38,7 @@ import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
+import com.odysseusinc.arachne.datanode.security.TokenUtils;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
@@ -53,6 +54,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.jms.core.JmsTemplate;
@@ -76,6 +79,17 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     protected final CentralClient centralClient;
     protected final DataNodeService dataNodeService;
     protected final ConverterUtils converterUtils;
+    @Autowired
+    protected UserService userService;
+    @Autowired
+    protected TokenUtils tokenUtils;
+    @Value("${datanode.arachneCentral.host}")
+    private String centralHost;
+    @Value("${datanode.arachneCentral.port}")
+    private Integer centralPort;
+    @Value("${datanode.jwt.header}")
+    private String tokenHeader;
+
 
     protected BaseDataSourceController(UserService userService,
                                        ModelMapper modelMapper,
