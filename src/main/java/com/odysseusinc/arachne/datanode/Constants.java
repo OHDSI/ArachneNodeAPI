@@ -115,6 +115,7 @@ public interface Constants {
             String DS_MODEL_CHECK_UPDATE = "/api/v1/data-sources/{id}/check/update/{password}";
             String GET_BUSINESS = "/api/v1/data-sources/{id}/business";
             String UPDATE_BUSINESS = "/api/v1/data-sources/{id}/business";
+            String EDIT = "/api/v1/data-sources/{id}/edit";
         }
     }
 
