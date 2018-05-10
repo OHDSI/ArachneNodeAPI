@@ -76,6 +76,9 @@ public interface AtlasClient {
 
     @RequestLine("GET /ir/{id}")
     Map<String, Object> getIncidenceRate(@Param("id") Integer localId);
+    
+    @RequestLine("GET " + Constants.Atlas.INFO)
+    Info checkVersion();
 
     class Info {
         public String version;

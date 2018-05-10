@@ -28,8 +28,6 @@ import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_DB_UR
 import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_RES_SCHEMA;
 import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_SOURCE;
 import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_VOCAB_SCHEMA;
-import static com.odysseusinc.arachne.datanode.Constants.CentralApi.Achilles.LIST_REPORTS;
-import static com.odysseusinc.arachne.datanode.Constants.CentralApi.Achilles.PARAM_DATANODE;
 import static com.odysseusinc.arachne.datanode.model.achilles.AchillesJobStatus.FAILED;
 import static com.odysseusinc.arachne.datanode.model.achilles.AchillesJobStatus.IN_PROGRESS;
 import static com.odysseusinc.arachne.datanode.model.achilles.AchillesJobStatus.SUCCESSFUL;
@@ -53,12 +51,10 @@ import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.config.properties.AchillesProperties;
 import com.odysseusinc.arachne.datanode.exception.AchillesJobInProgressException;
 import com.odysseusinc.arachne.datanode.exception.AchillesResultNotAvailableException;
-import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.achilles.AchillesJob;
 import com.odysseusinc.arachne.datanode.model.achilles.AchillesJobSource;
 import com.odysseusinc.arachne.datanode.model.achilles.AchillesJobStatus;
-import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.repository.AchillesJobRepository;
 import com.odysseusinc.arachne.datanode.service.AchillesService;
@@ -89,7 +85,6 @@ import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
@@ -127,12 +122,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.support.RetryTemplate;
@@ -140,7 +129,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class AchillesServiceImpl implements AchillesService {
@@ -159,7 +147,6 @@ public class AchillesServiceImpl implements AchillesService {
     private static final String ACHILLES_RESULTS_AVAILABLE_LOG = "Achilles results available at: {}";
     protected final DockerClient dockerClient;
     protected final AchillesProperties properties;
-    protected final RestTemplate restTemplate;
     protected final CentralUtil centralUtil;
     protected final RetryTemplate retryTemplate;
     protected final DataNodeService dataNodeService;
@@ -206,7 +193,6 @@ public class AchillesServiceImpl implements AchillesService {
     @Autowired
     public AchillesServiceImpl(DockerClient dockerClient,
                                AchillesProperties properties,
-                               @Qualifier("executionEngineRestTemplate") RestTemplate restTemplate,
                                CentralUtil centralUtil,
                                @Qualifier("achillesRetryTemplate") RetryTemplate retryTemplate,
                                DataNodeService dataNodeService,
@@ -214,7 +200,6 @@ public class AchillesServiceImpl implements AchillesService {
 
         this.dockerClient = dockerClient;
         this.properties = properties;
-        this.restTemplate = restTemplate;
         this.centralUtil = centralUtil;
         this.retryTemplate = retryTemplate;
         this.dataNodeService = dataNodeService;
@@ -497,29 +482,7 @@ public class AchillesServiceImpl implements AchillesService {
     @Override
     public List<CommonAchillesReportDTO> getAchillesReports() throws NotExistException {
 
-        DataNode dataNode = dataNodeService.findCurrentDataNode()
-                .orElseThrow(() -> new NotExistException(DATA_NODE_NOT_EXISTS_EXCEPTION,
-                        DataNode.class));
-        String token = dataNode.getToken();
-        HttpHeaders headers = centralUtil.getCentralNodeAuthHeader(token);
-        HttpEntity requestEntity = new HttpEntity(headers);
-        URI uri = UriComponentsBuilder.fromHttpUrl(centralHost + ":" + centralPort
-                + LIST_REPORTS)
-                .queryParam(PARAM_DATANODE, dataNode.getCentralId())
-                .build().encode().toUri();
-        ResponseEntity<List<CommonAchillesReportDTO>> entity = restTemplate.exchange(
-                uri,
-                HttpMethod.GET,
-                requestEntity,
-                new ParameterizedTypeReference<List<CommonAchillesReportDTO>>() {
-                });
-        if (!HttpStatus.OK.equals(entity.getStatusCode())) {
-            String message = String.format("Failed to get achilles reports, status code: %d",
-                    entity.getStatusCode().value());
-            LOGGER.error(message);
-            throw new ArachneSystemRuntimeException(message);
-        }
-        return entity.getBody();
+        return centralSystemClient.listReports();
     }
 
     private void sendResultToCentral(DataSource dataSource, Path results) throws IOException, NotExistException {

@@ -23,16 +23,13 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 public class CentralIntegrationServiceImpl extends BaseCentralIntegrationServiceImpl<DataSource, CommonDataSourceDTO>
@@ -40,16 +37,11 @@ public class CentralIntegrationServiceImpl extends BaseCentralIntegrationService
 
     @Autowired
     public CentralIntegrationServiceImpl(
-            @Qualifier("centralRestTemplate") RestTemplate centralRestTemplate,
             GenericConversionService conversionService,
-            CentralUtil centralUtil) {
+            CentralUtil centralUtil,
+            ApplicationContext applicationContext) {
 
-        super(conversionService, centralRestTemplate, centralUtil);
+        super(conversionService, centralUtil, applicationContext);
     }
 
-    @Override
-    protected ParameterizedTypeReference<JsonResult<CommonDataSourceDTO>> getParameterizedTypeReferenceJsonResultDTO() {
-
-        return new ParameterizedTypeReference<JsonResult<CommonDataSourceDTO>>(){};
-    }
 }

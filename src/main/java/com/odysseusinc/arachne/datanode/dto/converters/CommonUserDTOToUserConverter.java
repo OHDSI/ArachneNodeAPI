@@ -55,6 +55,7 @@ public class CommonUserDTOToUserConverter implements Converter<CommonUserDTO, Us
         User dto = new User();
         dto.setId(UserIdUtils.uuidToId(user.getId()));
         dto.setEmail(user.getEmail());
+        dto.setUsername(user.getUsername());
         dto.setFirstName(user.getFirstname());
         dto.setLastName(user.getLastname());
         dto.setUsername(user.getUsername());

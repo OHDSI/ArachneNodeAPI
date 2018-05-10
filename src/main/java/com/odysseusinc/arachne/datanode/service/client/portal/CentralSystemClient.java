@@ -22,13 +22,24 @@
 
 package com.odysseusinc.arachne.datanode.service.client.portal;
 
+import static com.odysseusinc.arachne.datanode.Constants.CentralApi.Achilles.LIST_PERMISSIONS;
+import static com.odysseusinc.arachne.datanode.Constants.CentralApi.Achilles.LIST_REPORTS;
+import static com.odysseusinc.arachne.datanode.Constants.CentralApi.Achilles.PERMISSION;
+import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.LINK_TO_NODE;
+
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonAchillesGrantTypeDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonAchillesPermissionDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonAchillesReportDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityRequestDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonLinkUserToDataNodeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonListEntityRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonListEntityResponseDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
+import com.odysseusinc.arachne.datanode.Constants;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -69,6 +80,34 @@ public interface CentralSystemClient {
     @RequestLine("GET /api/v1/data-nodes/byuuid/{uuid}")
     JsonResult<CommonDataNodeDTO> getDataNode(@Param("uuid") String dataNodeUuid);
 
+    @RequestLine("GET " + Constants.CentralApi.DataSource.GET)
+    <T extends CommonDataSourceDTO> JsonResult<T> getDataSource(@Param("id") Long dataSourceId);
+
     @RequestLine("GET /api/v1/data-nodes/{id}")
     JsonResult<CommonDataNodeDTO> getDataNode(@Param("id") Long centralId);
+
+    @RequestLine("GET " + LIST_REPORTS)
+    List<CommonAchillesReportDTO> listReports();
+
+    @RequestLine("GET " + LIST_PERMISSIONS)
+    List<CommonAchillesPermissionDTO> listPermissions(@Param("id") Long centralId);
+
+    @RequestLine("GET " + PERMISSION)
+    CommonAchillesPermissionDTO getPermission(@Param("dataSourceId") Long centralId, @Param("id") String reportId);
+
+    @RequestLine("POST " + PERMISSION)
+    @Headers("Content-Type: application/json")
+    void setPermission(@Param("dataSourceId") Long centralId, @Param("id") String reportId, CommonAchillesGrantTypeDTO grantType);
+
+    @RequestLine("POST " + LINK_TO_NODE)
+    @Headers("Content-Type: application/json")
+    void linkUser(@Param("datanodeId") Long centralId, CommonLinkUserToDataNodeDTO userLink);
+
+    @RequestLine("DELETE " + LINK_TO_NODE)
+    @Headers("Content-Type: application/json")
+    void unlinkUser(@Param("datanodeId") Long centralId, CommonLinkUserToDataNodeDTO userLink);
+
+    @RequestLine("PUT " + LINK_TO_NODE)
+    @Headers("Content-Type: application/json")
+    JsonResult<List<CommonUserDTO>> relinkUsers(@Param("datanodeId") Long centralId, List<CommonLinkUserToDataNodeDTO> userLinks);
 }

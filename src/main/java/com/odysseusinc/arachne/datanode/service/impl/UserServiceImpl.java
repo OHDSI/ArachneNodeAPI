@@ -179,7 +179,7 @@ public class UserServiceImpl implements UserService {
             User user = new User();
             user.setId(centralUser.getId());
             user.setEmail(centralUser.getEmail());
-            user.setUsername(centralUser.getEmail());
+            user.setUsername(centralUser.getUsername());
             user.setFirstName(centralUser.getFirstName());
             user.setLastName(centralUser.getLastName());
             user.setEnabled(true);
@@ -189,6 +189,16 @@ public class UserServiceImpl implements UserService {
         else {
             throw new AlreadyExistsException("user not registered");
         }
+    }
+
+    @Override
+    public User updateUserInfo(User centralUserDto) {
+
+        User user = findByUsername(centralUserDto.getUsername())
+                .orElseThrow(() -> new NotExistException(String.format("Cannot find user '%s' to update info", centralUserDto.getUsername()), User.class));
+        user.setFirstName(centralUserDto.getFirstName());
+        user.setLastName(centralUserDto.getLastName());
+        return userRepository.save(user);
     }
 
     private Role getAdminRole() {

@@ -99,6 +99,12 @@ public class Atlas {
         setId(id);
     }
 
+    public Atlas(String url) {
+
+        this.url = url;
+        this.authType = AtlasAuthSchema.NONE;
+    }
+
     public Long getId() {
 
         return id;
