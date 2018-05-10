@@ -47,6 +47,8 @@ public interface UserService extends UserDetailsService {
 
     User createIfFirst(User centralUserDto) throws AlreadyExistsException;
 
+    User updateUserInfo(User centralUserDto);
+
     List<User> suggestNotAdmin(User user, String query, Integer limit);
 
     List<User> getAllAdmins(String sortBy, Boolean sortAsc);

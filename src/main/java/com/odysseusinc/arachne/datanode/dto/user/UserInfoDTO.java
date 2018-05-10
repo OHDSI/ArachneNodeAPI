@@ -26,6 +26,8 @@ public class UserInfoDTO {
 
     private String username;
     private Boolean isAdmin;
+    private String firstname;
+    private String lastname;
 
     public String getUsername() {
 
@@ -45,5 +47,21 @@ public class UserInfoDTO {
     public void setIsAdmin(Boolean admin) {
 
         isAdmin = admin;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
     }
 }
