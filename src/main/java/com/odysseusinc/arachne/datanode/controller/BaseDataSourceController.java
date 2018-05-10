@@ -45,7 +45,6 @@ import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import io.swagger.annotations.ApiOperation;
-import java.io.IOException;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,7 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -221,17 +219,6 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             result.setResult(Boolean.FALSE);
         }
         return result;
-    }
-
-    @RequestMapping(value = Constants.Api.DataSource.EDIT)
-    public void edit(Principal principal, HttpServletResponse response,
-                     @PathVariable("id") Long centralId) throws IOException {
-
-        User user = userService.findByUsername(principal.getName())
-                .orElseThrow(() -> new AuthException("user not registered"));
-        String redirectUrl = centralHost + ":" + centralPort + "/data-catalog/data-sources/" + centralId
-                + "/edit?token=" + user.getToken();
-        response.sendRedirect(redirectUrl);
     }
 
     @ApiOperation(value = "Updates given data source")
