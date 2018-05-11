@@ -205,7 +205,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
         if (asList(NO_ERROR.getCode(), VALIDATION_ERROR.getCode()).contains(centralErrorCode)) {
             if (VALIDATION_ERROR.getCode().equals(centralErrorCode)) {
-                LOGGER.warn("Datasource with id = {} cannot be found at central", id);
+                LOGGER.warn("Datasource with local id = {} cannot be found at central", id);
             }
             dataSourceService.delete(id);
             result.setErrorCode(NO_ERROR.getCode());
