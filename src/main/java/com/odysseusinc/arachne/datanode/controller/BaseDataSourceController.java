@@ -23,6 +23,8 @@
 package com.odysseusinc.arachne.datanode.controller;
 
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
+import static java.util.Arrays.asList;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.OptionDTO;
@@ -53,6 +55,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.jms.core.JmsTemplate;
@@ -76,6 +80,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     protected final CentralClient centralClient;
     protected final DataNodeService dataNodeService;
     protected final ConverterUtils converterUtils;
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseDataSourceController.class);
 
     protected BaseDataSourceController(UserService userService,
                                        ModelMapper modelMapper,
@@ -196,12 +201,17 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         }
         JsonResult centralResult = unpublishAndDeleteOnCentral(id);
         JsonResult<Boolean> result = new JsonResult<>();
-        result.setErrorCode(centralResult.getErrorCode());
+        Integer centralErrorCode = centralResult.getErrorCode();
 
-        if (NO_ERROR.getCode().equals(centralResult.getErrorCode())) {
+        if (asList(NO_ERROR.getCode(), VALIDATION_ERROR.getCode()).contains(centralErrorCode)) {
+            if (VALIDATION_ERROR.getCode().equals(centralErrorCode)) {
+                LOGGER.warn("Datasource with local id = {} cannot be found at central", id);
+            }
             dataSourceService.delete(id);
+            result.setErrorCode(NO_ERROR.getCode());
             result.setResult(Boolean.TRUE);
         } else {
+            result.setErrorCode(centralErrorCode);
             result.setResult(Boolean.FALSE);
         }
         return result;
@@ -244,7 +254,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     )
     public List<OptionDTO> getDBMSTypes() {
 
-        return converterUtils.convertList(Arrays.asList(DBMSType.values()), OptionDTO.class);
+        return converterUtils.convertList(asList(DBMSType.values()), OptionDTO.class);
     }
 
 }
