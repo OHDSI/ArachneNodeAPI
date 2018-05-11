@@ -23,6 +23,8 @@
 package com.odysseusinc.arachne.datanode.controller;
 
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
+import static java.util.Arrays.asList;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.OptionDTO;
@@ -196,12 +198,14 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         }
         JsonResult centralResult = unpublishAndDeleteOnCentral(id);
         JsonResult<Boolean> result = new JsonResult<>();
-        result.setErrorCode(centralResult.getErrorCode());
+        Integer centralErrorCode = centralResult.getErrorCode();
 
-        if (NO_ERROR.getCode().equals(centralResult.getErrorCode())) {
+        if (asList(NO_ERROR.getCode(), VALIDATION_ERROR.getCode()).contains(centralErrorCode)) {
             dataSourceService.delete(id);
+            result.setErrorCode(NO_ERROR.getCode());
             result.setResult(Boolean.TRUE);
         } else {
+            result.setErrorCode(centralErrorCode);
             result.setResult(Boolean.FALSE);
         }
         return result;
@@ -244,7 +248,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     )
     public List<OptionDTO> getDBMSTypes() {
 
-        return converterUtils.convertList(Arrays.asList(DBMSType.values()), OptionDTO.class);
+        return converterUtils.convertList(asList(DBMSType.values()), OptionDTO.class);
     }
 
 }
