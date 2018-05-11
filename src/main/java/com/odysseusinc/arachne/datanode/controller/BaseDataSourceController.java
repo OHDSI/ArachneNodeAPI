@@ -55,6 +55,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.jms.core.JmsTemplate;
@@ -78,6 +80,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     protected final CentralClient centralClient;
     protected final DataNodeService dataNodeService;
     protected final ConverterUtils converterUtils;
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseDataSourceController.class);
 
     protected BaseDataSourceController(UserService userService,
                                        ModelMapper modelMapper,
@@ -201,6 +204,9 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         Integer centralErrorCode = centralResult.getErrorCode();
 
         if (asList(NO_ERROR.getCode(), VALIDATION_ERROR.getCode()).contains(centralErrorCode)) {
+            if (VALIDATION_ERROR.getCode().equals(centralErrorCode)) {
+                LOGGER.warn("Datasource with id = {} cannot be found at central", id);
+            }
             dataSourceService.delete(id);
             result.setErrorCode(NO_ERROR.getCode());
             result.setResult(Boolean.TRUE);
