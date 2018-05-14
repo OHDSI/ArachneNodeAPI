@@ -108,6 +108,7 @@ public class DataSourceServiceImpl implements DataSourceService {
         );
         dataSource.setCentralId(centralDTO.getId());
 
+        checkNotNull(centralDTO.getId(), "central id of datasource is null");
         checkNotNull(dataSource, "given datasource is null");
         checkNotNull(owner, "given owner is null");
         return dataSourceRepository.save(dataSource);

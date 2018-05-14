@@ -110,6 +110,13 @@ public class CohortServiceImpl implements CohortService {
             requests.getRequestMap().forEach((id, requestObject) -> {
                 if (handlerMap.containsKey(requestObject.getEntityType())) {
 
+                    LOGGER.info(
+                            "Requesting entity list for type "
+                                    + requestObject.getEntityType()
+                                    + " for Atlas ids = "
+                                    + requestObject.getAtlasIdList().stream().map(Object::toString).collect(Collectors.joining(", "))
+                    );
+
                     List<Atlas> requestAtlasList = atlasRepository.findByCentralIdIn(requestObject.getAtlasIdList());
                     Map<Long, Long> atlasIdMap = requestAtlasList.stream().collect(Collectors.toMap(Atlas::getId, Atlas::getCentralId));
 

@@ -22,14 +22,13 @@
 
 package com.odysseusinc.arachne.datanode.scheduler;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CohortService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
-import feign.RetryableException;
+import feign.FeignException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -102,7 +101,7 @@ public class CohortScheduler {
                 try {
                     final AtlasClient.Info info = atlasService.execute(atlas, AtlasClient::getInfo);
                     version = info.version;
-                } catch (RetryableException e) {
+                } catch (FeignException e) {
                     LOGGER.debug(ATLAS_NOT_INSTALLED_LOG, e.getMessage());
                 }
 

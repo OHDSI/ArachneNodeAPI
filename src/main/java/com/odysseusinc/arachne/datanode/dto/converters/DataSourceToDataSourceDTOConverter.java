@@ -57,6 +57,9 @@ public class DataSourceToDataSourceDTOConverter implements Converter<DataSource,
         dto.setTargetSchema(dataSource.getTargetSchema());
         dto.setCohortTargetTable(dataSource.getCohortTargetTable());
 
+        dto.setHealthStatus(dataSource.getHealthStatus());
+        dto.setHealthStatusDescription(dataSource.getHealthStatusDescription());
+
         DataSourceUtils.masqueradePassword(dto);
 
         return dto;
