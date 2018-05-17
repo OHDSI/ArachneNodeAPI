@@ -49,6 +49,7 @@ import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
@@ -72,6 +76,8 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 public class AtlasServiceImpl implements AtlasService {
+    private Logger log = LoggerFactory.getLogger(AtlasServiceImpl.class);
+
     private final RestTemplate atlasRestTemplate;
     private final GenericConversionService conversionService;
     private final ArachneHttpClientBuilder arachneHttpClientBuilder;
@@ -203,10 +209,15 @@ public class AtlasServiceImpl implements AtlasService {
 
         return atlasList.parallelStream()
                 .map(atlas -> {
-                    AtlasClient client = getOrCreate(atlas);
-                    List<R> list = sendAtlasRequest.apply(client);
-                    list.forEach(entry -> entry.setOrigin(atlas));
-                    return list;
+                    try {
+                        AtlasClient client = getOrCreate(atlas);
+                        List<R> list = sendAtlasRequest.apply(client);
+                        list.forEach(entry -> entry.setOrigin(atlas));
+                        return list;
+                    } catch (Exception ex) {
+                        log.error("Cannot fetch data from Atlas with id = " + atlas.getId(), ex);
+                        return new ArrayList<R>();
+                    }
                 })
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
