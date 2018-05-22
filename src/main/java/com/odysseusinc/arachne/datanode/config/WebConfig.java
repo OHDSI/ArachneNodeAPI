@@ -53,6 +53,7 @@ public class WebConfig extends WebMvcConfigurerAdapter {
         registry.addViewController("/cdm-source-list/data-sources**").setViewName("index");
         registry.addViewController("/cdm-source-list/data-sources/**").setViewName("index");
         registry.addViewController("/admin-settings/**").setViewName("index");
+        registry.addViewController("/external-resource-manager/**").setViewName("index");
     }
 
     @Bean
