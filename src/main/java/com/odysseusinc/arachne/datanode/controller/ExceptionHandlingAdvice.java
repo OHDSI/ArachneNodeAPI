@@ -35,18 +35,25 @@ import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.UUID;
-import org.apache.commons.lang3.StringUtils;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
 @ControllerAdvice
 public class ExceptionHandlingAdvice extends BaseController {
@@ -57,9 +64,15 @@ public class ExceptionHandlingAdvice extends BaseController {
     @Value("${datanode.app.errorsTokenEnabled}")
     private boolean errorsTokenEnabled;
 
-    public ExceptionHandlingAdvice(UserService userService) {
+    private static final String STATIC_CONTENT_FOLDER = "public";
+    private static final String INDEX_FILE = STATIC_CONTENT_FOLDER + "/index.html";
+
+    private WebApplicationContext webApplicationContext;
+
+    public ExceptionHandlingAdvice(UserService userService, WebApplicationContext webApplicationContext) {
 
         super(userService);
+        this.webApplicationContext = webApplicationContext;
     }
 
     @ExceptionHandler({SQLException.class, DataAccessException.class})
@@ -99,13 +112,12 @@ public class ExceptionHandlingAdvice extends BaseController {
     private ResponseEntity<JsonResult> getErrorResponse(JsonResult.ErrorCode errorCode, Exception ex) {
 
         JsonResult result = new JsonResult<>(errorCode);
-        return  getErrorResponse(result,  ex);
+        return getErrorResponse(result, ex);
     }
 
     private ResponseEntity<JsonResult> getErrorResponse(final JsonResult result, final Exception ex) {
 
         final String message = getErrorMessage(result, ex);
-        
         result.setErrorMessage(message);
 
         if (errorsTokenEnabled) {
@@ -115,7 +127,6 @@ public class ExceptionHandlingAdvice extends BaseController {
         } else {
             LOGGER.error(message, ex);
         }
-        
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -155,4 +166,28 @@ public class ExceptionHandlingAdvice extends BaseController {
         return UUID.randomUUID().toString();
     }
 
+    @ExceptionHandler({NoHandlerFoundException.class})
+    public void handleNotFoundError(HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+        ResourceHttpRequestHandler handler = new ResourceHttpRequestHandler() {
+            @Override
+            protected Resource getResource(HttpServletRequest request) throws IOException {
+
+                String requestPath = request.getRequestURI().substring(request.getContextPath().length());
+
+                ClassPathResource resource = new ClassPathResource(STATIC_CONTENT_FOLDER + requestPath);
+                if (!resource.exists()) {
+                    resource = new ClassPathResource(INDEX_FILE);
+                }
+
+                return resource;
+            }
+        };
+
+        handler.setServletContext(webApplicationContext.getServletContext());
+        handler.setLocations(Collections.singletonList(new ClassPathResource("classpath:/" + STATIC_CONTENT_FOLDER + "/")));
+        handler.afterPropertiesSet();
+
+        handler.handleRequest(request, response);
+    }
 }
