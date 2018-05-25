@@ -27,7 +27,7 @@ import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCo
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
-import com.odysseusinc.arachne.commons.utils.NoHandlerFoundExceptionUtils;
+import com.odysseusinc.arachne.nohandlerfoundexception.NoHandlerFoundExceptionUtils;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
