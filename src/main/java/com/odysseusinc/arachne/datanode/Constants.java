@@ -73,6 +73,7 @@ public interface Constants {
         interface Submission {
             String UPLOAD = "/api/v1/analysis-management/submissions/result/upload";
             String UPDATE_STATUS = "/api/v1/analysis-management/submissions/{id}/status/{password}";
+            String DOWNLOAD_FILE = "/api/v1/analysis-management/submissions/{submissionId}/files?fileName={fileName}&updatePassword={updatePassword}";
         }
 
         interface Achilles {

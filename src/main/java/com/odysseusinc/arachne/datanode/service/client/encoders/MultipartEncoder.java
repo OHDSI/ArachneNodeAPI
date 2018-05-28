@@ -44,12 +44,15 @@ public class MultipartEncoder extends FormEncoder {
 
     public MultipartEncoder(Encoder delegate) {
 
+        this(delegate, new SpringMultipartEncodedDataProcessor());
+    }
+
+    public MultipartEncoder(Encoder delegate, FormDataProcessor processor) {
+
         this.deligate = delegate;
         processors = new HashMap<>();
-
-        FormDataProcessor multipartEncodedDataProcessor = new SpringMultipartEncodedDataProcessor();
-        processors.put(multipartEncodedDataProcessor.getSupportetContentType().toLowerCase(),
-                multipartEncodedDataProcessor);
+        processors.put(processor.getSupportetContentType().toLowerCase(),
+                processor);
     }
 
     @Override

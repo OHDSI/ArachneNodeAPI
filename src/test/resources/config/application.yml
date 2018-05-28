@@ -1,9 +1,9 @@
 flyway:
   datasource:
-    driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://127.0.0.1:5432/datanode_test
-    username: ohdsi
-    password: ohdsi
+    driverClassName: ${spring.datasource.driver-class-name}
+    url: ${spring.datasource.url}
+    username: ${spring.datasource.username}
+    password: ${spring.datasource.password}
     enabled: false
 spring:
   jpa:
@@ -19,7 +19,7 @@ spring:
         characterEncoding: utf8
         useUnicode: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/datanode_test
+    url: jdbc:postgresql://localhost:5432/datanode_test_@env@
     username: ohdsi
     password: ohdsi
     driver-class-name: org.postgresql.Driver
@@ -74,3 +74,6 @@ jasypt:
     algorythm: PBEWITHMD5ANDDES
 server:
   port: 8080
+build:
+  number: no_build_number
+  id: no_build_id
