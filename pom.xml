@@ -26,7 +26,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
         <jjwt.version>0.6.0</jjwt.version>
-        <postgresql.version>9.1-901-1.jdbc4</postgresql.version>
+        <postgresql.version>42.2.1</postgresql.version>
         <flywayVersion>4.2.0</flywayVersion>
         <javaDockerVersion>3.0.6</javaDockerVersion>
         <springRetryVersion>1.2.0.RELEASE</springRetryVersion>
@@ -89,7 +89,7 @@
         </dependency>
 
         <dependency>
-            <groupId>postgresql</groupId>
+            <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${postgresql.version}</version>
         </dependency>
