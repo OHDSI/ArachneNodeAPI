@@ -73,6 +73,9 @@ spring:
     view:
       prefix: /
       suffix: .html
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
   activemq:
     packages:
       trust-all: true

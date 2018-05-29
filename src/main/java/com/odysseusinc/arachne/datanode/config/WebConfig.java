@@ -26,34 +26,10 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.CommonAnnotationBeanPostProcessor;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 @Configuration
 public class WebConfig extends WebMvcConfigurerAdapter {
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-
-        registry.addResourceHandler("public/**").addResourceLocations("classpath:/public/");
-    }
-
-    @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-
-        registry.addViewController("/dashboard**").setViewName("index");
-        registry.addViewController("/study-notebook**").setViewName("index");
-        registry.addViewController("/auth/login**").setViewName("index");
-        registry.addViewController("/auth/register**").setViewName("index");
-        registry.addViewController("/expert-finder**").setViewName("index");
-        registry.addViewController("/data-catalog**").setViewName("index");
-        registry.addViewController("/insights-library**").setViewName("index");
-        registry.addViewController("/study-manager/studies/**").setViewName("index");
-        registry.addViewController("analysis-execution/analyses/**").setViewName("index");
-        registry.addViewController("/cdm-source-list/data-sources**").setViewName("index");
-        registry.addViewController("/cdm-source-list/data-sources/**").setViewName("index");
-        registry.addViewController("/admin-settings/**").setViewName("index");
-    }
 
     @Bean
     public BeanPostProcessor commonAnnotationBeanPostProcessor() {

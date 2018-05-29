@@ -27,6 +27,7 @@ import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCo
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
+import com.odysseusinc.arachne.nohandlerfoundexception.NoHandlerFoundExceptionUtils;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
@@ -37,7 +38,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Objects;
 import java.util.UUID;
-import org.apache.commons.lang3.StringUtils;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,6 +49,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 @ControllerAdvice
 public class ExceptionHandlingAdvice extends BaseController {
@@ -57,9 +60,12 @@ public class ExceptionHandlingAdvice extends BaseController {
     @Value("${datanode.app.errorsTokenEnabled}")
     private boolean errorsTokenEnabled;
 
-    public ExceptionHandlingAdvice(UserService userService) {
+    private NoHandlerFoundExceptionUtils noHandlerFoundExceptionUtils;
+
+    public ExceptionHandlingAdvice(UserService userService, NoHandlerFoundExceptionUtils noHandlerFoundExceptionUtils) {
 
         super(userService);
+        this.noHandlerFoundExceptionUtils = noHandlerFoundExceptionUtils;
     }
 
     @ExceptionHandler({SQLException.class, DataAccessException.class})
@@ -99,13 +105,12 @@ public class ExceptionHandlingAdvice extends BaseController {
     private ResponseEntity<JsonResult> getErrorResponse(JsonResult.ErrorCode errorCode, Exception ex) {
 
         JsonResult result = new JsonResult<>(errorCode);
-        return  getErrorResponse(result,  ex);
+        return getErrorResponse(result, ex);
     }
 
     private ResponseEntity<JsonResult> getErrorResponse(final JsonResult result, final Exception ex) {
 
         final String message = getErrorMessage(result, ex);
-        
         result.setErrorMessage(message);
 
         if (errorsTokenEnabled) {
@@ -115,7 +120,6 @@ public class ExceptionHandlingAdvice extends BaseController {
         } else {
             LOGGER.error(message, ex);
         }
-        
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -155,4 +159,9 @@ public class ExceptionHandlingAdvice extends BaseController {
         return UUID.randomUUID().toString();
     }
 
+    @ExceptionHandler({NoHandlerFoundException.class})
+    public void handleNotFoundError(HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+        noHandlerFoundExceptionUtils.handleNotFoundError(request, response);
+    }
 }
