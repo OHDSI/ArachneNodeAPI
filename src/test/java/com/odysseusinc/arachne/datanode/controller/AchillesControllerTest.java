@@ -35,6 +35,7 @@ import com.github.springtestdbunit.annotation.DbUnitConfiguration;
 import com.odysseusinc.arachne.commons.utils.ConverterUtils;
 import com.odysseusinc.arachne.datanode.model.achilles.AchillesJob;
 import com.odysseusinc.arachne.datanode.repository.AchillesJobRepository;
+import com.odysseusinc.arachne.nohandlerfoundexception.NoHandlerFoundExceptionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -83,6 +84,8 @@ public class AchillesControllerTest {
 
     @MockBean
     private ConverterUtils converterUtils;
+    @MockBean
+    private NoHandlerFoundExceptionUtils noHandlerFoundExceptionUtils;
 
     @Before
     public void setUp() throws Exception {
