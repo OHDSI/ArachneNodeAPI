@@ -76,6 +76,7 @@ public class DataSourceUtils<T> {
     public static void masqueradePassword(DataSourceDTO dataSource) {
 
         dataSource.setDbPassword(getMasqueradedPassword(dataSource.getDbPassword()));
+        dataSource.setKrbPassword(getMasqueradedPassword(dataSource.getKrbPassword()));
     }
 
     public static void masqueradePassword(AtlasDetailedDTO atlasDetailedDTO) {

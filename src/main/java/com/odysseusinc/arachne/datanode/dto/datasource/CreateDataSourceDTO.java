@@ -22,8 +22,10 @@
 
 package com.odysseusinc.arachne.datanode.dto.datasource;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
+import org.springframework.web.multipart.MultipartFile;
 
 public class CreateDataSourceDTO {
 
@@ -50,6 +52,14 @@ public class CreateDataSourceDTO {
     private String cohortTargetTable;
 
     private Boolean registred;
+
+    private Boolean useKerberos;
+    private String krbRealm;
+    private String krbFQDN;
+    private String krbUser;
+    private String krbPassword;
+//    @JsonDeserialize(using = )
+    private MultipartFile krbKeytab;
 
     public Long getId() {
 
@@ -173,5 +183,65 @@ public class CreateDataSourceDTO {
 
     public void setCohortTargetTable(String cohortTargetTable) {
         this.cohortTargetTable = cohortTargetTable;
+    }
+
+    public Boolean getUseKerberos() {
+
+        return useKerberos;
+    }
+
+    public void setUseKerberos(Boolean useKerberos) {
+
+        this.useKerberos = useKerberos;
+    }
+
+    public String getKrbRealm() {
+
+        return krbRealm;
+    }
+
+    public void setKrbRealm(String krbRealm) {
+
+        this.krbRealm = krbRealm;
+    }
+
+    public String getKrbFQDN() {
+
+        return krbFQDN;
+    }
+
+    public void setKrbFQDN(String krbFQDN) {
+
+        this.krbFQDN = krbFQDN;
+    }
+
+    public String getKrbUser() {
+
+        return krbUser;
+    }
+
+    public void setKrbUser(String krbUser) {
+
+        this.krbUser = krbUser;
+    }
+
+    public String getKrbPassword() {
+
+        return krbPassword;
+    }
+
+    public void setKrbPassword(String krbPassword) {
+
+        this.krbPassword = krbPassword;
+    }
+
+    public MultipartFile getKrbKeytab() {
+
+        return krbKeytab;
+    }
+
+    public void setKrbKeytab(MultipartFile krbKeytab) {
+
+        this.krbKeytab = krbKeytab;
     }
 }

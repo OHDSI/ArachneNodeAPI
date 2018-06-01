@@ -72,6 +72,15 @@ public class DataSourceToDataSourceUnsecuredDTOConverter implements Converter<Da
         final String cohortTargetTable = source.getCohortTargetTable();
         target.setCohortTargetTable(StringUtils.isEmpty(cohortTargetTable) ? defaultCohortTargetTable : cohortTargetTable);
 
+        target.setUseKerberos(source.getUseKerberos());
+        if (source.getUseKerberos()) {
+            target.setKrbFQDN(source.getKrbFQDN());
+            target.setKrbRealm(source.getKrbRealm());
+            target.setKrbUser(source.getKrbUser());
+            target.setKrbPassword(source.getKrbPassword());
+            target.setKrbKeytab(source.getKrbKeytab());
+        }
+
         return target;
     }
 }

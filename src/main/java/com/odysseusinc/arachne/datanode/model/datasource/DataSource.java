@@ -108,6 +108,25 @@ public class DataSource {
     @Column
     private String cohortTargetTable;
 
+    @Column(name = "use_kerberos")
+    private Boolean useKerberos;
+
+    @Column(name = "krb_realm")
+    private String krbRealm;
+
+    @Column(name = "krb_fqdn")
+    private String krbFQDN;
+
+    @Column(name = "krb_user")
+    private String krbUser;
+
+    @Column(name = "krb_keytab")
+    private byte[] krbKeytab;
+
+    @Column(name = "krb_password", nullable = true)
+    @Type(type = "encryptedString")
+    private String krbPassword;
+
     private Long centralId;
 
     public Long getId() {
@@ -271,6 +290,66 @@ public class DataSource {
     public void setCohortTargetTable(String cohortTargetTable) {
 
         this.cohortTargetTable = cohortTargetTable;
+    }
+
+    public String getKrbRealm() {
+
+        return krbRealm;
+    }
+
+    public void setKrbRealm(String krbRealm) {
+
+        this.krbRealm = krbRealm;
+    }
+
+    public String getKrbFQDN() {
+
+        return krbFQDN;
+    }
+
+    public void setKrbFQDN(String krbFQDN) {
+
+        this.krbFQDN = krbFQDN;
+    }
+
+    public String getKrbUser() {
+
+        return krbUser;
+    }
+
+    public void setKrbUser(String krbUser) {
+
+        this.krbUser = krbUser;
+    }
+
+    public byte[] getKrbKeytab() {
+
+        return krbKeytab;
+    }
+
+    public void setKrbKeytab(byte[] krbKeytab) {
+
+        this.krbKeytab = krbKeytab;
+    }
+
+    public String getKrbPassword() {
+
+        return krbPassword;
+    }
+
+    public void setKrbPassword(String krbPassword) {
+
+        this.krbPassword = krbPassword;
+    }
+
+    public Boolean getUseKerberos() {
+
+        return useKerberos;
+    }
+
+    public void setUseKerberos(Boolean useKerberos) {
+
+        this.useKerberos = useKerberos;
     }
 
     @Override
