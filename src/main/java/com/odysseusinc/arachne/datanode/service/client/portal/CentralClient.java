@@ -110,5 +110,6 @@ public interface CentralClient {
     <T extends CommonDataSourceDTO> JsonResult<T> createDataSource(@Param("id") Long dataNodeId, T dataSourceDTO);
 
     @RequestLine("PUT " + UPDATE)
+    @Headers("Content-Type: " + MediaType.APPLICATION_JSON_UTF8_VALUE)
     <T extends CommonDataSourceDTO> JsonResult<T> updateDataSource(@Param("id") Long dataSourceId, T dataSource);
 }

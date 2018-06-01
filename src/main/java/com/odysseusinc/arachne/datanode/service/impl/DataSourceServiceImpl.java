@@ -209,6 +209,38 @@ public class DataSourceServiceImpl implements DataSourceService {
         if (Objects.nonNull(atlasTargetCohortTable)) {
             exists.setCohortTargetTable(atlasTargetCohortTable);
         }
+        if (DBMSType.IMPALA.equals(type)) {
+            final Boolean useKerberos = dataSource.getUseKerberos();
+            if (Objects.nonNull(useKerberos)) {
+                exists.setUseKerberos(useKerberos);
+            }
+            final String krbRealm = dataSource.getKrbRealm();
+            if (Objects.nonNull(krbRealm)) {
+                exists.setKrbRealm(krbRealm);
+            }
+            final String krbFQDN = dataSource.getKrbFQDN();
+            if (Objects.nonNull(krbFQDN)) {
+                exists.setKrbFQDN(krbFQDN);
+            }
+            final String krbUser = dataSource.getKrbUser();
+            if (Objects.nonNull(krbUser)) {
+                exists.setKrbUser(krbUser);
+            }
+            final String krbPassword = dataSource.getKrbPassword();
+            if (isNotDummyPassword(krbPassword)) {
+                exists.setKrbPassword(krbPassword);
+            }
+            final byte[] keytab = dataSource.getKrbKeytab();
+            if (Objects.nonNull(keytab)) {
+                exists.setKrbKeytab(keytab);
+            }
+        } else {
+            exists.setKrbRealm(null);
+            exists.setKrbFQDN(null);
+            exists.setKrbUser(null);
+            exists.setKrbPassword(null);
+            exists.setKrbKeytab(null);
+        }
 
         AutoDetectedFields autoDetectedFields = autoDetectFields(exists);
         DataSource updated = dataSourceRepository.save(exists);

@@ -62,6 +62,13 @@ public class DataSourceDTO {
 
     private Boolean published;
 
+    private Boolean useKerberos;
+    private String krbRealm;
+    private String krbFQDN;
+    private String krbUser;
+    private String krbPassword;
+    private Boolean hasKeytab;
+
     public Long getId() {
 
         return id;
@@ -218,5 +225,65 @@ public class DataSourceDTO {
 
     public void setModelType(CommonModelType modelType) {
         this.modelType = modelType;
+    }
+
+    public Boolean getUseKerberos() {
+
+        return useKerberos;
+    }
+
+    public void setUseKerberos(Boolean useKerberos) {
+
+        this.useKerberos = useKerberos;
+    }
+
+    public String getKrbRealm() {
+
+        return krbRealm;
+    }
+
+    public void setKrbRealm(String krbRealm) {
+
+        this.krbRealm = krbRealm;
+    }
+
+    public String getKrbFQDN() {
+
+        return krbFQDN;
+    }
+
+    public void setKrbFQDN(String krbFQDN) {
+
+        this.krbFQDN = krbFQDN;
+    }
+
+    public String getKrbUser() {
+
+        return krbUser;
+    }
+
+    public void setKrbUser(String krbUser) {
+
+        this.krbUser = krbUser;
+    }
+
+    public String getKrbPassword() {
+
+        return krbPassword;
+    }
+
+    public void setKrbPassword(String krbPassword) {
+
+        this.krbPassword = krbPassword;
+    }
+
+    public Boolean getHasKeytab() {
+
+        return hasKeytab;
+    }
+
+    public void setHasKeytab(Boolean hasKeytab) {
+
+        this.hasKeytab = hasKeytab;
     }
 }

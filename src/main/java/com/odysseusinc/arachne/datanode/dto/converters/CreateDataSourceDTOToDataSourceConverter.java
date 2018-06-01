@@ -25,6 +25,8 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.dto.datasource.CreateDataSourceDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
+import java.io.IOException;
+import java.util.Objects;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
@@ -65,6 +67,17 @@ public class CreateDataSourceDTOToDataSourceConverter implements Converter<Creat
         dataSource.setCohortTargetTable(createDataSourceDTO.getCohortTargetTable());
         dataSource.setTargetSchema(createDataSourceDTO.getTargetSchema());
         dataSource.setResultSchema(createDataSourceDTO.getResultSchema());
+        dataSource.setUseKerberos(createDataSourceDTO.getUseKerberos());
+        dataSource.setKrbFQDN(createDataSourceDTO.getKrbFQDN());
+        dataSource.setKrbRealm(createDataSourceDTO.getKrbRealm());
+        dataSource.setKrbUser(createDataSourceDTO.getKrbUser());
+        dataSource.setKrbPassword(createDataSourceDTO.getKrbPassword());
+        if (Objects.nonNull(createDataSourceDTO.getKrbKeytab())) {
+            try {
+                dataSource.setKrbKeytab(createDataSourceDTO.getKrbKeytab().getBytes());
+            } catch (IOException ignored) {
+            }
+        }
         return dataSource;
 
     }
