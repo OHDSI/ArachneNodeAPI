@@ -274,6 +274,13 @@ public class DataSourceServiceImpl implements DataSourceService {
         return new AutoDetectedFields(CommonModelType.CDM);
     }
 
+    @Override
+    public void removeKeytab(DataSource dataSource) {
+
+        dataSource.setKrbKeytab(null);
+        dataSourceRepository.save(dataSource);
+    }
+
     protected final Sort getSort(String sortBy, Boolean sortAsc) {
 
         String defaultSort = "name";

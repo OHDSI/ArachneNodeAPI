@@ -244,6 +244,17 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         return result;
     }
 
+    @RequestMapping(
+            value = Constants.Api.DataSource.DELETE_KEYTAB,
+            method = RequestMethod.DELETE
+    )
+    public JsonResult removeKeytab(@PathVariable("id") Long id){
+
+        DataSource dataSource = dataSourceService.getById(id);
+        dataSourceService.removeKeytab(dataSource);
+        return new JsonResult(NO_ERROR);
+    }
+
     public JsonResult unpublishAndDeleteOnCentral(Long dataSourceId) {
 
         DataSource dataSource = dataSourceService.getById(dataSourceId);
