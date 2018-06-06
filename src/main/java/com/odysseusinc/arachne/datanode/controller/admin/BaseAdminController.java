@@ -24,6 +24,7 @@ package com.odysseusinc.arachne.datanode.controller.admin;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.commons.utils.UserIdUtils;
+import com.odysseusinc.arachne.datanode.controller.BaseController;
 import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
@@ -41,11 +42,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-public abstract class BaseAdminController {
+public abstract class BaseAdminController extends BaseController {
 
     public static final int SUGGEST_LIMIT = 10;
 
-    protected UserService userService;
     protected GenericConversionService conversionService;
     protected AtlasService atlasService;
 
@@ -55,7 +55,7 @@ public abstract class BaseAdminController {
             GenericConversionService conversionService,
             AtlasService atlasService
     ) {
-        this.userService = userService;
+        super(userService);
         this.conversionService = conversionService;
         this.atlasService = atlasService;
     }
