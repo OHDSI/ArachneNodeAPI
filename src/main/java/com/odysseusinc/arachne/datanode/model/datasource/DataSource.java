@@ -26,6 +26,7 @@ import com.google.common.base.MoreObjects;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMethod;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -41,7 +42,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.Where;
 import org.hibernate.validator.constraints.NotBlank;
 
 @Entity
@@ -126,6 +126,10 @@ public class DataSource {
     @Column(name = "krb_password", nullable = true)
     @Type(type = "encryptedString")
     private String krbPassword;
+
+    @Column(name = "krb_auth_method")
+    @Enumerated(EnumType.STRING)
+    private KerberosAuthMethod krbAuthMethod;
 
     private Long centralId;
 
@@ -350,6 +354,16 @@ public class DataSource {
     public void setUseKerberos(Boolean useKerberos) {
 
         this.useKerberos = useKerberos;
+    }
+
+    public KerberosAuthMethod getKrbAuthMethod() {
+
+        return krbAuthMethod;
+    }
+
+    public void setKrbAuthMethod(KerberosAuthMethod krbAuthMethod) {
+
+        this.krbAuthMethod = krbAuthMethod;
     }
 
     @Override

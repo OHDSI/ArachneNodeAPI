@@ -52,4 +52,6 @@ public interface DataSourceService {
     void updateHealthStatus(Long centralId, CommonHealthStatus status, String description);
 
     AutoDetectedFields autoDetectFields(DataSource dataSource);
+
+    void removeKeytab(DataSource dataSource);
 }

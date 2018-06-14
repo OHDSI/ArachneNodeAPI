@@ -52,7 +52,6 @@ public class DataSourceToDataSourceUnsecuredDTOConverter implements Converter<Da
     public void afterPropertiesSet() throws Exception {
 
         conversionService.addConverter(this);
-
     }
 
     @Override
@@ -79,6 +78,7 @@ public class DataSourceToDataSourceUnsecuredDTOConverter implements Converter<Da
             target.setKrbUser(source.getKrbUser());
             target.setKrbPassword(source.getKrbPassword());
             target.setKrbKeytab(source.getKrbKeytab());
+            target.setKrbAuthMethod(source.getKrbAuthMethod());
         }
 
         return target;
