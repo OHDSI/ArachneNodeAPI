@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -164,4 +165,17 @@ public class ExceptionHandlingAdvice extends BaseController {
 
         noHandlerFoundExceptionUtils.handleNotFoundError(request, response);
     }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(BindException ex) {
+
+        LOGGER.warn(ex.getMessage());
+        JsonResult result = new JsonResult<>(VALIDATION_ERROR);
+        result.setErrorMessage("Incorrect data");
+        if (ex.hasErrors()) {
+            ex.getFieldErrors().forEach(er -> result.getValidatorErrors().put(er.getField(), er.getDefaultMessage()));
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
 }
