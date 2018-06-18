@@ -6,6 +6,5 @@
             name="ds_test"
             cdm_schema="public"
             registred="true"
-            krb_auth_method="PASSWORD"
     />
 </dataset>
