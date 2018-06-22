@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -52,7 +52,6 @@ public class DataSourceToDataSourceUnsecuredDTOConverter implements Converter<Da
     public void afterPropertiesSet() throws Exception {
 
         conversionService.addConverter(this);
-
     }
 
     @Override
@@ -71,6 +70,16 @@ public class DataSourceToDataSourceUnsecuredDTOConverter implements Converter<Da
         target.setResultSchema(StringUtils.isEmpty(resultSchema) ? cdmSchema : resultSchema);
         final String cohortTargetTable = source.getCohortTargetTable();
         target.setCohortTargetTable(StringUtils.isEmpty(cohortTargetTable) ? defaultCohortTargetTable : cohortTargetTable);
+
+        target.setUseKerberos(source.getUseKerberos());
+        if (source.getUseKerberos()) {
+            target.setKrbFQDN(source.getKrbFQDN());
+            target.setKrbRealm(source.getKrbRealm());
+            target.setKrbUser(source.getKrbUser());
+            target.setKrbPassword(source.getKrbPassword());
+            target.setKrbKeytab(source.getKrbKeytab());
+            target.setKrbAuthMethod(source.getKrbAuthMethod());
+        }
 
         return target;
     }

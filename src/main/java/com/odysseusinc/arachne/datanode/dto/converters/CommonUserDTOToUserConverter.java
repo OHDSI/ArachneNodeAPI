@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,6 +55,7 @@ public class CommonUserDTOToUserConverter implements Converter<CommonUserDTO, Us
         User dto = new User();
         dto.setId(UserIdUtils.uuidToId(user.getId()));
         dto.setEmail(user.getEmail());
+        dto.setUsername(user.getUsername());
         dto.setFirstName(user.getFirstname());
         dto.setLastName(user.getLastname());
         dto.setUsername(user.getUsername());

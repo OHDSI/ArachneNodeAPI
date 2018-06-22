@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -100,6 +100,7 @@ public class AuthController {
             }
             User centralUser = integrationService.getUserInfoFromCentral(centralToken);
             User user = userService.findByUsername(username).orElseGet(() -> userService.createIfFirst(centralUser));
+            userService.updateUserInfo(centralUser);
             userService.setToken(user, centralToken);
             String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
             Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
@@ -160,6 +161,8 @@ public class AuthController {
                     final boolean isAdmin = user.getRoles().stream()
                             .anyMatch(r -> r.getName().equals("ROLE_ADMIN"));
                     userInfoDTO.setIsAdmin(isAdmin);
+                    userInfoDTO.setFirstname(user.getFirstName());
+                    userInfoDTO.setLastname(user.getLastName());
                     result.setResult(userInfoDTO);
                 });
 

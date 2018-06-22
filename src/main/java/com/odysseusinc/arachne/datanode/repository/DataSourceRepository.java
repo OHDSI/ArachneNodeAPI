@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,13 +28,11 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 
 public interface DataSourceRepository extends JpaRepository<DataSource, Long> {
 
     Optional<DataSource> findByCentralId(Long centralId);
 
-    @Query("from DataSource ds where ds.id = ?1")
     Optional<DataSource> findById(Long id);
 
     Stream<DataSource> findAllByCentralIdIsNull();

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,12 +44,15 @@ public class MultipartEncoder extends FormEncoder {
 
     public MultipartEncoder(Encoder delegate) {
 
+        this(delegate, new SpringMultipartEncodedDataProcessor());
+    }
+
+    public MultipartEncoder(Encoder delegate, FormDataProcessor processor) {
+
         this.deligate = delegate;
         processors = new HashMap<>();
-
-        FormDataProcessor multipartEncodedDataProcessor = new SpringMultipartEncodedDataProcessor();
-        processors.put(multipartEncodedDataProcessor.getSupportetContentType().toLowerCase(),
-                multipartEncodedDataProcessor);
+        processors.put(processor.getSupportetContentType().toLowerCase(),
+                processor);
     }
 
     @Override

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -73,6 +73,7 @@ public interface Constants {
         interface Submission {
             String UPLOAD = "/api/v1/analysis-management/submissions/result/upload";
             String UPDATE_STATUS = "/api/v1/analysis-management/submissions/{id}/status/{password}";
+            String DOWNLOAD_FILE = "/api/v1/analysis-management/submissions/{submissionId}/files?fileName={fileName}&updatePassword={updatePassword}";
         }
 
         interface Achilles {
@@ -114,6 +115,7 @@ public interface Constants {
             String DS_MODEL_CHECK_UPDATE = "/api/v1/data-sources/{id}/check/update/{password}";
             String GET_BUSINESS = "/api/v1/data-sources/{id}/business";
             String UPDATE_BUSINESS = "/api/v1/data-sources/{id}/business";
+            String DELETE_KEYTAB = "/api/v1/data-sources/{id}/keytab";
         }
     }
 

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,13 +27,13 @@ import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCo
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
-import com.odysseusinc.arachne.nohandlerfoundexception.NoHandlerFoundExceptionUtils;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.service.UserService;
+import com.odysseusinc.arachne.nohandlerfoundexception.NoHandlerFoundExceptionUtils;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Objects;
@@ -46,6 +46,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -83,9 +85,20 @@ public class ExceptionHandlingAdvice extends BaseController {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<JsonResult> exceptionHandler(MethodArgumentNotValidException ex) {
 
+        return getValidationErrorResponse(ex.getBindingResult(), ex);
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(BindException ex) {
+
+        return getValidationErrorResponse(ex.getBindingResult(), ex);
+    }
+
+    private ResponseEntity<JsonResult> getValidationErrorResponse(BindingResult bindingResult, Exception ex) {
+
         JsonResult result = new JsonResult<>(VALIDATION_ERROR);
-        if (ex.getBindingResult().hasErrors()) {
-            result = setValidationErrors(ex.getBindingResult());
+        if (bindingResult.hasErrors()) {
+            result = setValidationErrors(bindingResult);
         }
         return getErrorResponse(result, ex);
     }
@@ -164,4 +177,5 @@ public class ExceptionHandlingAdvice extends BaseController {
 
         noHandlerFoundExceptionUtils.handleNotFoundError(request, response);
     }
+
 }

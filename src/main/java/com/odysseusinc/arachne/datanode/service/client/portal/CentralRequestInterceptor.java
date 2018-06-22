@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,11 +26,13 @@ import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import feign.RequestTemplate;
+import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -42,24 +44,23 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
     @Value("${arachne.token.header}")
     private String authHeader;
 
-    private final UserService userService;
+    private ApplicationContext applicationContext;
+    private UserService userService;
 
     @Autowired
-    public CentralRequestInterceptor(UserService userService) {
+    public CentralRequestInterceptor(ApplicationContext applicationContext) {
 
-        this.userService = userService;
+        this.applicationContext = applicationContext;
     }
 
 
     private String getToken() throws PermissionDeniedException {
 
         final Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal != null) {
+        if (principal instanceof org.springframework.security.core.userdetails.User) {
             String userName = ((org.springframework.security.core.userdetails.User) principal).getUsername();
             final Optional<User> userOptional = userService.findByUsername(userName);
-            if (userOptional.isPresent()) {
-                return userOptional.get().getToken();
-            }
+            return userOptional.map(User::getToken).orElse(null);
         }
         return null;
     }
@@ -69,12 +70,20 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
 
         final String token;
         try {
+            init();
             token = getToken();
             if (!StringUtils.isEmpty(token)) {
                 template.header(authHeader, token);
             }
         } catch (PermissionDeniedException e) {
             log.error(e.getMessage());
+        }
+    }
+
+    private void init(){
+
+        if (Objects.isNull(this.userService)){
+            this.userService = applicationContext.getBean(UserService.class);
         }
     }
 }

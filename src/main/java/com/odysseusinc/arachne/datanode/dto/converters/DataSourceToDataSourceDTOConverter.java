@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.util.DataSourceUtils;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -60,8 +61,15 @@ public class DataSourceToDataSourceDTOConverter implements Converter<DataSource,
         dto.setHealthStatus(dataSource.getHealthStatus());
         dto.setHealthStatusDescription(dataSource.getHealthStatusDescription());
 
-        DataSourceUtils.masqueradePassword(dto);
+        dto.setUseKerberos(dataSource.getUseKerberos());
+        dto.setKrbFQDN(dataSource.getKrbFQDN());
+        dto.setKrbRealm(dataSource.getKrbRealm());
+        dto.setKrbUser(dataSource.getKrbUser());
+        dto.setHasKeytab(Objects.nonNull(dataSource.getKrbKeytab()));
+        dto.setKrbPassword(dataSource.getKrbPassword());
+        dto.setKrbAuthMethod(dataSource.getKrbAuthMethod());
 
+        DataSourceUtils.masqueradePassword(dto);
         return dto;
     }
 }

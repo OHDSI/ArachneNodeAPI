@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -179,7 +179,7 @@ public class UserServiceImpl implements UserService {
             User user = new User();
             user.setId(centralUser.getId());
             user.setEmail(centralUser.getEmail());
-            user.setUsername(centralUser.getEmail());
+            user.setUsername(centralUser.getUsername());
             user.setFirstName(centralUser.getFirstName());
             user.setLastName(centralUser.getLastName());
             user.setEnabled(true);
@@ -189,6 +189,16 @@ public class UserServiceImpl implements UserService {
         else {
             throw new AlreadyExistsException("user not registered");
         }
+    }
+
+    @Override
+    public User updateUserInfo(User centralUserDto) {
+
+        User user = findByUsername(centralUserDto.getUsername())
+                .orElseThrow(() -> new NotExistException(String.format("Cannot find user '%s' to update info", centralUserDto.getUsername()), User.class));
+        user.setFirstName(centralUserDto.getFirstName());
+        user.setLastName(centralUserDto.getLastName());
+        return userRepository.save(user);
     }
 
     private Role getAdminRole() {
