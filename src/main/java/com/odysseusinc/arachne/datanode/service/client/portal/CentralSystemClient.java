@@ -31,7 +31,6 @@ import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAchillesGrantTypeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAchillesPermissionDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAchillesReportDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityRequestDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonLinkUserToDataNodeDTO;
@@ -40,6 +39,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonListEntityResponseDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.Constants;
+import com.odysseusinc.arachne.datanode.dto.datanode.DataNodeDTO;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -78,13 +78,10 @@ public interface CentralSystemClient {
     JsonResult<CommonDataSourceDTO> getDataSource(@Param("uuid") String dataSourceUuid);
 
     @RequestLine("GET /api/v1/data-nodes/byuuid/{uuid}")
-    JsonResult<CommonDataNodeDTO> getDataNode(@Param("uuid") String dataNodeUuid);
+    JsonResult<DataNodeDTO> getDataNode(@Param("uuid") String dataNodeUuid);
 
     @RequestLine("GET " + Constants.CentralApi.DataSource.GET)
     <T extends CommonDataSourceDTO> JsonResult<T> getDataSource(@Param("id") Long dataSourceId);
-
-    @RequestLine("GET /api/v1/data-nodes/{id}")
-    JsonResult<CommonDataNodeDTO> getDataNode(@Param("id") Long centralId);
 
     @RequestLine("GET " + LIST_REPORTS)
     List<CommonAchillesReportDTO> listReports();
