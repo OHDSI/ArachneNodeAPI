@@ -83,9 +83,6 @@ public interface CentralSystemClient {
     @RequestLine("GET " + Constants.CentralApi.DataSource.GET)
     <T extends CommonDataSourceDTO> JsonResult<T> getDataSource(@Param("id") Long dataSourceId);
 
-    @RequestLine("GET /api/v1/data-nodes/{id}")
-    JsonResult<CommonDataNodeDTO> getDataNode(@Param("id") Long centralId);
-
     @RequestLine("GET " + LIST_REPORTS)
     List<CommonAchillesReportDTO> listReports();
 
