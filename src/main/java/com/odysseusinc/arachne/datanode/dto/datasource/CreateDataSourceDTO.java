@@ -53,7 +53,7 @@ public class CreateDataSourceDTO {
 
     private Boolean registred;
 
-    private Boolean useKerberos;
+    private Boolean useKerberos = Boolean.FALSE;
     private String krbRealm;
     private String krbFQDN;
     private String krbUser;

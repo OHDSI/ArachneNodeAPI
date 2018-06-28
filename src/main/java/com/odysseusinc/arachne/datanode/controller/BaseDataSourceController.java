@@ -63,7 +63,6 @@ import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.util.CollectionUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -108,7 +107,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     @ApiOperation(value = "Add data source")
     @RequestMapping(value = Constants.Api.DataSource.ADD, method = RequestMethod.POST)
     public JsonResult<DataSourceDTO> add(Principal principal,
-                                         @Valid @RequestBody CreateDataSourceDTO dataSourceDTO,
+                                         @Valid @RequestPart("dataSource") CreateDataSourceDTO dataSourceDTO,
+                                         @RequestPart(name = "krbKeytab", required = false) MultipartFile keytab,
                                          BindingResult bindingResult
     ) throws NotExistException, PermissionDeniedException {
 
@@ -116,6 +116,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
+        dataSourceDTO.setKrbKeytab(keytab);
         DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
         DataSource optional = dataSourceService.create(user, dataSource);
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
