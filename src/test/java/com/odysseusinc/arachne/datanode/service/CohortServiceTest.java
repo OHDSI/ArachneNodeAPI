@@ -31,6 +31,7 @@ import static com.odysseusinc.arachne.commons.types.DBMSType.REDSHIFT;
 
 import com.odysseusinc.arachne.commons.utils.ConverterUtils;
 import com.odysseusinc.arachne.datanode.service.impl.CohortServiceImpl;
+import com.odysseusinc.arachne.nohandlerfoundexception.NoHandlerFoundExceptionUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
@@ -63,7 +64,8 @@ public class CohortServiceTest {
 
     @MockBean
     private ConverterUtils converterUtils;
-
+    @MockBean
+    private NoHandlerFoundExceptionUtils noHandlerFoundExceptionUtils;
 
     public CohortServiceTest() throws IOException {
 
