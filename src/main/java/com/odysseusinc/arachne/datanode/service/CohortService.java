@@ -39,4 +39,6 @@ public interface CohortService {
 
     String translateSQL(String sourceStatement, Map<String, String> parameters,
                         DBMSType dbmsType, CohortServiceImpl.TranslateOptions options);
+
+    String translateSql(String dbmsType, String renderedSQL);
 }
