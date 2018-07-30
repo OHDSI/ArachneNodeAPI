@@ -192,7 +192,7 @@ public class CohortServiceImpl implements CohortService {
                     || DBMSType.PDW == dbmsType) {
                 translated = renderedSQL;
             } else {
-                translated = translateSql(dbmsType, renderedSQL);
+                translated = translateSql(dbmsType.getOhdsiDB(), renderedSQL);
             }
         } catch (Exception exception) {
             throw new RuntimeException(exception);
@@ -200,13 +200,14 @@ public class CohortServiceImpl implements CohortService {
         return processPlaceHolders(translated, options);
     }
 
-    private synchronized String translateSql(DBMSType dbmsType, String renderedSQL) {
+    public synchronized String translateSql(String dbmsType, String renderedSQL) {
 
+        // Oracle fails with a single query ending with semicolon. That's why we remove the semicolon after translation
         return SqlTranslate.translateSql(
                 renderedSQL,
                 DBMSType.MS_SQL_SERVER.getOhdsiDB(),
-                dbmsType.getOhdsiDB()
-        );
+                dbmsType
+        ).replaceAll(";\\s*$", "");
     }
 
     private String processPlaceHolders(String expression, TranslateOptions options) {
