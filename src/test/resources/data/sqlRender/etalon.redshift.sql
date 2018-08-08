@@ -181,4 +181,4 @@ TRUNCATE TABLE #included_events;
 DROP TABLE #included_events;
 
 TRUNCATE TABLE #Codesets;
-DROP TABLE #Codesets;
+DROP TABLE #Codesets
