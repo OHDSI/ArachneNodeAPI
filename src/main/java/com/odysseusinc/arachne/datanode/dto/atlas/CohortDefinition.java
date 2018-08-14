@@ -24,6 +24,8 @@ package com.odysseusinc.arachne.datanode.dto.atlas;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.odysseusinc.arachne.datanode.dto.serialize.MultiFormatDateDeserializer;
 import java.util.Date;
 
 public class CohortDefinition extends BaseAtlasEntity {
@@ -31,10 +33,10 @@ public class CohortDefinition extends BaseAtlasEntity {
     private String description;
     private ExpressionType expressionType;
     private String createdBy;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm")
+    @JsonDeserialize(using = MultiFormatDateDeserializer.class)
     private Date createdDate;
     private String modifiedBy;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm")
+    @JsonDeserialize(using = MultiFormatDateDeserializer.class)
     private Date modifiedDate;
     private String expression;
 
