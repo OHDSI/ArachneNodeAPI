@@ -25,7 +25,7 @@ package com.odysseusinc.arachne.datanode.dto.datasource;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.commons.types.DBMSType;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMethod;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMechanism;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -69,7 +69,7 @@ public class DataSourceDTO {
     private String krbUser;
     private String krbPassword;
     private Boolean hasKeytab;
-    private KerberosAuthMethod krbAuthMethod;
+    private KerberosAuthMechanism krbAuthMethod;
 
     public Long getId() {
 
@@ -289,12 +289,12 @@ public class DataSourceDTO {
         this.hasKeytab = hasKeytab;
     }
 
-    public KerberosAuthMethod getKrbAuthMethod() {
+    public KerberosAuthMechanism getKrbAuthMethod() {
 
         return krbAuthMethod;
     }
 
-    public void setKrbAuthMethod(KerberosAuthMethod krbAuthMethod) {
+    public void setKrbAuthMethod(KerberosAuthMechanism krbAuthMethod) {
 
         this.krbAuthMethod = krbAuthMethod;
     }
