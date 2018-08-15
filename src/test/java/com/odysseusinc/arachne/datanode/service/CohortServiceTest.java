@@ -273,7 +273,7 @@ public class CohortServiceTest {
             "DROP TABLE included_events;\n" +
             "\n" +
             "TRUNCATE TABLE Codesets;\n" +
-            "DROP TABLE Codesets;\n";
+            "DROP TABLE Codesets";
 
     private static final String ORACLE_SQL_RESULT = "CREATE TABLE se3jtcbfCodesets (\n" +
             "  codeset_id int NOT NULL,\n" +
@@ -431,7 +431,7 @@ public class CohortServiceTest {
             "DROP TABLE se3jtcbfincluded_events;\n" +
             "\n" +
             "TRUNCATE TABLE se3jtcbfCodesets;\n" +
-            "DROP TABLE se3jtcbfCodesets;\n";
+            "DROP TABLE se3jtcbfCodesets";
 
     private static final String MS_SQL_SQL_RESULT = "CREATE TABLE #Codesets (\n" +
             "  codeset_id int NOT NULL,\n" +
@@ -595,5 +595,5 @@ public class CohortServiceTest {
             "DROP TABLE #included_events;\n" +
             "\n" +
             "TRUNCATE TABLE #Codesets;\n" +
-            "DROP TABLE #Codesets;\n";
+            "DROP TABLE #Codesets";
 }
