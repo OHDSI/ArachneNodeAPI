@@ -58,7 +58,7 @@ public class CreateDataSourceDTO {
     private String krbFQDN;
     private String krbUser;
     private String krbPassword;
-    private KerberosAuthMechanism krbAuthMethod;
+    private KerberosAuthMechanism krbAuthMechanism;
 //    @JsonDeserialize(using = )
     private MultipartFile krbKeytab;
 
@@ -246,13 +246,13 @@ public class CreateDataSourceDTO {
         this.krbKeytab = krbKeytab;
     }
 
-    public KerberosAuthMechanism getKrbAuthMethod() {
+    public KerberosAuthMechanism getKrbAuthMechanism() {
 
-        return krbAuthMethod;
+        return krbAuthMechanism;
     }
 
-    public void setKrbAuthMethod(KerberosAuthMechanism krbAuthMethod) {
+    public void setKrbAuthMechanism(KerberosAuthMechanism krbAuthMechanism) {
 
-        this.krbAuthMethod = krbAuthMethod;
+        this.krbAuthMechanism = krbAuthMechanism;
     }
 }

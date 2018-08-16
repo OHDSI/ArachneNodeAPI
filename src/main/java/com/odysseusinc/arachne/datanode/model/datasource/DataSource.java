@@ -129,7 +129,7 @@ public class DataSource {
 
     @Column(name = "krb_auth_method")
     @Enumerated(EnumType.STRING)
-    private KerberosAuthMechanism krbAuthMethod;
+    private KerberosAuthMechanism krbAuthMechanism;
 
     private Long centralId;
 
@@ -356,14 +356,14 @@ public class DataSource {
         this.useKerberos = useKerberos;
     }
 
-    public KerberosAuthMechanism getKrbAuthMethod() {
+    public KerberosAuthMechanism getKrbAuthMechanism() {
 
-        return krbAuthMethod;
+        return krbAuthMechanism;
     }
 
-    public void setKrbAuthMethod(KerberosAuthMechanism krbAuthMethod) {
+    public void setKrbAuthMechanism(KerberosAuthMechanism krbAuthMechanism) {
 
-        this.krbAuthMethod = krbAuthMethod;
+        this.krbAuthMechanism = krbAuthMechanism;
     }
 
     @Override

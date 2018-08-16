@@ -69,7 +69,7 @@ public class DataSourceDTO {
     private String krbUser;
     private String krbPassword;
     private Boolean hasKeytab;
-    private KerberosAuthMechanism krbAuthMethod;
+    private KerberosAuthMechanism krbAuthMechanism;
 
     public Long getId() {
 
@@ -289,13 +289,13 @@ public class DataSourceDTO {
         this.hasKeytab = hasKeytab;
     }
 
-    public KerberosAuthMechanism getKrbAuthMethod() {
+    public KerberosAuthMechanism getKrbAuthMechanism() {
 
-        return krbAuthMethod;
+        return krbAuthMechanism;
     }
 
-    public void setKrbAuthMethod(KerberosAuthMechanism krbAuthMethod) {
+    public void setKrbAuthMechanism(KerberosAuthMechanism krbAuthMechanism) {
 
-        this.krbAuthMethod = krbAuthMethod;
+        this.krbAuthMechanism = krbAuthMechanism;
     }
 }
