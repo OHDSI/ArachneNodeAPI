@@ -67,7 +67,7 @@ public class DataSourceToDataSourceDTOConverter implements Converter<DataSource,
         dto.setKrbUser(dataSource.getKrbUser());
         dto.setHasKeytab(Objects.nonNull(dataSource.getKrbKeytab()));
         dto.setKrbPassword(dataSource.getKrbPassword());
-        dto.setKrbAuthMethod(dataSource.getKrbAuthMethod());
+        dto.setKrbAuthMechanism(dataSource.getKrbAuthMechanism());
 
         DataSourceUtils.masqueradePassword(dto);
         return dto;

@@ -26,7 +26,7 @@ import com.google.common.base.MoreObjects;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMethod;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMechanism;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -129,7 +129,7 @@ public class DataSource {
 
     @Column(name = "krb_auth_method")
     @Enumerated(EnumType.STRING)
-    private KerberosAuthMethod krbAuthMethod;
+    private KerberosAuthMechanism krbAuthMechanism;
 
     private Long centralId;
 
@@ -356,14 +356,14 @@ public class DataSource {
         this.useKerberos = useKerberos;
     }
 
-    public KerberosAuthMethod getKrbAuthMethod() {
+    public KerberosAuthMechanism getKrbAuthMechanism() {
 
-        return krbAuthMethod;
+        return krbAuthMechanism;
     }
 
-    public void setKrbAuthMethod(KerberosAuthMethod krbAuthMethod) {
+    public void setKrbAuthMechanism(KerberosAuthMechanism krbAuthMechanism) {
 
-        this.krbAuthMethod = krbAuthMethod;
+        this.krbAuthMechanism = krbAuthMechanism;
     }
 
     @Override

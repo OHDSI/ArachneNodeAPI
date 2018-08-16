@@ -22,7 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.dto.datasource;
 
-import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMethod;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMechanism;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.web.multipart.MultipartFile;
@@ -58,7 +58,7 @@ public class CreateDataSourceDTO {
     private String krbFQDN;
     private String krbUser;
     private String krbPassword;
-    private KerberosAuthMethod krbAuthMethod;
+    private KerberosAuthMechanism krbAuthMechanism;
 //    @JsonDeserialize(using = )
     private MultipartFile krbKeytab;
 
@@ -246,13 +246,13 @@ public class CreateDataSourceDTO {
         this.krbKeytab = krbKeytab;
     }
 
-    public KerberosAuthMethod getKrbAuthMethod() {
+    public KerberosAuthMechanism getKrbAuthMechanism() {
 
-        return krbAuthMethod;
+        return krbAuthMechanism;
     }
 
-    public void setKrbAuthMethod(KerberosAuthMethod krbAuthMethod) {
+    public void setKrbAuthMechanism(KerberosAuthMechanism krbAuthMechanism) {
 
-        this.krbAuthMethod = krbAuthMethod;
+        this.krbAuthMechanism = krbAuthMechanism;
     }
 }
