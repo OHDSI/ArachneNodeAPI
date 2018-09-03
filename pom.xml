@@ -6,7 +6,7 @@
 
     <artifactId>datanode</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.12.2</version>
+    <version>1.12.3</version>
     <packaging>jar</packaging>
 
 
@@ -185,12 +185,12 @@
         <dependency>
             <groupId>org.ohdsi.sql</groupId>
             <artifactId>SqlRender</artifactId>
-            <version>1.4.7-SNAPSHOT</version>
+            <version>1.5.2</version>
         </dependency>
         <dependency>
             <groupId>org.ohdsi</groupId>
             <artifactId>circe</artifactId>
-            <version>1.2.1</version>
+            <version>1.6.0</version>
         </dependency>
         <dependency>
             <groupId>org.dbunit</groupId>
