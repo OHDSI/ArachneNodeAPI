@@ -29,6 +29,9 @@ public class MultiFormatDateDeserializer extends JsonDeserializer<Date> {
             } catch (ParseException ignored) {
             }
         }
+        try {
+            return new Date(Long.valueOf(dateString));
+        }catch(NumberFormatException ignored){}
         throw new InvalidFormatException(jsonParser, "Cannot deserialize value", dateString, Date.class);
     }
 }
