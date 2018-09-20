@@ -256,6 +256,7 @@ public class CohortServiceImpl implements CohortService {
                     .put("@results_database_schema", resultsDatabaseSchema)
                     .put("@target_database_schema", targetDataBaseSchema)
                     .put("@vocab_database_schema", vocabDatabaseSchema)
+                    .put("@vocabulary_database_schema", vocabDatabaseSchema)
                     .put("@target_cohort_table", targetCohortTable)
                     .put("@target_cohort_id", String.valueOf(targetCohortId))
                     .put("@generateStats;", "1")
