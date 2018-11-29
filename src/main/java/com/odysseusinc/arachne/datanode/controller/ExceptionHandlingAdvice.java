@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.datanode.controller;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.SYSTEM_ERROR;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.UNAUTHORIZED;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
+import static java.util.Arrays.asList;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
@@ -34,9 +35,9 @@ import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.nohandlerfoundexception.NoHandlerFoundExceptionUtils;
+import feign.FeignException;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Objects;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -138,8 +139,8 @@ public class ExceptionHandlingAdvice extends BaseController {
 
     private String getErrorMessage(final JsonResult result, final Exception ex) {
 
-        // return default ERROR_MESSAGE for all exceptions except Validation error
-        return Objects.equals(result.getErrorCode(), VALIDATION_ERROR.getCode()) ? ex.getMessage() : ERROR_MESSAGE;
+        return asList(UNAUTHORIZED.getCode(), VALIDATION_ERROR.getCode()).contains(result.getErrorCode()) ?
+               ex.getMessage() : ERROR_MESSAGE;
     }
 
     @ExceptionHandler(IntegrationValidationException.class)
@@ -165,6 +166,15 @@ public class ExceptionHandlingAdvice extends BaseController {
     public ResponseEntity<JsonResult> exceptionHandler(IllegalOperationException ex) {
 
         return getErrorResponse(SYSTEM_ERROR, ex);
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(FeignException ex) {
+
+        LOGGER.error(ex.getMessage(), ex);
+        JsonResult result = new JsonResult(SYSTEM_ERROR);
+        result.setErrorMessage("External system is not available");
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     private String generateErrorToken() {

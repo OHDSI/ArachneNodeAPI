@@ -91,29 +91,23 @@ public class AuthController {
             throws AuthenticationException {
 
         JsonResult<CommonAuthenticationResponse> jsonResult;
-        try {
-            final String token;
-            String username = authenticationRequest.getUsername();
-            String centralToken = integrationService.loginToCentral(username, authenticationRequest.getPassword());
-            if (centralToken == null) {
-                throw new AuthException("central auth error");
-            }
-            User centralUser = integrationService.getUserInfoFromCentral(centralToken);
-            User user = userService.findByUsername(username).orElseGet(() -> userService.createIfFirst(centralUser));
-            userService.updateUserInfo(centralUser);
-            userService.setToken(user, centralToken);
-            String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
-            Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
-            token = tokenUtils.generateToken(user, createdDateFromToken);
-
-            jsonResult = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-            CommonAuthenticationResponse authenticationResponse = new CommonAuthenticationResponse(token);
-            jsonResult.setResult(authenticationResponse);
-        } catch (Exception ex) {
-            log.error(ex.getMessage(), ex);
-            jsonResult = new JsonResult<>(JsonResult.ErrorCode.UNAUTHORIZED);
-            jsonResult.setErrorMessage(ex.getMessage());
+        final String token;
+        String username = authenticationRequest.getUsername();
+        String centralToken = integrationService.loginToCentral(username, authenticationRequest.getPassword());
+        if (centralToken == null) {
+            throw new AuthException("central auth error");
         }
+        User centralUser = integrationService.getUserInfoFromCentral(centralToken);
+        User user = userService.findByUsername(username).orElseGet(() -> userService.createIfFirst(centralUser));
+        userService.updateUserInfo(centralUser);
+        userService.setToken(user, centralToken);
+        String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
+        Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
+        token = tokenUtils.generateToken(user, createdDateFromToken);
+
+        jsonResult = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+        CommonAuthenticationResponse authenticationResponse = new CommonAuthenticationResponse(token);
+        jsonResult.setResult(authenticationResponse);
         // Return the token
         return jsonResult;
     }
@@ -123,27 +117,22 @@ public class AuthController {
     public JsonResult<String> refresh(HttpServletRequest request) {
 
         JsonResult<String> result;
-        try {
-            String token = request.getHeader(this.tokenHeader);
-            User user = userService.findByUsername(tokenUtils.getUsernameFromToken(token))
-                    .orElseThrow(() -> new AuthException("user not registered"));
-            Map<String, String> header = new HashMap<>();
-            header.put(this.tokenHeader, token);
-            String centralToken = centralClient.refreshToken(header).getResult();
-            if (centralToken == null) {
-                throw new AuthException("central auth error");
-            }
-            userService.setToken(user, centralToken);
-            String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
-            Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
-            token = tokenUtils.generateToken(user, createdDateFromToken);
-
-            result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-            result.setResult(token);
-        } catch (Exception ex) {
-            log.error(ex.getMessage(), ex);
-            result = new JsonResult<>(JsonResult.ErrorCode.UNAUTHORIZED);
+        String token = request.getHeader(this.tokenHeader);
+        User user = userService.findByUsername(tokenUtils.getUsernameFromToken(token))
+                .orElseThrow(() -> new AuthException("user not registered"));
+        Map<String, String> header = new HashMap<>();
+        header.put(this.tokenHeader, token);
+        String centralToken = centralClient.refreshToken(header).getResult();
+        if (centralToken == null) {
+            throw new AuthException("central auth error");
         }
+        userService.setToken(user, centralToken);
+        String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
+        Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
+        token = tokenUtils.generateToken(user, createdDateFromToken);
+
+        result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+        result.setResult(token);
         return result;
     }
 
