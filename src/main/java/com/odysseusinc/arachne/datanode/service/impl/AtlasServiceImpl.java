@@ -26,17 +26,13 @@ import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPa
 
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
-import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
+import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
-import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
-import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthRequestInterceptor;
-
-
-import com.odysseusinc.arachne.datanode.Constants;
-import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
+import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
+import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthRequestInterceptor;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthSchema;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasLoginClient;
@@ -48,27 +44,21 @@ import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -83,7 +73,7 @@ public class AtlasServiceImpl implements AtlasService {
     private final CentralSystemClient centralSystemClient;
     private HttpHeaders headers;
 
-    private Map<Atlas, AtlasClient> atlasClientPool = new HashMap<>();
+    private Map<Atlas, AtlasClient> atlasClientPool = new ConcurrentHashMap<>();
 
     @Autowired
     public AtlasServiceImpl(GenericConversionService genericConversionService,
@@ -188,6 +178,7 @@ public class AtlasServiceImpl implements AtlasService {
             syncWithCentral(updated);
         }
 
+        atlasClientPool.replace(updated, buildAtlasClient(updated));
         return updated;
     }
 
@@ -198,6 +189,7 @@ public class AtlasServiceImpl implements AtlasService {
         Atlas atlas = atlasRepository.findOne(atlasId);
         atlasRepository.delete(atlas.getId());
         centralSystemClient.deleteAtlas(atlas.getCentralId());
+        atlasClientPool.remove(atlas);
     }
 
     @Override
