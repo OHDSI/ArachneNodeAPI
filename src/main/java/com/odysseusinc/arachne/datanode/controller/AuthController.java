@@ -44,6 +44,7 @@ import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -181,7 +182,7 @@ public class AuthController {
 
     @ApiOperation(value = "Get professional types list")
     @RequestMapping(value = "/api/v1/user-management/professional-types", method = GET)
-    public JsonResult<CommonProfessionalTypeDTO> getProfessionalTypes() {
+    public JsonResult<List<CommonProfessionalTypeDTO>> getProfessionalTypes() {
 
         return integrationService.getProfessionalTypes();
     }
