@@ -195,7 +195,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
-    public JsonResult<CommonProfessionalTypeDTO> getProfessionalTypes() {
+    public JsonResult<List<CommonProfessionalTypeDTO>> getProfessionalTypes() {
 
         return centralClient.getProfessionalTypes();
     }
