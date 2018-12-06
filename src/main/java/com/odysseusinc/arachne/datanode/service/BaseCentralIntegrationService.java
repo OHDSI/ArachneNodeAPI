@@ -60,7 +60,7 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     User getUserInfoFromCentral(String centralToken);
 
-    JsonResult<CommonProfessionalTypeDTO> getProfessionalTypes();
+    JsonResult<List<CommonProfessionalTypeDTO>> getProfessionalTypes();
 
     JsonResult<CommonUserDTO> getRegisterUser(CommonUserRegistrationDTO dto);
 
