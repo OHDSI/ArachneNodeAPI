@@ -200,9 +200,7 @@ public class CohortServiceTest {
             "WHERE QE.ordinal = 1\n" +
             ";\n" +
             "ANALYZE qualified_events\n" +
-            ";\n" +
-            "\n" +
-            "\n" +
+            ";\n\n\n" +
             "CREATE TEMP TABLE inclusionRuleCohorts \n" +
             " (inclusion_rule_id bigint,\n" +
             "  person_id bigint,\n" +
@@ -233,8 +231,7 @@ public class CohortServiceTest {
             "WHERE Results.ordinal = 1\n" +
             ";\n" +
             "ANALYZE included_events\n" +
-            ";\n" +
-            "\n" +
+            ";\n\n" +
             "-- Apply end date stratagies\n" +
             "-- by default, all events extend to the op_end_date.\n" +
             "CREATE TEMP TABLE cohort_ends\n" +

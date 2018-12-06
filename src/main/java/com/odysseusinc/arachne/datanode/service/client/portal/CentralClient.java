@@ -84,7 +84,7 @@ public interface CentralClient {
     JsonResult logout();
 
     @RequestLine("GET " + PROFESSIONAL_TYPES)
-    JsonResult<CommonProfessionalTypeDTO> getProfessionalTypes();
+    JsonResult<List<CommonProfessionalTypeDTO>> getProfessionalTypes();
 
     @RequestLine("GET " + USER_INFO)
     JsonResult<UserDTO> getUserInfo(@HeaderMap Map<String, Object> headers);
