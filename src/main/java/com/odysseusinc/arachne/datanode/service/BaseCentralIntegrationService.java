@@ -25,8 +25,10 @@ package com.odysseusinc.arachne.datanode.service;
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonBaseDataSourceDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonCountryDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonProfessionalTypeDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonStateProvinceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
@@ -62,6 +64,8 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     JsonResult<List<CommonProfessionalTypeDTO>> getProfessionalTypes();
 
+    JsonResult<List<CommonCountryDTO>> getCountries(String query, Integer limit, Long includeId);
+
     JsonResult<CommonUserDTO> getRegisterUser(CommonUserRegistrationDTO dto);
 
     JsonResult<DTO> getDataSource(User user, Long id);
@@ -77,4 +81,6 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
     void unlinkUserToDataNodeOnCentral(DataNode dataNode, User user);
 
     List<User> relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users);
+
+    JsonResult<List<CommonStateProvinceDTO>> getStateProvinces(String countryId, String query, Integer limit, String includeId);
 }
