@@ -28,7 +28,9 @@ import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationResponse;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonCountryDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonProfessionalTypeDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonStateProvinceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
@@ -55,6 +57,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 //import static com.odysseusinc.arachne.datanode.Constants.Api.Auth.LOGIN_ENTRY_POINT;
@@ -187,6 +190,28 @@ public class AuthController {
         return integrationService.getProfessionalTypes();
     }
 
+    @ApiOperation("Suggests country.")
+    @RequestMapping(value = "/api/v1/user-management/countries/search", method = GET)
+    public JsonResult<List<CommonCountryDTO>> suggestCountries(
+            @RequestParam("query") String query,
+            @RequestParam("limit") Integer limit,
+            @RequestParam(value = "includeId", required = false) Long includeId
+
+    ) {
+
+        return integrationService.getCountries(query, limit, includeId);
+    }
+
+    @ApiOperation("Suggests state or province.")
+    @RequestMapping(value = "/api/v1/user-management/state-province/search", method = GET)
+    public JsonResult<List<CommonStateProvinceDTO>> suggestStateProvince(
+            @RequestParam("countryId") String countryId,
+            @RequestParam("query") String query,
+            @RequestParam("limit") Integer limit,
+            @RequestParam(value = "includeId", required = false) String includeId
+    ) {
+        return integrationService.getStateProvinces(countryId, query, limit, includeId);
+    }
 
     @ApiOperation("Register new user via form.")
     @RequestMapping(value = "/api/v1/auth/registration", method = RequestMethod.POST)

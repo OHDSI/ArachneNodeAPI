@@ -29,10 +29,12 @@ import com.google.common.base.Functions;
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonCountryDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeCreationResponseDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonLinkUserToDataNodeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonProfessionalTypeDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonStateProvinceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
@@ -58,7 +60,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -198,6 +199,18 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     public JsonResult<List<CommonProfessionalTypeDTO>> getProfessionalTypes() {
 
         return centralClient.getProfessionalTypes();
+    }
+
+    @Override
+    public JsonResult<List<CommonCountryDTO>> getCountries(String query, Integer limit, Long includeId) {
+
+        return centralClient.getCountries(query, limit, includeId);
+    }
+
+    @Override
+    public JsonResult<List<CommonStateProvinceDTO>> getStateProvinces(String countryId, String query, Integer limit, String includeId) {
+
+        return centralClient.getStateProvinces(countryId, query, limit, includeId);
     }
 
     @Override

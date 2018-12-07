@@ -26,21 +26,25 @@ import static com.odysseusinc.arachne.datanode.Constants.CentralApi.DataNode.CRE
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.DataSource.GET_LIST;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.DataSource.UPDATE;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.AUTH_METHOD;
+import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.COUNTRIES;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.GET_USER;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.LOGIN;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.LOGOUT;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.PASSWORD_POLICIES;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.PROFESSIONAL_TYPES;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.REGISTRATION;
+import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.STATES_PROVINCES;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.SUGGEST;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.USER_INFO;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonCountryDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeCreationResponseDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonProfessionalTypeDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonStateProvinceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
@@ -85,6 +89,17 @@ public interface CentralClient {
 
     @RequestLine("GET " + PROFESSIONAL_TYPES)
     JsonResult<List<CommonProfessionalTypeDTO>> getProfessionalTypes();
+
+    @RequestLine("GET " + COUNTRIES + "?query={query}&limit={limit}&includeId={includeId}")
+    JsonResult<List<CommonCountryDTO>> getCountries(@Param("query") String query,
+                                                    @Param("limit") Integer limit,
+                                                    @Param("includeId") Long includeId);
+
+    @RequestLine("GET " + STATES_PROVINCES + "?countryId={countryId}&query={query}&limit={limit}&includeId={includeId}")
+    JsonResult<List<CommonStateProvinceDTO>> getStateProvinces(@Param("countryId") String countryId,
+                                                               @Param("query") String query,
+                                                               @Param("limit") Integer limit,
+                                                               @Param("includeId") String includeId);
 
     @RequestLine("GET " + USER_INFO)
     JsonResult<UserDTO> getUserInfo(@HeaderMap Map<String, Object> headers);
