@@ -38,4 +38,6 @@ public interface DataSourceRepository extends JpaRepository<DataSource, Long> {
     Stream<DataSource> findAllByCentralIdIsNull();
 
     List<DataSource> findAllByDeletedAtIsNull(Sort sort);
+
+    List<DataSource> findAllByDeletedAtIsNull();
 }
