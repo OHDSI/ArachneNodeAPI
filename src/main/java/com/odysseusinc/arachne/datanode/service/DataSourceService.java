@@ -33,9 +33,7 @@ import java.util.Optional;
 public interface DataSourceService {
     DataSource create(User owner, DataSource dataSource) throws NotExistException;
 
-    List<DataSource> findAll();
-
-    List<DataSource> findAll(String sortBy, Boolean sortAsc);
+    List<DataSource> findAllNotDeleted();
 
     List<DataSource> findAllNotDeleted(String sortBy, Boolean sortAsc);
 

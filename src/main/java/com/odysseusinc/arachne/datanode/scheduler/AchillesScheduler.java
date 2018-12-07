@@ -77,7 +77,7 @@ public class AchillesScheduler {
         @Override
         public void run() {
 
-            dataSourceService.findAll().forEach(achillesService::executeAchilles);
+            dataSourceService.findAllNotDeleted().forEach(achillesService::executeAchilles);
         }
     }
 }
