@@ -115,15 +115,9 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     @Override
-    public List<DataSource> findAll() {
+    public List<DataSource> findAllNotDeleted() {
 
-        return dataSourceRepository.findAll();
-    }
-
-    @Override
-    public List<DataSource> findAll(String sortBy, Boolean sortAsc) {
-
-        return dataSourceRepository.findAll(getSort(sortBy, sortAsc));
+        return dataSourceRepository.findAllByDeletedAtIsNull();
     }
 
     @Override
