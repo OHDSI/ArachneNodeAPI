@@ -102,6 +102,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/auth/method**").permitAll()
                 .antMatchers("/api/v1/auth/password-policies**").permitAll()
                 .antMatchers("/api/v1/user-management/professional-types**").permitAll()
+                .antMatchers("/api/v1/user-management/countries/**").permitAll()
+                .antMatchers("/api/v1/user-management/state-province/**").permitAll()
                 .antMatchers("/api/v1/auth/registration**").permitAll()
                 .antMatchers("/swagger-ui.html/**").permitAll()
                 .antMatchers("/webjars/**").permitAll()
