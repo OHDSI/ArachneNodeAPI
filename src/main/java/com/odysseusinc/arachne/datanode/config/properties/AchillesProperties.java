@@ -35,6 +35,9 @@ public class AchillesProperties {
     @NotNull
     private String imageName;
 
+    @NotNull
+    private String networkMode;
+
     private AuthConfig authConfig = new AuthConfig();
 
     private RetryConfig retry = new RetryConfig();
@@ -52,6 +55,16 @@ public class AchillesProperties {
     public void setImageName(String imageName) {
 
         this.imageName = imageName;
+    }
+
+    public String getNetworkMode() {
+
+        return networkMode;
+    }
+
+    public void setNetworkMode(String networkMode) {
+
+        this.networkMode = networkMode;
     }
 
     public RetryConfig getRetry() {
