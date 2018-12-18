@@ -159,7 +159,7 @@ public class AchillesServiceImpl implements AchillesService {
     @Value("${datanode.arachneCentral.port}")
     protected Integer centralPort;
 
-    @Value("${tmp.location-on-host}")
+    @Value("${tmp.location-on-host:}")
     protected String tmpLocationOnHost;
 
     @Autowired
