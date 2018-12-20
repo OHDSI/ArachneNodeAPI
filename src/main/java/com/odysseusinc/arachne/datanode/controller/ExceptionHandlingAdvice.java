@@ -28,6 +28,7 @@ import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCo
 import static java.util.Arrays.asList;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
+import com.odysseusinc.arachne.commons.utils.ErrorMessages;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
@@ -131,6 +132,8 @@ public class ExceptionHandlingAdvice extends BaseController {
             final String errorToken = generateErrorToken();
             LOGGER.error(message + " token: " + errorToken, ex);
             result.setErrorMessage(String.format(ERROR_MESSAGE_WITH_TOKEN, errorToken));
+        } else if (ErrorMessages.BAD_CREDENTIALS.getMessage().equalsIgnoreCase(message) || ErrorMessages.USER_NOT_REGISTERED.getMessage().equalsIgnoreCase(message)) {
+            LOGGER.error(message);
         } else {
             LOGGER.error(message, ex);
         }
@@ -140,7 +143,7 @@ public class ExceptionHandlingAdvice extends BaseController {
     private String getErrorMessage(final JsonResult result, final Exception ex) {
 
         return asList(UNAUTHORIZED.getCode(), VALIDATION_ERROR.getCode()).contains(result.getErrorCode()) ?
-               ex.getMessage() : ERROR_MESSAGE;
+                ex.getMessage() : ERROR_MESSAGE;
     }
 
     @ExceptionHandler(IntegrationValidationException.class)

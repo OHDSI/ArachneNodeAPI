@@ -48,7 +48,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +99,7 @@ public class AuthController {
         String username = authenticationRequest.getUsername();
         String centralToken = integrationService.loginToCentral(username, authenticationRequest.getPassword());
         if (centralToken == null) {
-            return new JsonResult<>(JsonResult.ErrorCode.UNAUTHORIZED);
+            throw new AuthException("central auth error");
         }
         User centralUser = integrationService.getUserInfoFromCentral(centralToken);
         User user = userService.findByUsername(username).orElseGet(() -> userService.createIfFirst(centralUser));
@@ -123,12 +122,8 @@ public class AuthController {
 
         JsonResult<String> result;
         String token = request.getHeader(this.tokenHeader);
-        Optional<User> userOpt = userService.findByUsername(tokenUtils.getUsernameFromToken(token));
-        if (!userOpt.isPresent()) {
-            log.info("User is not logged in");
-            return new JsonResult<>(JsonResult.ErrorCode.UNAUTHORIZED);
-        }
-        User user = userOpt.get();
+        User user = userService.findByUsername(tokenUtils.getUsernameFromToken(token))
+                .orElseThrow(() -> new AuthException("user not registered"));
         Map<String, String> header = new HashMap<>();
         header.put(this.tokenHeader, token);
         String centralToken = centralClient.refreshToken(header).getResult();
