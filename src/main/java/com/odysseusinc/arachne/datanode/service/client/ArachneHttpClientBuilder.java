@@ -37,6 +37,13 @@ public class ArachneHttpClientBuilder {
     @Value("${proxy.auth.password}")
     private String proxyPassword;
 
+    @Value("${datanode.httpClient.connectTimeout}")
+    private Integer connectTimeout;
+    @Value("${datanode.httpClient.writeTimeout}")
+    private Integer writeTimeout;
+    @Value("${datanode.httpClient.readTimeout}")
+    private Integer readTimeout;
+
     @Value("${server.ssl.strictMode}")
     private Boolean sslStrictMode;
 
@@ -85,9 +92,9 @@ public class ArachneHttpClientBuilder {
     protected OkHttpClient buildOkHttpClient(boolean proxyEnabled) {
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                .connectTimeout(60, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
-                .readTimeout(60, TimeUnit.SECONDS);
+                .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+                .writeTimeout(writeTimeout, TimeUnit.SECONDS)
+                .readTimeout(readTimeout, TimeUnit.SECONDS);
 
         if (proxyEnabled) {
 
