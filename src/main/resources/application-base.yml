@@ -163,5 +163,6 @@ cohorts:
     summaryEnabled: false
     defaultTargetTable: cohort
 tmp:
+  location-on-host:
   holder:
     cron: 0 * * ? * *
