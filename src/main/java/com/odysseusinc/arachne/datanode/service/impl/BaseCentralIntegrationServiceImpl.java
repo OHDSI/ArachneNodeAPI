@@ -174,13 +174,14 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
         if (result == null) {
             throw new AuthException("Empty response body");
         }
-
         if (result.getErrorCode() != 0) {
             throw new AuthException(result.getErrorMessage());
         }
-
         if (result.getResult() == null) {
             throw new AuthException("Missing JWT token from central");
+        }
+        if (((Map) result.getResult()).get("token") == null) {
+            throw new AuthException("JWT token from central is empty");
         }
 
         return ((Map) result.getResult()).get("token").toString();
