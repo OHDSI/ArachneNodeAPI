@@ -111,6 +111,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import net.lingala.zip4j.exception.ZipException;
@@ -156,6 +158,9 @@ public class AchillesServiceImpl implements AchillesService {
     protected String centralHost;
     @Value("${datanode.arachneCentral.port}")
     protected Integer centralPort;
+
+    @Value("${tmp.location-on-host:}")
+    protected String tmpLocationOnHost;
 
     @Autowired
     protected ApplicationContext applicationContext;
@@ -509,6 +514,16 @@ public class AchillesServiceImpl implements AchillesService {
         }
     }
 
+    private String getTempLocationOnHost(Path workDir) {
+        if (StringUtils.isEmpty(tmpLocationOnHost)) {
+            return workDir.toString();
+        }
+        return workDir.toString().replaceFirst(
+                "^" + Pattern.quote(System.getProperty("java.io.tmpdir")),
+                Matcher.quoteReplacement(tmpLocationOnHost)
+        );
+    }
+
     private Path runAchilles(final DataSource dataSource, AchillesJob job, Path workDir) throws IOException {
 
         LOGGER.debug("Achilles result directory: {}", workDir);
@@ -534,7 +549,7 @@ public class AchillesServiceImpl implements AchillesService {
                         env(ACHILLES_CDM_VERSION, Constants.Achilles.DEFAULT_CDM_VERSION)
                 )
                 .withVolumes(outputVolume)
-                .withBinds(new Bind(workDir.toString(), outputVolume))
+                .withBinds(new Bind(getTempLocationOnHost(workDir), outputVolume))
                 .withNetworkMode(properties.getNetworkMode())
                 .exec();
         LOGGER.debug("Container created: {}", container.getId());
