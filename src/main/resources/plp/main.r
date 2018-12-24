@@ -4,6 +4,6 @@ connStr <- Sys.getenv("CONNECTION_STRING")
 user <- Sys.getenv("DBMS_USERNAME")
 pw <- Sys.getenv("DBMS_PASSWORD")
 cdmDatabaseSchema <- Sys.getenv("DBMS_SCHEMA")
-cohortsDatabaseSchema <-cdmDatabaseSchema
+cohortsDatabaseSchema <- Sys.getenv("RESULT_SCHEMA")
 source("run_plp_analysis.r")
 run_plp_analysis(workDir, file.path(workDir, "analysisDescription.json"), file.path(workDir, "{{initialFileName}}"), file.path(workDir, "{{outcomeFileName}}"), dbms, connStr, user, pw, cdmDatabaseSchema, cohortsDatabaseSchema, cohortTable = "cohort", outcomeTable = "cohort")
