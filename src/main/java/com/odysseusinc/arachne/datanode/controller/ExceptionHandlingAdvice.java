@@ -25,10 +25,11 @@ package com.odysseusinc.arachne.datanode.controller;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.SYSTEM_ERROR;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.UNAUTHORIZED;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
+import static com.odysseusinc.arachne.commons.utils.ErrorMessages.BAD_CREDENTIALS;
+import static com.odysseusinc.arachne.commons.utils.ErrorMessages.USER_NOT_REGISTERED;
 import static java.util.Arrays.asList;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
-import com.odysseusinc.arachne.commons.utils.ErrorMessages;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
@@ -132,7 +133,7 @@ public class ExceptionHandlingAdvice extends BaseController {
             final String errorToken = generateErrorToken();
             LOGGER.error(message + " token: " + errorToken, ex);
             result.setErrorMessage(String.format(ERROR_MESSAGE_WITH_TOKEN, errorToken));
-        } else if (ErrorMessages.BAD_CREDENTIALS.getMessage().equalsIgnoreCase(message) || ErrorMessages.USER_NOT_REGISTERED.getMessage().equalsIgnoreCase(message)) {
+        } else if (asList(BAD_CREDENTIALS.getMessage().toLowerCase(), USER_NOT_REGISTERED.getMessage().toLowerCase()).contains(message.toLowerCase())) {
             LOGGER.error(message);
         } else {
             LOGGER.error(message, ex);
