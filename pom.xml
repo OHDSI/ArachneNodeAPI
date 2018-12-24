@@ -367,8 +367,8 @@
                 <version>1.9.5</version>
                 <configuration>
                     <connectionType>developerConnection</connectionType>
-                    <!--<scmVersion>${atlas.version}</scmVersion>-->
-                    <!--<scmVersionType>branch</scmVersionType>-->
+                    <scmVersion>v1.5.0</scmVersion>
+                    <scmVersionType>tag</scmVersionType>
                     <checkoutDirectory>src/achilles</checkoutDirectory>
                     <skipCheckoutIfExists/>
                 </configuration>
