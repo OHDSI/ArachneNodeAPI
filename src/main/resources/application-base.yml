@@ -103,6 +103,10 @@ datanode:
     port: 443
     authHeader: Arachne-Auth-Token
     nodeAuthHeader: Arachne-System-Token
+  httpClient:
+    connectTimeout: 60
+    writeTimeout: 60
+    readTimeout: 60
 swagger:
   enabled: false
 proxy:
