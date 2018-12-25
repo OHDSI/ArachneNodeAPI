@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,6 +46,8 @@ public interface UserService extends UserDetailsService {
     void setToken(User user, String token);
 
     User createIfFirst(User centralUserDto) throws AlreadyExistsException;
+
+    User updateUserInfo(User centralUserDto);
 
     List<User> suggestNotAdmin(User user, String query, Integer limit);
 

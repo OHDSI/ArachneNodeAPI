@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,8 @@ public class UserInfoDTO {
 
     private String username;
     private Boolean isAdmin;
+    private String firstname;
+    private String lastname;
 
     public String getUsername() {
 
@@ -45,5 +47,21 @@ public class UserInfoDTO {
     public void setIsAdmin(Boolean admin) {
 
         isAdmin = admin;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
     }
 }

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,6 +60,8 @@ public interface Constants {
             String AUTH_METHOD = "/api/v1/auth/method";
             String LOGIN = "/api/v1/auth/login";
             String PROFESSIONAL_TYPES = "/api/v1/user-management/professional-types";
+            String COUNTRIES = "/api/v1/user-management/countries/search";
+            String STATES_PROVINCES = "/api/v1/user-management/state-province/search";
             String REGISTER_USER = "/api/v1/auth/registration";
             String LOGOUT = "/api/v1/auth/logout";
             String REGISTRATION = "/api/v1/auth/registration";
@@ -73,6 +75,7 @@ public interface Constants {
         interface Submission {
             String UPLOAD = "/api/v1/analysis-management/submissions/result/upload";
             String UPDATE_STATUS = "/api/v1/analysis-management/submissions/{id}/status/{password}";
+            String DOWNLOAD_FILE = "/api/v1/analysis-management/submissions/{submissionId}/files?fileName={fileName}&updatePassword={updatePassword}";
         }
 
         interface Achilles {
@@ -114,6 +117,7 @@ public interface Constants {
             String DS_MODEL_CHECK_UPDATE = "/api/v1/data-sources/{id}/check/update/{password}";
             String GET_BUSINESS = "/api/v1/data-sources/{id}/business";
             String UPDATE_BUSINESS = "/api/v1/data-sources/{id}/business";
+            String DELETE_KEYTAB = "/api/v1/data-sources/{id}/keytab";
         }
     }
 

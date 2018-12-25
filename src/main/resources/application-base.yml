@@ -12,7 +12,9 @@ server:
     enabled: true
     mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
 logging:
-  level: info
+  level:
+    root: INFO
+    org.springframework.web.servlet.PageNotFound: ERROR
 #  com.odysseusinc.arachne.datanode.service.AchillesService: DEBUG
 flyway:
   datasource:
@@ -101,6 +103,10 @@ datanode:
     port: 443
     authHeader: Arachne-Auth-Token
     nodeAuthHeader: Arachne-System-Token
+  httpClient:
+    connectTimeout: 60
+    writeTimeout: 60
+    readTimeout: 60
 swagger:
   enabled: false
 proxy:
@@ -120,7 +126,8 @@ docker:
     username: user
     password:
 achilles:
-  image-name: hub.arachnenetwork.com/achilles:1.0.0
+  image-name: hub.arachnenetwork.com/achilles:1.5.0
+  network-mode: arachnenetwork
   auth-config:
     registry-address: hub.arachnenetwork.com
     username: user
@@ -160,5 +167,6 @@ cohorts:
     summaryEnabled: false
     defaultTargetTable: cohort
 tmp:
+  location-on-host:
   holder:
     cron: 0 * * ? * *

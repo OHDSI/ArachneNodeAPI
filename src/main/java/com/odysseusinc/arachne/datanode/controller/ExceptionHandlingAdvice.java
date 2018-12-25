@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,18 +25,21 @@ package com.odysseusinc.arachne.datanode.controller;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.SYSTEM_ERROR;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.UNAUTHORIZED;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
+import static com.odysseusinc.arachne.commons.utils.ErrorMessages.BAD_CREDENTIALS;
+import static com.odysseusinc.arachne.commons.utils.ErrorMessages.USER_NOT_REGISTERED;
+import static java.util.Arrays.asList;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
-import com.odysseusinc.arachne.nohandlerfoundexception.NoHandlerFoundExceptionUtils;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.service.UserService;
+import com.odysseusinc.arachne.nohandlerfoundexception.NoHandlerFoundExceptionUtils;
+import feign.FeignException;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Objects;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -46,6 +49,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -83,9 +88,20 @@ public class ExceptionHandlingAdvice extends BaseController {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<JsonResult> exceptionHandler(MethodArgumentNotValidException ex) {
 
+        return getValidationErrorResponse(ex.getBindingResult(), ex);
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(BindException ex) {
+
+        return getValidationErrorResponse(ex.getBindingResult(), ex);
+    }
+
+    private ResponseEntity<JsonResult> getValidationErrorResponse(BindingResult bindingResult, Exception ex) {
+
         JsonResult result = new JsonResult<>(VALIDATION_ERROR);
-        if (ex.getBindingResult().hasErrors()) {
-            result = setValidationErrors(ex.getBindingResult());
+        if (bindingResult.hasErrors()) {
+            result = setValidationErrors(bindingResult);
         }
         return getErrorResponse(result, ex);
     }
@@ -117,6 +133,8 @@ public class ExceptionHandlingAdvice extends BaseController {
             final String errorToken = generateErrorToken();
             LOGGER.error(message + " token: " + errorToken, ex);
             result.setErrorMessage(String.format(ERROR_MESSAGE_WITH_TOKEN, errorToken));
+        } else if (asList(BAD_CREDENTIALS.getMessage().toLowerCase(), USER_NOT_REGISTERED.getMessage().toLowerCase()).contains(message.toLowerCase())) {
+            LOGGER.error(message);
         } else {
             LOGGER.error(message, ex);
         }
@@ -125,8 +143,8 @@ public class ExceptionHandlingAdvice extends BaseController {
 
     private String getErrorMessage(final JsonResult result, final Exception ex) {
 
-        // return default ERROR_MESSAGE for all exceptions except Validation error
-        return Objects.equals(result.getErrorCode(), VALIDATION_ERROR.getCode()) ? ex.getMessage() : ERROR_MESSAGE;
+        return asList(UNAUTHORIZED.getCode(), VALIDATION_ERROR.getCode()).contains(result.getErrorCode()) ?
+                ex.getMessage() : ERROR_MESSAGE;
     }
 
     @ExceptionHandler(IntegrationValidationException.class)
@@ -154,6 +172,15 @@ public class ExceptionHandlingAdvice extends BaseController {
         return getErrorResponse(SYSTEM_ERROR, ex);
     }
 
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(FeignException ex) {
+
+        LOGGER.error(ex.getMessage(), ex);
+        JsonResult result = new JsonResult(SYSTEM_ERROR);
+        result.setErrorMessage("External system is not available");
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
     private String generateErrorToken() {
 
         return UUID.randomUUID().toString();
@@ -164,4 +191,5 @@ public class ExceptionHandlingAdvice extends BaseController {
 
         noHandlerFoundExceptionUtils.handleNotFoundError(request, response);
     }
+
 }

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -115,15 +115,9 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     @Override
-    public List<DataSource> findAll() {
+    public List<DataSource> findAllNotDeleted() {
 
-        return dataSourceRepository.findAll();
-    }
-
-    @Override
-    public List<DataSource> findAll(String sortBy, Boolean sortAsc) {
-
-        return dataSourceRepository.findAll(getSort(sortBy, sortAsc));
+        return dataSourceRepository.findAllByDeletedAtIsNull();
     }
 
     @Override
@@ -209,6 +203,38 @@ public class DataSourceServiceImpl implements DataSourceService {
         if (Objects.nonNull(atlasTargetCohortTable)) {
             exists.setCohortTargetTable(atlasTargetCohortTable);
         }
+        if (DBMSType.IMPALA.equals(type)) {
+            final Boolean useKerberos = dataSource.getUseKerberos();
+            if (Objects.nonNull(useKerberos)) {
+                exists.setUseKerberos(useKerberos);
+            }
+            final String krbRealm = dataSource.getKrbRealm();
+            if (Objects.nonNull(krbRealm)) {
+                exists.setKrbRealm(krbRealm);
+            }
+            final String krbFQDN = dataSource.getKrbFQDN();
+            if (Objects.nonNull(krbFQDN)) {
+                exists.setKrbFQDN(krbFQDN);
+            }
+            final String krbUser = dataSource.getKrbUser();
+            if (Objects.nonNull(krbUser)) {
+                exists.setKrbUser(krbUser);
+            }
+            final String krbPassword = dataSource.getKrbPassword();
+            if (isNotDummyPassword(krbPassword)) {
+                exists.setKrbPassword(krbPassword);
+            }
+            final byte[] keytab = dataSource.getKrbKeytab();
+            if (Objects.nonNull(keytab)) {
+                exists.setKrbKeytab(keytab);
+            }
+        } else {
+            exists.setKrbRealm(null);
+            exists.setKrbFQDN(null);
+            exists.setKrbUser(null);
+            exists.setKrbPassword(null);
+            exists.setKrbKeytab(null);
+        }
 
         AutoDetectedFields autoDetectedFields = autoDetectFields(exists);
         DataSource updated = dataSourceRepository.save(exists);
@@ -240,6 +266,13 @@ public class DataSourceServiceImpl implements DataSourceService {
     public AutoDetectedFields autoDetectFields(DataSource dataSource) {
 
         return new AutoDetectedFields(CommonModelType.CDM);
+    }
+
+    @Override
+    public void removeKeytab(DataSource dataSource) {
+
+        dataSource.setKrbKeytab(null);
+        dataSourceRepository.save(dataSource);
     }
 
     protected final Sort getSort(String sortBy, Boolean sortAsc) {
