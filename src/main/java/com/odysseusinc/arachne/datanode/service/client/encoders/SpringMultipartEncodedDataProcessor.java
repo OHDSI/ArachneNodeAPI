@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,6 +36,7 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,7 +45,7 @@ public class SpringMultipartEncodedDataProcessor implements FormDataProcessor {
 
     public static final String CONTENT_TYPE;
 
-    private static final String CRLF;
+    protected static final String CRLF;
 
     static {
         CONTENT_TYPE = "multipart/form-data";
@@ -87,13 +88,13 @@ public class SpringMultipartEncodedDataProcessor implements FormDataProcessor {
                 for (Object value: entry.getValue()) {
                     writer.append("--" + boundary).append(CRLF);
 
-                    if (value != null && value instanceof MultipartFile) {
+                    if (value instanceof MultipartFile) {
                         MultipartFile mpf = (MultipartFile) value;
                         writeByteArray(outputStream, writer, key, mpf.getName(), mpf.getContentType(), mpf.getBytes());
-                    } else if (value != null && value instanceof File) {
+                    } else if (value instanceof File) {
                         writeFile(outputStream, writer, key, null, (File) value);
-                    } else {
-                        writeParameter(writer, entry.getKey(), entry.getValue().toString());
+                    } else if (Objects.nonNull(value)) {
+                        writeParameter(writer, entry.getKey(), value);
                     }
                     writer.append(CRLF).flush();
                 }
@@ -122,10 +123,10 @@ public class SpringMultipartEncodedDataProcessor implements FormDataProcessor {
         return Long.toHexString(System.currentTimeMillis());
     }
 
-    private void writeParameter (PrintWriter writer, String name, String value) {
+    protected void writeParameter (PrintWriter writer, String name, Object value) {
         writer.append("Content-Disposition: form-data; name=\"" + name + "\"").append(CRLF);
         writer.append("Content-Type: text/plain; charset=UTF-8").append(CRLF);
-        writer.append(CRLF).append(value);
+        writer.append(CRLF).append(value.toString());
     }
 
     protected void writeFile (OutputStream output, PrintWriter writer, String name, String contentType, File file) throws IOException {

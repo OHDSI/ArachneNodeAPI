@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,9 +33,7 @@ import java.util.Optional;
 public interface DataSourceService {
     DataSource create(User owner, DataSource dataSource) throws NotExistException;
 
-    List<DataSource> findAll();
-
-    List<DataSource> findAll(String sortBy, Boolean sortAsc);
+    List<DataSource> findAllNotDeleted();
 
     List<DataSource> findAllNotDeleted(String sortBy, Boolean sortAsc);
 
@@ -52,4 +50,6 @@ public interface DataSourceService {
     void updateHealthStatus(Long centralId, CommonHealthStatus status, String description);
 
     AutoDetectedFields autoDetectFields(DataSource dataSource);
+
+    void removeKeytab(DataSource dataSource);
 }

@@ -6,7 +6,7 @@
 
     <artifactId>datanode</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.12.3</version>
+    <version>1.13.0</version>
     <packaging>jar</packaging>
 
 
@@ -231,7 +231,7 @@
         <dependency>
             <groupId>com.oracle</groupId>
             <artifactId>ojdbc6</artifactId>
-            <version>12.1.0.1-atlassian-hosted</version>
+            <version>12.1.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.jasypt</groupId>
@@ -367,8 +367,8 @@
                 <version>1.9.5</version>
                 <configuration>
                     <connectionType>developerConnection</connectionType>
-                    <!--<scmVersion>${atlas.version}</scmVersion>-->
-                    <!--<scmVersionType>branch</scmVersionType>-->
+                    <scmVersion>v1.5.0</scmVersion>
+                    <scmVersionType>tag</scmVersionType>
                     <checkoutDirectory>src/achilles</checkoutDirectory>
                     <skipCheckoutIfExists/>
                 </configuration>
@@ -405,6 +405,12 @@
                 </executions>
             </plugin>
         </plugins>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+            </testResource>
+        </testResources>
         <finalName>datanode</finalName>
     </build>
 

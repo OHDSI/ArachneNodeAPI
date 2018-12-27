@@ -6,6 +6,7 @@ import java.net.Proxy;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -36,12 +37,24 @@ public class ArachneHttpClientBuilder {
     @Value("${proxy.auth.password}")
     private String proxyPassword;
 
+    @Value("${datanode.httpClient.connectTimeout}")
+    private Integer connectTimeout;
+    @Value("${datanode.httpClient.writeTimeout}")
+    private Integer writeTimeout;
+    @Value("${datanode.httpClient.readTimeout}")
+    private Integer readTimeout;
+
     @Value("${server.ssl.strictMode}")
     private Boolean sslStrictMode;
 
     public Client build() {
 
-        return new feign.okhttp.OkHttpClient(buildOkHttpClient());
+        return new feign.okhttp.OkHttpClient(buildOkHttpClient(proxyEnabled));
+    }
+
+    public Client build(boolean proxyEnabled) {
+
+        return new feign.okhttp.OkHttpClient(buildOkHttpClient(proxyEnabled));
     }
 
     public static TrustManager[] getTrustAllCertsManager() {
@@ -76,12 +89,12 @@ public class ArachneHttpClientBuilder {
         return sc.getSocketFactory();
     }
 
-    protected OkHttpClient buildOkHttpClient() {
+    protected OkHttpClient buildOkHttpClient(boolean proxyEnabled) {
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                .connectTimeout(60, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
-                .readTimeout(60, TimeUnit.SECONDS);
+                .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+                .writeTimeout(writeTimeout, TimeUnit.SECONDS)
+                .readTimeout(readTimeout, TimeUnit.SECONDS);
 
         if (proxyEnabled) {
 
@@ -103,7 +116,9 @@ public class ArachneHttpClientBuilder {
 
         if (!sslStrictMode) {
             try {
-                builder.sslSocketFactory(getTrustAllSSLSocketFactory());
+                SSLSocketFactory sslSocketFactory = getTrustAllSSLSocketFactory();
+                builder.sslSocketFactory(sslSocketFactory);
+                HttpsURLConnection.setDefaultSSLSocketFactory(sslSocketFactory);
                 builder.hostnameVerifier((hostname, session) -> true);
             } catch (KeyManagementException | NoSuchAlgorithmException ex) {
                 LOGGER.error("Cannot disable strict SSL mode", ex);

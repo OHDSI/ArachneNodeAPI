@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,7 +47,6 @@ import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -64,10 +63,11 @@ import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.util.CollectionUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 public abstract class BaseDataSourceController<DS extends DataSource, BusinessDTO extends DataSourceBusinessDTO, CommonDTO extends CommonDataSourceDTO> extends BaseController {
 
@@ -107,7 +107,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     @ApiOperation(value = "Add data source")
     @RequestMapping(value = Constants.Api.DataSource.ADD, method = RequestMethod.POST)
     public JsonResult<DataSourceDTO> add(Principal principal,
-                                         @Valid @RequestBody CreateDataSourceDTO dataSourceDTO,
+                                         @Valid @RequestPart("dataSource") CreateDataSourceDTO dataSourceDTO,
+                                         @RequestPart(name = "krbKeytab", required = false) MultipartFile keytab,
                                          BindingResult bindingResult
     ) throws NotExistException, PermissionDeniedException {
 
@@ -115,6 +116,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
+        dataSourceDTO.setKrbKeytab(keytab);
         DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
         DataSource optional = dataSourceService.create(user, dataSource);
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
@@ -220,12 +222,12 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     @ApiOperation(value = "Updates given data source")
     @RequestMapping(
             value = Constants.Api.DataSource.UPDATE,
-            method = RequestMethod.PUT,
-            consumes = MediaType.APPLICATION_JSON_VALUE
+            method = RequestMethod.PUT
     )
     public JsonResult<DataSourceDTO> update(Principal principal,
-                                            @Valid @RequestBody CreateDataSourceDTO dataSourceDTO,
+                                            @Valid @RequestPart("dataSource") CreateDataSourceDTO dataSourceDTO,
                                             @PathVariable("id") Long id,
+                                            @RequestPart(name = "krbKeytab", required = false) MultipartFile keytab,
                                             BindingResult bindingResult)
             throws PermissionDeniedException {
 
@@ -233,6 +235,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
+        dataSourceDTO.setKrbKeytab(keytab);
         DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
         dataSource.setId(id);
 
@@ -240,6 +243,17 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
         result.setResult(conversionService.convert(savedDataSource, DataSourceDTO.class));
         return result;
+    }
+
+    @RequestMapping(
+            value = Constants.Api.DataSource.DELETE_KEYTAB,
+            method = RequestMethod.DELETE
+    )
+    public JsonResult removeKeytab(@PathVariable("id") Long id){
+
+        DataSource dataSource = dataSourceService.getById(id);
+        dataSourceService.removeKeytab(dataSource);
+        return new JsonResult(NO_ERROR);
     }
 
     public JsonResult unpublishAndDeleteOnCentral(Long dataSourceId) {

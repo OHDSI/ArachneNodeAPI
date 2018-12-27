@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,17 +26,13 @@ import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPa
 
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
-import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
+import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
-import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
-import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthRequestInterceptor;
-
-
-import com.odysseusinc.arachne.datanode.Constants;
-import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
+import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
+import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthRequestInterceptor;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthSchema;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasLoginClient;
@@ -48,54 +44,44 @@ import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 public class AtlasServiceImpl implements AtlasService {
     private Logger log = LoggerFactory.getLogger(AtlasServiceImpl.class);
 
-    private final RestTemplate atlasRestTemplate;
     private final GenericConversionService conversionService;
     private final ArachneHttpClientBuilder arachneHttpClientBuilder;
     private final AtlasRepository atlasRepository;
     private final CentralSystemClient centralSystemClient;
     private HttpHeaders headers;
 
-    private Map<Atlas, AtlasClient> atlasClientPool = new HashMap<>();
+    private Map<Atlas, AtlasClient> atlasClientPool = new ConcurrentHashMap<>();
 
     @Autowired
     public AtlasServiceImpl(GenericConversionService genericConversionService,
-                            @Qualifier("atlasRestTemplate") RestTemplate atlasRestTemplate,
                             AtlasRepository atlasRepository,
                             CentralSystemClient centralSystemClient,
                             ArachneHttpClientBuilder arachneHttpClientBuilder) {
 
         this.conversionService = genericConversionService;
-        this.atlasRestTemplate = atlasRestTemplate;
         this.atlasRepository = atlasRepository;
         this.centralSystemClient = centralSystemClient;
         this.arachneHttpClientBuilder = arachneHttpClientBuilder;
@@ -125,14 +111,14 @@ public class AtlasServiceImpl implements AtlasService {
         headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_FORM_URLENCODED_VALUE));
 
-        String atlasVersion = checkVersion(atlas.getUrl());
+        String atlasVersion = checkVersion(atlas);
 
         if (!Objects.equals(AtlasAuthSchema.NONE, atlas.getAuthType())) {
             String atlasToken = authToAtlas(atlas.getUrl(), atlas.getAuthType(), atlas.getUsername(), atlas.getPassword());
             headers.add(AtlasAuthRequestInterceptor.AUTHORIZATION_HEADER, AtlasAuthRequestInterceptor.BEARER_PREFIX + atlasToken);
         }
 
-        getCohortDefinitionCount(atlas.getUrl());
+        getCohortDefinitionCount(atlas);
 
         return Optional.ofNullable(atlasVersion).orElseThrow(
                 () -> new ServiceNotAvailableException("Atlas version is null"));
@@ -192,6 +178,7 @@ public class AtlasServiceImpl implements AtlasService {
             syncWithCentral(updated);
         }
 
+        atlasClientPool.replace(updated, buildAtlasClient(updated));
         return updated;
     }
 
@@ -202,6 +189,7 @@ public class AtlasServiceImpl implements AtlasService {
         Atlas atlas = atlasRepository.findOne(atlasId);
         atlasRepository.delete(atlas.getId());
         centralSystemClient.deleteAtlas(atlas.getCentralId());
+        atlasClientPool.remove(atlas);
     }
 
     @Override
@@ -241,12 +229,11 @@ public class AtlasServiceImpl implements AtlasService {
         return atlasClientPool.computeIfAbsent(atlas, this::buildAtlasClient);
     }
 
-    private String checkVersion(String url) {
+    private String checkVersion(Atlas atlas) {
 
         AtlasClient.Info info;
         try {
-            info = atlasRestTemplate.getForObject(
-                    new URI(url + Constants.Atlas.INFO), AtlasClient.Info.class);
+            info = getOrCreate(atlas).getInfo();
         } catch (Exception e) {
             throw new ServiceNotAvailableException("Incorrect Atlas address");
         }
@@ -301,15 +288,10 @@ public class AtlasServiceImpl implements AtlasService {
                 .target(AtlasLoginClient.class, url);
     }
 
-    private void getCohortDefinitionCount(String url) {
+    private void getCohortDefinitionCount(Atlas atlas) {
 
         try {
-            HttpEntity request = new HttpEntity(headers);
-            atlasRestTemplate.exchange(
-                    new URI(url + Constants.Atlas.COHORT_DEFINITION),
-                    HttpMethod.GET, request,
-                    new ParameterizedTypeReference<List<CohortDefinition>>() {
-                    });
+            getOrCreate(atlas).getCohortDefinitions();
         } catch (Exception e) {
             throw new ServiceNotAvailableException("Failed to get Cohort Definitions");
         }

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 Observational Health Data Sciences and Informatics
+ * Copyright 2018 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,9 @@ import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationResponse;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonCountryDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonProfessionalTypeDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonStateProvinceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
@@ -44,6 +46,7 @@ import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -54,6 +57,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 //import static com.odysseusinc.arachne.datanode.Constants.Api.Auth.LOGIN_ENTRY_POINT;
@@ -91,28 +95,23 @@ public class AuthController {
             throws AuthenticationException {
 
         JsonResult<CommonAuthenticationResponse> jsonResult;
-        try {
-            final String token;
-            String username = authenticationRequest.getUsername();
-            String centralToken = integrationService.loginToCentral(username, authenticationRequest.getPassword());
-            if (centralToken == null) {
-                throw new AuthException("central auth error");
-            }
-            User centralUser = integrationService.getUserInfoFromCentral(centralToken);
-            User user = userService.findByUsername(username).orElseGet(() -> userService.createIfFirst(centralUser));
-            userService.setToken(user, centralToken);
-            String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
-            Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
-            token = tokenUtils.generateToken(user, createdDateFromToken);
-
-            jsonResult = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-            CommonAuthenticationResponse authenticationResponse = new CommonAuthenticationResponse(token);
-            jsonResult.setResult(authenticationResponse);
-        } catch (Exception ex) {
-            log.error(ex.getMessage(), ex);
-            jsonResult = new JsonResult<>(JsonResult.ErrorCode.UNAUTHORIZED);
-            jsonResult.setErrorMessage(ex.getMessage());
+        final String token;
+        String username = authenticationRequest.getUsername();
+        String centralToken = integrationService.loginToCentral(username, authenticationRequest.getPassword());
+        if (centralToken == null) {
+            throw new AuthException("central auth error");
         }
+        User centralUser = integrationService.getUserInfoFromCentral(centralToken);
+        User user = userService.findByUsername(username).orElseGet(() -> userService.createIfFirst(centralUser));
+        userService.updateUserInfo(centralUser);
+        userService.setToken(user, centralToken);
+        String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
+        Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
+        token = tokenUtils.generateToken(user, createdDateFromToken);
+
+        jsonResult = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+        CommonAuthenticationResponse authenticationResponse = new CommonAuthenticationResponse(token);
+        jsonResult.setResult(authenticationResponse);
         // Return the token
         return jsonResult;
     }
@@ -122,27 +121,22 @@ public class AuthController {
     public JsonResult<String> refresh(HttpServletRequest request) {
 
         JsonResult<String> result;
-        try {
-            String token = request.getHeader(this.tokenHeader);
-            User user = userService.findByUsername(tokenUtils.getUsernameFromToken(token))
-                    .orElseThrow(() -> new AuthException("user not registered"));
-            Map<String, String> header = new HashMap<>();
-            header.put(this.tokenHeader, token);
-            String centralToken = centralClient.refreshToken(header).getResult();
-            if (centralToken == null) {
-                throw new AuthException("central auth error");
-            }
-            userService.setToken(user, centralToken);
-            String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
-            Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
-            token = tokenUtils.generateToken(user, createdDateFromToken);
-
-            result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-            result.setResult(token);
-        } catch (Exception ex) {
-            log.error(ex.getMessage(), ex);
-            result = new JsonResult<>(JsonResult.ErrorCode.UNAUTHORIZED);
+        String token = request.getHeader(this.tokenHeader);
+        User user = userService.findByUsername(tokenUtils.getUsernameFromToken(token))
+                .orElseThrow(() -> new AuthException("user not registered"));
+        Map<String, String> header = new HashMap<>();
+        header.put(this.tokenHeader, token);
+        String centralToken = centralClient.refreshToken(header).getResult();
+        if (centralToken == null) {
+            throw new AuthException("central auth error");
         }
+        userService.setToken(user, centralToken);
+        String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
+        Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
+        token = tokenUtils.generateToken(user, createdDateFromToken);
+
+        result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+        result.setResult(token);
         return result;
     }
 
@@ -160,6 +154,8 @@ public class AuthController {
                     final boolean isAdmin = user.getRoles().stream()
                             .anyMatch(r -> r.getName().equals("ROLE_ADMIN"));
                     userInfoDTO.setIsAdmin(isAdmin);
+                    userInfoDTO.setFirstname(user.getFirstName());
+                    userInfoDTO.setLastname(user.getLastName());
                     result.setResult(userInfoDTO);
                 });
 
@@ -189,11 +185,34 @@ public class AuthController {
 
     @ApiOperation(value = "Get professional types list")
     @RequestMapping(value = "/api/v1/user-management/professional-types", method = GET)
-    public JsonResult<CommonProfessionalTypeDTO> getProfessionalTypes() {
+    public JsonResult<List<CommonProfessionalTypeDTO>> getProfessionalTypes() {
 
         return integrationService.getProfessionalTypes();
     }
 
+    @ApiOperation("Suggests country.")
+    @RequestMapping(value = "/api/v1/user-management/countries/search", method = GET)
+    public JsonResult<List<CommonCountryDTO>> suggestCountries(
+            @RequestParam("query") String query,
+            @RequestParam("limit") Integer limit,
+            @RequestParam(value = "includeId", required = false) Long includeId
+
+    ) {
+
+        return integrationService.getCountries(query, limit, includeId);
+    }
+
+    @ApiOperation("Suggests state or province.")
+    @RequestMapping(value = "/api/v1/user-management/state-province/search", method = GET)
+    public JsonResult<List<CommonStateProvinceDTO>> suggestStateProvince(
+            @RequestParam("countryId") String countryId,
+            @RequestParam("query") String query,
+            @RequestParam("limit") Integer limit,
+            @RequestParam(value = "includeId", required = false) String includeId
+    ) {
+
+        return integrationService.getStateProvinces(countryId, query, limit, includeId);
+    }
 
     @ApiOperation("Register new user via form.")
     @RequestMapping(value = "/api/v1/auth/registration", method = RequestMethod.POST)
