@@ -38,6 +38,7 @@ import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_5Mapper;
 import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_7Mapper;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -90,7 +91,7 @@ public class PatientLevelPredictionRequestHandler extends BaseRequestHandler imp
     @Override
     public List<MultipartFile> getAtlasObject(String guid) {
 
-        return commonEntityService.findByGuid(guid).map(entity -> getEntityMapper(entity).mapEntity(entity)).orElse(null);
+        return commonEntityService.findByGuid(guid).map(entity -> getEntityMapper(entity).mapEntity(entity)).orElse(Collections.emptyList());
     }
 
     private EntityMapper<CommonEntity> getEntityMapper(CommonEntity entity) {
@@ -111,6 +112,6 @@ public class PatientLevelPredictionRequestHandler extends BaseRequestHandler imp
     @Override
     public void sendResponse(List<MultipartFile> response, String id) {
 
-        centralClient.sendCommonEntityResponse(id, response.toArray(new MultipartFile[response.size()]));
+        centralClient.sendCommonEntityResponse(id, response.toArray(new MultipartFile[0]));
     }
 }
