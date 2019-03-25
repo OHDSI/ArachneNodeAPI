@@ -26,27 +26,25 @@ package com.odysseusinc.arachne.datanode.service.messaging;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonPredictionDTO;
+import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_5Mapper;
+import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_7Mapper;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -54,13 +52,12 @@ import org.springframework.web.multipart.MultipartFile;
 public class PatientLevelPredictionRequestHandler extends BaseRequestHandler implements AtlasRequestHandler<CommonPredictionDTO, List<MultipartFile>> {
 
     private static final Logger logger = LoggerFactory.getLogger(PatientLevelPredictionRequestHandler.class);
-    public static final String INITIAL_SUFFIX = " initial population.sql";
-    public static final String OUTCOME_SUFFIX = " outcome population.sql";
 
     private final GenericConversionService conversionService;
     private final CommonEntityService commonEntityService;
     private final CentralSystemClient centralClient;
     private final Template patientLevelPredictionRunnerTemplate;
+    private final Template predictionRunnerTemplate;
 
     @Autowired
     public PatientLevelPredictionRequestHandler(AtlasService atlasService,
@@ -69,7 +66,8 @@ public class PatientLevelPredictionRequestHandler extends BaseRequestHandler imp
                                                 CentralSystemClient centralClient,
                                                 SqlRenderService sqlRenderService,
                                                 @Qualifier("patientLevelPredictionRunnerTemplate")
-                                                            Template patientLevelPredictionRunnerTemplate) {
+                                                            Template patientLevelPredictionRunnerTemplate,
+                                                @Qualifier("predictionRunnerTemplate") Template predictionRunnerTemplate) {
 
         super(sqlRenderService, atlasService);
 
@@ -77,6 +75,7 @@ public class PatientLevelPredictionRequestHandler extends BaseRequestHandler imp
         this.commonEntityService = commonEntityService;
         this.centralClient = centralClient;
         this.patientLevelPredictionRunnerTemplate = patientLevelPredictionRunnerTemplate;
+        this.predictionRunnerTemplate = predictionRunnerTemplate;
     }
 
     @Override
@@ -91,35 +90,16 @@ public class PatientLevelPredictionRequestHandler extends BaseRequestHandler imp
     @Override
     public List<MultipartFile> getAtlasObject(String guid) {
 
-        return commonEntityService.findByGuid(guid).map(entity -> {
-            Map<String, Object> info = atlasService.execute(
-                    entity.getOrigin(),
-                    atlasClient -> atlasClient.getPatientLevelPrediction(entity.getLocalId())
-            );
-            List<MultipartFile> files = new ArrayList<>(6);
-            try {
-                String initialName = info.get("name") + INITIAL_SUFFIX;
-                String outcomeName = info.get("name") + OUTCOME_SUFFIX;
-
-                files.add(getAnalysisDescription(info));
-                files.add(getCohortFile(entity.getOrigin(), (Integer) info.get("treatmentId"), initialName));
-                files.add(getCohortFile(entity.getOrigin(), (Integer) info.get("outcomeId"), outcomeName));
-                files.add(getRunner(initialName, outcomeName));
-            }catch (IOException e){
-                logger.error("Failed to build PLP data", e);
-                throw new RuntimeIOException("Failed to build PLP data", e);
-            }
-            return files;
-        }).orElse(null);
+        return commonEntityService.findByGuid(guid).map(entity -> getEntityMapper(entity).mapEntity(entity)).orElse(null);
     }
 
-    private MultipartFile getRunner(String initialName, String outcomeName) throws IOException {
-
-        Map<String, Object> params = new HashMap<>();
-        params.put("initialFileName", initialName);
-        params.put("outcomeFileName", outcomeName);
-        String result = patientLevelPredictionRunnerTemplate.apply(params);
-        return new MockMultipartFile("main.r", result.getBytes());
+    private EntityMapper<CommonEntity> getEntityMapper(CommonEntity entity) {
+        Atlas atlas = entity.getOrigin();
+        if (Constants.Atlas.ATLAS_2_7_VERSION.isLesserOrEqualsThan(atlas.getVersion())) {
+            return new PredictionAtlas2_7Mapper(atlasService, predictionRunnerTemplate);
+        } else {
+            return new PredictionAtlas2_5Mapper(sqlRenderService, atlasService, patientLevelPredictionRunnerTemplate);
+        }
     }
 
     @Override

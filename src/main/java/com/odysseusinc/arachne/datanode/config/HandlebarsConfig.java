@@ -37,6 +37,7 @@ public class HandlebarsConfig {
     private static final String ESTIMATION_RUNNER_TEMPLATE = "estimation/runner.mustache";
     private static final String PATIENT_LEVEL_PREDICTION_RUNNER_TEMPLATE = "plp/main.r";
     private static final String COHORT_CHARACTERIZATION_RUNNER_TEMPLATE = "cc/main.r";
+    private static final String PREDICTION_RUNNER_TEMPLATE = "plp/runAnalysis.R"; //for Atlas 2.7.0+
 
     @Bean
     public Template estimationRunnerTemplate() {
@@ -60,5 +61,11 @@ public class HandlebarsConfig {
     public Template incidenceRatesRunnerTemplate(){
 
         return loadTemplate(INCIDENCE_RATES_RUNNER_TEMPLATE);
+    }
+
+    @Bean
+    public Template predictionRunnerTemplate() {
+
+        return loadTemplate(PREDICTION_RUNNER_TEMPLATE);
     }
 }

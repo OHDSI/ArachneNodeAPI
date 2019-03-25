@@ -44,9 +44,6 @@ public interface AtlasClient {
     @RequestLine("GET /exchange/cohorts/{guid}")
     CommonCohortDTO getCohort(@Param("guid") String guid);
 
-    @RequestLine("GET " + Constants.Atlas.INFO)
-    Info getInfo();
-
     @RequestLine("GET /exchange/estimations")
     List<CommonCohortAnalysisDTO> getAllEstimations();
 
@@ -65,11 +62,7 @@ public interface AtlasClient {
     @RequestLine("GET /comparativecohortanalysis/{id}")
     ComparativeCohortAnalysisInfo getComparativeCohortAnalysisInfo(@Param("id") Integer id);
 
-    @RequestLine("GET /plp")
     List<PatientLevelPredictionInfo> getPatientLevelPredictions();
-
-    @RequestLine("GET /plp/{id}")
-    Map<String, Object> getPatientLevelPrediction(@Param("id") Integer id);
 
     @RequestLine("GET /ir")
     List<IRAnalysis> getIncidenceRates();
@@ -77,9 +70,6 @@ public interface AtlasClient {
     @RequestLine("GET /ir/{id}")
     Map<String, Object> getIncidenceRate(@Param("id") Integer localId);
     
-    @RequestLine("GET " + Constants.Atlas.INFO)
-    Info checkVersion();
-
     class Info {
         public String version;
     }
