@@ -224,16 +224,16 @@ public class DataSourceServiceImpl implements DataSourceService {
             if (isNotDummyPassword(krbPassword)) {
                 exists.setKrbPassword(krbPassword);
             }
-            final byte[] keytab = dataSource.getKrbKeytab();
+            final byte[] keytab = dataSource.getKeyfile();
             if (Objects.nonNull(keytab)) {
-                exists.setKrbKeytab(keytab);
+                exists.setKeyfile(keytab);
             }
         } else {
             exists.setKrbRealm(null);
             exists.setKrbFQDN(null);
             exists.setKrbUser(null);
             exists.setKrbPassword(null);
-            exists.setKrbKeytab(null);
+            exists.setKeyfile(null);
         }
 
         AutoDetectedFields autoDetectedFields = autoDetectFields(exists);
@@ -271,7 +271,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     public void removeKeytab(DataSource dataSource) {
 
-        dataSource.setKrbKeytab(null);
+        dataSource.setKeyfile(null);
         dataSourceRepository.save(dataSource);
     }
 
