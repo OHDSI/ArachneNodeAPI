@@ -121,7 +121,7 @@ public class DataSource {
     private String krbUser;
 
     @Column(name = "krb_keytab")
-    private byte[] krbKeytab;
+    private byte[] keyfile;
 
     @Column(name = "krb_password", nullable = true)
     @Type(type = "encryptedString")
@@ -326,14 +326,14 @@ public class DataSource {
         this.krbUser = krbUser;
     }
 
-    public byte[] getKrbKeytab() {
+    public byte[] getKeyfile() {
 
-        return krbKeytab;
+        return keyfile;
     }
 
-    public void setKrbKeytab(byte[] krbKeytab) {
+    public void setKeyfile(byte[] keyfile) {
 
-        this.krbKeytab = krbKeytab;
+        this.keyfile = keyfile;
     }
 
     public String getKrbPassword() {

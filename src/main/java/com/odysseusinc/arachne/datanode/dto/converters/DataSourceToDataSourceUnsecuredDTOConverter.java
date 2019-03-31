@@ -77,7 +77,7 @@ public class DataSourceToDataSourceUnsecuredDTOConverter implements Converter<Da
             target.setKrbRealm(source.getKrbRealm());
             target.setKrbUser(source.getKrbUser());
             target.setKrbPassword(source.getKrbPassword());
-            target.setKrbKeytab(source.getKrbKeytab());
+            target.setKeyfile(source.getKeyfile());
             target.setKrbAuthMethod(source.getKrbAuthMechanism());
         }
 
