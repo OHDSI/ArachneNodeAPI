@@ -15,7 +15,7 @@ atlas:
   port: 443
   auth:
     schema: DATABASE
-    username: admin-dev@odysseusinc.com
+    username: admin-test@odysseusinc.com
     password: ENC(ScVtM/zv348iHQ3b+zZHytAiOcU+DbY2)
 proxy:
   auth:
