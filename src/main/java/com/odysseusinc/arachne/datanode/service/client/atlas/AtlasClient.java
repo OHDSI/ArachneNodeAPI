@@ -25,13 +25,13 @@ package com.odysseusinc.arachne.datanode.service.client.atlas;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityDTO;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortCharacterization;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysisInfo;
 import com.odysseusinc.arachne.datanode.dto.atlas.IRAnalysis;
+import com.odysseusinc.arachne.datanode.dto.atlas.Pathway;
 import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
 import feign.Headers;
 import feign.Param;
@@ -75,6 +75,12 @@ public interface AtlasClient {
 
     @RequestLine("GET /plp/{id}")
     Map<String, Object> getPatientLevelPrediction(@Param("id") Integer id);
+
+    @RequestLine("GET /pathway-analysis?size={pageSize}")
+    Page<Pathway> getPathways(@Param("pageSize") int pageSize);
+
+    @RequestLine("GET /pathway-analysis/{id}")
+    Map<String, Object> getPathway(@Param("id") Integer id);
 
     @RequestLine("GET /ir")
     List<IRAnalysis> getIncidenceRates();
