@@ -24,8 +24,10 @@ package com.odysseusinc.arachne.datanode.service.impl;
 
 import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
 
+import com.fasterxml.jackson.databind.Module;
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
+import com.odysseusinc.arachne.datanode.dto.serialize.PageModule;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
@@ -37,6 +39,7 @@ import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthSchema;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasLoginClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.TokenDecoder;
+import com.odysseusinc.arachne.datanode.service.client.decoders.ByteArrayDecoder;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import feign.Client;
 import feign.Feign;
@@ -45,6 +48,7 @@ import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -72,6 +76,8 @@ public class AtlasServiceImpl implements AtlasService {
     private final AtlasRepository atlasRepository;
     private final CentralSystemClient centralSystemClient;
     private HttpHeaders headers;
+
+    private static final List<Module> MODULES = Collections.singletonList(new PageModule());
 
     private Map<Atlas, AtlasClient> atlasClientPool = new ConcurrentHashMap<>();
 
@@ -271,7 +277,7 @@ public class AtlasServiceImpl implements AtlasService {
         return Feign.builder()
                 .client(httpClient)
                 .encoder(new JacksonEncoder())
-                .decoder(new JacksonDecoder())
+                .decoder(new ByteArrayDecoder(new JacksonDecoder(MODULES)))
                 .logger(new Slf4jLogger(AtlasClient.class))
                 .logLevel(feign.Logger.Level.FULL)
                 .requestInterceptor(new AtlasAuthRequestInterceptor(buildAtlasLoginClient(atlas.getUrl(), httpClient), atlas.getAuthType(), atlas.getUsername(), atlas.getPassword()))

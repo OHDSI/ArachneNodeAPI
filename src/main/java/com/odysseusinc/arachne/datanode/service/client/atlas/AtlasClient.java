@@ -25,16 +25,21 @@ package com.odysseusinc.arachne.datanode.service.client.atlas;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityDTO;
 import com.odysseusinc.arachne.datanode.Constants;
+import com.odysseusinc.arachne.datanode.dto.atlas.CohortCharacterization;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysisInfo;
 import com.odysseusinc.arachne.datanode.dto.atlas.IRAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
+import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 
 public interface AtlasClient {
 
@@ -76,6 +81,13 @@ public interface AtlasClient {
 
     @RequestLine("GET /ir/{id}")
     Map<String, Object> getIncidenceRate(@Param("id") Integer localId);
+
+    @RequestLine("GET /cohort-characterization?size={pageSize}")
+    Page<CohortCharacterization> getCohortCharacterizations(@Param("pageSize") int pageSize);
+
+    @RequestLine("GET /cohort-characterization/{id}/download?packageName={packageName}")
+    @Headers("Accept: " + MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    byte[] getCohortCharacterizationPackage(@Param("id") int id, @Param("packageName") String packageName);
     
     @RequestLine("GET " + Constants.Atlas.INFO)
     Info checkVersion();

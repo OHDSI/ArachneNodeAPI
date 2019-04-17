@@ -36,7 +36,8 @@ public class HandlebarsConfig {
     public static final String INCIDENCE_RATES_RUNNER_TEMPLATE = "ir/main.r";
     private static final String ESTIMATION_RUNNER_TEMPLATE = "estimation/runner.mustache";
     private static final String PATIENT_LEVEL_PREDICTION_RUNNER_TEMPLATE = "plp/main.r";
-    private static final String COHORT_CHARACTERIZATION_RUNNER_TEMPLATE = "cc/main.r";
+    private static final String COHORT_HERACLES_RUNNER_TEMPLATE = "heracles/main.r";
+    private static final String COHORT_CHARACTERIZATION_TEMPLATE = "cc/runAnalysis.R";
 
     @Bean
     public Template estimationRunnerTemplate() {
@@ -51,14 +52,20 @@ public class HandlebarsConfig {
     }
 
     @Bean
-    public Template cohortCharacterizationRunnerTemplate() {
+    public Template cohortHeraclesRunnerTemplate() {
 
-        return loadTemplate(COHORT_CHARACTERIZATION_RUNNER_TEMPLATE);
+        return loadTemplate(COHORT_HERACLES_RUNNER_TEMPLATE);
     }
 
     @Bean
     public Template incidenceRatesRunnerTemplate(){
 
         return loadTemplate(INCIDENCE_RATES_RUNNER_TEMPLATE);
+    }
+
+    @Bean
+    public Template cohortCharacterizationTemplate() {
+
+        return loadTemplate(COHORT_CHARACTERIZATION_TEMPLATE);
     }
 }
