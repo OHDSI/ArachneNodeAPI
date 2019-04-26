@@ -26,81 +26,57 @@ package com.odysseusinc.arachne.datanode.service.messaging;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonPredictionDTO;
-import com.odysseusinc.arachne.datanode.Constants;
-import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
+import com.odysseusinc.arachne.commons.utils.ConverterUtils;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
-import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
-import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
-import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_5Mapper;
-import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_7Mapper;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class PatientLevelPredictionRequestHandler extends BaseRequestHandler implements AtlasRequestHandler<CommonPredictionDTO, List<MultipartFile>> {
+public class PatientLevelPredictionRequestHandler extends CommonAnalysisRequestHandler implements AtlasRequestHandler<CommonPredictionDTO, List<MultipartFile>> {
 
     private static final Logger logger = LoggerFactory.getLogger(PatientLevelPredictionRequestHandler.class);
 
-    private final GenericConversionService conversionService;
     private final CommonEntityService commonEntityService;
-    private final CentralSystemClient centralClient;
-    private final Template patientLevelPredictionRunnerTemplate;
-    private final Template predictionRunnerTemplate;
+    private final ConverterUtils converterUtils;
 
     @Autowired
     public PatientLevelPredictionRequestHandler(AtlasService atlasService,
-                                                GenericConversionService conversionService,
                                                 CommonEntityService commonEntityService,
                                                 CentralSystemClient centralClient,
                                                 SqlRenderService sqlRenderService,
                                                 @Qualifier("patientLevelPredictionRunnerTemplate")
                                                             Template patientLevelPredictionRunnerTemplate,
-                                                @Qualifier("predictionRunnerTemplate") Template predictionRunnerTemplate) {
+                                                @Qualifier("predictionRunnerTemplate") Template predictionRunnerTemplate,
+                                                ConverterUtils converterUtils) {
 
-        super(sqlRenderService, atlasService);
+        super(sqlRenderService, atlasService, predictionRunnerTemplate, patientLevelPredictionRunnerTemplate, centralClient);
 
-        this.conversionService = conversionService;
         this.commonEntityService = commonEntityService;
-        this.centralClient = centralClient;
-        this.patientLevelPredictionRunnerTemplate = patientLevelPredictionRunnerTemplate;
-        this.predictionRunnerTemplate = predictionRunnerTemplate;
+        this.converterUtils = converterUtils;
     }
 
     @Override
     public List<CommonPredictionDTO> getObjectsList(List<Atlas> atlasList) {
 
-        List<PatientLevelPredictionInfo> result = atlasService.execute(atlasList, AtlasClient::getPatientLevelPredictions);
-        return result.stream()
-                .map(plp -> conversionService.convert(plp, CommonPredictionDTO.class))
-                .collect(Collectors.toList());
+        return converterUtils.convertList(getEntities(atlasList), CommonPredictionDTO.class);
     }
 
     @Override
     public List<MultipartFile> getAtlasObject(String guid) {
 
-        return commonEntityService.findByGuid(guid).map(entity -> getEntityMapper(entity).mapEntity(entity)).orElse(Collections.emptyList());
-    }
-
-    private EntityMapper<CommonEntity> getEntityMapper(CommonEntity entity) {
-        Atlas atlas = entity.getOrigin();
-        if (Constants.Atlas.ATLAS_2_7_VERSION.isLesserOrEqualsThan(atlas.getVersion())) {
-            return new PredictionAtlas2_7Mapper(atlasService, predictionRunnerTemplate);
-        } else {
-            return new PredictionAtlas2_5Mapper(sqlRenderService, atlasService, patientLevelPredictionRunnerTemplate);
-        }
+        return commonEntityService.findByGuid(guid).map(entity -> getEntityMapper(entity.getOrigin())
+                .mapEntity(entity)).orElse(Collections.emptyList());
     }
 
     @Override
@@ -109,9 +85,4 @@ public class PatientLevelPredictionRequestHandler extends BaseRequestHandler imp
         return CommonAnalysisType.PREDICTION;
     }
 
-    @Override
-    public void sendResponse(List<MultipartFile> response, String id) {
-
-        centralClient.sendCommonEntityResponse(id, response.toArray(new MultipartFile[0]));
-    }
 }

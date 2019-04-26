@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
+import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysisInfo;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
@@ -34,7 +35,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-public class EstimationAtlas2_5Mapper extends BaseRequestHandler implements EntityMapper<CommonEntity> {
+public class EstimationAtlas2_5Mapper extends BaseRequestHandler implements EntityMapper<ComparativeCohortAnalysis, CommonEntity, AtlasClient2_5> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(EstimationAtlas2_5Mapper.class);
 
@@ -47,6 +48,12 @@ public class EstimationAtlas2_5Mapper extends BaseRequestHandler implements Enti
 		super(sqlRenderService, atlasService);
 		this.queryBuilder = queryBuilder;
 		this.runnerTemplate = runnerTemplate;
+	}
+
+	@Override
+	public List<ComparativeCohortAnalysis> getEntityList(AtlasClient2_5 client) {
+
+		return client.getEstimations();
 	}
 
 	@Override
@@ -81,7 +88,7 @@ public class EstimationAtlas2_5Mapper extends BaseRequestHandler implements Enti
 				LOGGER.error("Failed to construct estimation", e);
 			}
 		}
-		return null;
+		return result;
 	}
 
 	private String buildEstimationDesign(ComparativeCohortAnalysisInfo info)

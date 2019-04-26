@@ -1,6 +1,8 @@
 package com.odysseusinc.arachne.datanode.service.messaging.estimation;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.jknack.handlebars.Template;
+import com.odysseusinc.arachne.datanode.dto.atlas.EstimationAnalysis;
 import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_7;
@@ -9,7 +11,7 @@ import com.odysseusinc.arachne.datanode.service.messaging.EntityMapper;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
-public class EstimationAtlas2_7Mapper extends BaseAtlas2_7Mapper implements EntityMapper<CommonEntity> {
+public class EstimationAtlas2_7Mapper extends BaseAtlas2_7Mapper<EstimationAnalysis> implements EntityMapper<EstimationAnalysis, CommonEntity, AtlasClient2_7> {
 
 	private static final String PACKAGE_TMPL = "EstimationStudy%s";
 	private Template estimationRunnerTemplate;
@@ -33,10 +35,15 @@ public class EstimationAtlas2_7Mapper extends BaseAtlas2_7Mapper implements Enti
 	}
 
 	@Override
+	public List<EstimationAnalysis> getEntityList(AtlasClient2_7 client) {
+
+		return client.getEstimations();
+	}
+
+	@Override
 	public List<MultipartFile> mapEntity(CommonEntity entity) {
 
 		final Integer localId = entity.getLocalId();
-		final String packageName = getPackageName(entity);
-		return this.<AtlasClient2_7>doMapping(entity, atlasClient -> atlasClient.getEstimation(localId, packageName));
+		return this.<AtlasClient2_7>doMapping(entity, atlasClient -> atlasClient.getEstimation(localId));
 	}
 }

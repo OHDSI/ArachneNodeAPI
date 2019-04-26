@@ -57,10 +57,6 @@ public interface AtlasClient {
     @RequestLine("GET /cohortdefinition/{id}")
     CohortDefinition getCohortDefinition(@Param("id")  Integer id);
 
-    List<PatientLevelPredictionInfo> getPatientLevelPredictions();
-
-    List<? extends BaseAtlasEntity> getEstimations();
-
     @RequestLine("GET /ir")
     List<IRAnalysis> getIncidenceRates();
 

@@ -1,6 +1,7 @@
 package com.odysseusinc.arachne.datanode.service.messaging.prediction;
 
 import com.github.jknack.handlebars.Template;
+import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
 import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
@@ -18,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-public class PredictionAtlas2_5Mapper extends BaseRequestHandler implements EntityMapper<CommonEntity> {
+public class PredictionAtlas2_5Mapper extends BaseRequestHandler implements EntityMapper<PatientLevelPredictionInfo, CommonEntity, AtlasClient2_5> {
 
 	private static final Logger logger = LoggerFactory.getLogger(PredictionAtlas2_5Mapper.class);
 	private Template patientLevelPredictionRunnerTemplate;
@@ -30,6 +31,12 @@ public class PredictionAtlas2_5Mapper extends BaseRequestHandler implements Enti
 
 		super(sqlRenderService, atlasService);
 		this.patientLevelPredictionRunnerTemplate = patientLevelPredictionRunnerTemplate;
+	}
+
+	@Override
+	public List<PatientLevelPredictionInfo> getEntityList(AtlasClient2_5 client) {
+
+		return client.getPatientLevelPredictions();
 	}
 
 	@Override
