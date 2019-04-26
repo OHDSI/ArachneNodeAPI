@@ -38,6 +38,7 @@ public class HandlebarsConfig {
     private static final String PATIENT_LEVEL_PREDICTION_RUNNER_TEMPLATE = "plp/main.r";
     private static final String COHORT_HERACLES_RUNNER_TEMPLATE = "heracles/main.r";
     private static final String COHORT_CHARACTERIZATION_TEMPLATE = "cc/runAnalysis.R";
+    private static final String PATHWAYS_RUNNER_TEMPLATE = "pathways/main.R";
 
     @Bean
     public Template estimationRunnerTemplate() {
@@ -68,4 +69,11 @@ public class HandlebarsConfig {
 
         return loadTemplate(COHORT_CHARACTERIZATION_TEMPLATE);
     }
+
+    @Bean
+    public Template pathwaysRunnerTemplate() {
+
+        return loadTemplate(PATHWAYS_RUNNER_TEMPLATE);
+    }
+
 }

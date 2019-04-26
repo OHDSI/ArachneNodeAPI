@@ -15,10 +15,10 @@ public class Pathway extends BaseAtlasEntity {
     private Integer minCellCount;
     private Integer maxDepth;
     private boolean allowRepeats;
-    private String createdBy;
+    private AtlasUserDTO createdBy;
     @JsonDeserialize(using = MultiFormatDateDeserializer.class)
     private Date createdDate;
-    private String modifiedBy;
+    private AtlasUserDTO modifiedBy;
     @JsonDeserialize(using = MultiFormatDateDeserializer.class)
     private Date modifiedDate;
     private Integer hashCode;
@@ -103,12 +103,12 @@ public class Pathway extends BaseAtlasEntity {
         this.allowRepeats = allowRepeats;
     }
 
-    public String getCreatedBy() {
+    public AtlasUserDTO getCreatedBy() {
 
         return createdBy;
     }
 
-    public void setCreatedBy(String createdBy) {
+    public void setCreatedBy(AtlasUserDTO createdBy) {
 
         this.createdBy = createdBy;
     }
@@ -123,12 +123,12 @@ public class Pathway extends BaseAtlasEntity {
         this.createdDate = createdDate;
     }
 
-    public String getModifiedBy() {
+    public AtlasUserDTO getModifiedBy() {
 
         return modifiedBy;
     }
 
-    public void setModifiedBy(String modifiedBy) {
+    public void setModifiedBy(AtlasUserDTO modifiedBy) {
 
         this.modifiedBy = modifiedBy;
     }

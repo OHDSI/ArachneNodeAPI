@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.service.client.atlas;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
@@ -79,8 +80,8 @@ public interface AtlasClient {
     @RequestLine("GET /pathway-analysis?size={pageSize}")
     Page<Pathway> getPathways(@Param("pageSize") int pageSize);
 
-    @RequestLine("GET /pathway-analysis/{id}")
-    Map<String, Object> getPathway(@Param("id") Integer id);
+    @RequestLine("GET /pathway-analysis/{id}/export")
+		JsonNode exportPathwayDesign(@Param("id") Integer id);
 
     @RequestLine("GET /ir")
     List<IRAnalysis> getIncidenceRates();
