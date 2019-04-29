@@ -1,16 +1,22 @@
 package com.odysseusinc.arachne.datanode.service.messaging;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCcShortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityDTO;
+import com.odysseusinc.arachne.commons.utils.ComparableVersion;
+import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortCharacterization;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
+import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_7;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
+import com.odysseusinc.arachne.datanode.util.AtlasUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +32,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Component
-public class CohortCharacterizationRequestHandler implements AtlasRequestHandler<CommonEntityDTO, List<MultipartFile>> {
+public class CohortCharacterizationRequestHandler extends BaseAtlas2_7Mapper<CohortCharacterization> implements AtlasRequestHandler<CommonEntityDTO, List<MultipartFile>> {
 
 	private static final int PAGE_SIZE = 10000;
 	private static final String PACKAGE_NAME = "CohortCharacterization%d";
@@ -52,7 +58,9 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 	@Override
 	public List<CommonEntityDTO> getObjectsList(List<Atlas> atlasList) {
 
-		List<CohortCharacterization> ccList = atlasService.execute(atlasList, c -> c.getCohortCharacterizations(PAGE_SIZE).getContent());
+		List<Atlas> atlases27 = AtlasUtils.filterAtlasByVersion27(atlasList);
+		List<CohortCharacterization> ccList = atlasService.<AtlasClient2_7, CohortCharacterization>execute(atlases27,
+						c -> c.getCohortCharacterizations(PAGE_SIZE).getContent());
 		return ccList.stream()
 						.map(cc -> conversionService.convert(cc, CommonCcShortDTO.class))
 						.collect(Collectors.toList());
@@ -65,6 +73,9 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 			Integer localId = entity.getLocalId();
 			List<MultipartFile> files = new ArrayList<>();
 			String packageName = String.format(PACKAGE_NAME, localId);
+
+			JsonNode analysis = atlasService.<AtlasClient2_7, JsonNode>execute(entity.getOrigin(), c -> c.getCohortCharacterization(entity.getLocalId()));
+
 			byte[] ccPackage = atlasService.execute(entity.getOrigin(), c -> c.getCohortCharacterizationPackage(entity.getLocalId(),
 							packageName));
 			String filename = packageName + ".zip";
@@ -102,4 +113,27 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 		return new MockMultipartFile("runAnalysis.R", result.getBytes());
 	}
 
+	@Override
+	protected String getPackageName(CommonEntity entity) {
+
+		return null;
+	}
+
+	@Override
+	protected Template getRunnerTemplate() {
+
+		return null;
+	}
+
+	@Override
+	public List<CohortCharacterization> getEntityList(AtlasClient2_7 client) {
+
+		return null;
+	}
+
+	@Override
+	public List<MultipartFile> mapEntity(CommonEntity entity) {
+
+		return null;
+	}
 }

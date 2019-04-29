@@ -68,13 +68,6 @@ public interface AtlasClient {
     @RequestLine("GET /ir/{id}")
     Map<String, Object> getIncidenceRate(@Param("id") Integer localId);
 
-    @RequestLine("GET /cohort-characterization?size={pageSize}")
-    Page<CohortCharacterization> getCohortCharacterizations(@Param("pageSize") int pageSize);
-
-    @RequestLine("GET /cohort-characterization/{id}/download?packageName={packageName}")
-    @Headers("Accept: " + MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    byte[] getCohortCharacterizationPackage(@Param("id") int id, @Param("packageName") String packageName);
-
     class Info {
         public String version;
     }
