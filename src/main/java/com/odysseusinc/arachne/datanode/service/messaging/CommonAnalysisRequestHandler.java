@@ -23,7 +23,6 @@
 package com.odysseusinc.arachne.datanode.service.messaging;
 
 import com.github.jknack.handlebars.Template;
-import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
@@ -31,8 +30,6 @@ import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
-import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_5Mapper;
-import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_7Mapper;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.web.multipart.MultipartFile;
