@@ -63,14 +63,7 @@ public abstract class CommonAnalysisRequestHandler extends BaseRequestHandler {
 						.collect(Collectors.toList());
 	}
 
-	protected <T extends BaseAtlasEntity, C extends AtlasClient> EntityMapper<T, CommonEntity, C> getEntityMapper(Atlas atlas) {
-
-			if (Constants.Atlas.ATLAS_2_7_VERSION.isLesserOrEqualsThan(atlas.getVersion())) {
-					return (EntityMapper<T, CommonEntity, C>) new PredictionAtlas2_7Mapper(atlasService, runnerTemplate);
-			} else {
-					return (EntityMapper<T, CommonEntity, C>) new PredictionAtlas2_5Mapper(sqlRenderService, atlasService, legacyRunnerTemplate);
-			}
-	}
+	protected abstract  <T extends BaseAtlasEntity, C extends AtlasClient> EntityMapper<T, CommonEntity, C> getEntityMapper(Atlas atlas);
 
 	public void sendResponse(List<MultipartFile> response, String id) {
 

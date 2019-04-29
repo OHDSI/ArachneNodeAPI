@@ -28,12 +28,20 @@ import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEstimationDTO;
 import com.odysseusinc.arachne.commons.utils.ConverterUtils;
+import com.odysseusinc.arachne.datanode.Constants;
+import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
+import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
+import com.odysseusinc.arachne.datanode.service.messaging.estimation.EstimationAtlas2_5Mapper;
+import com.odysseusinc.arachne.datanode.service.messaging.estimation.EstimationAtlas2_7Mapper;
+import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_5Mapper;
+import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_7Mapper;
 import java.util.Collections;
 import java.util.List;
 import org.ohdsi.circe.cohortdefinition.CohortExpressionQueryBuilder;
@@ -96,5 +104,15 @@ public class EstimationRequestHandler extends CommonAnalysisRequestHandler imple
 
         return ESTIMATION;
     }
+
+    protected <T extends BaseAtlasEntity, C extends AtlasClient> EntityMapper<T, CommonEntity, C> getEntityMapper(Atlas atlas) {
+
+        if (Constants.Atlas.ATLAS_2_7_VERSION.isLesserOrEqualsThan(atlas.getVersion())) {
+            return (EntityMapper<T, CommonEntity, C>) new EstimationAtlas2_7Mapper(atlasService, runnerTemplate);
+        } else {
+            return (EntityMapper<T, CommonEntity, C>) new EstimationAtlas2_5Mapper(sqlRenderService, atlasService, queryBuilder, legacyRunnerTemplate);
+        }
+    }
+
 
 }
