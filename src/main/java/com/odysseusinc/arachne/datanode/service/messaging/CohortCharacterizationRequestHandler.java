@@ -5,16 +5,12 @@ import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCcShortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityDTO;
-import com.odysseusinc.arachne.commons.utils.ComparableVersion;
-import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortCharacterization;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
-import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_7;
-import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.util.AtlasUtils;
 import java.io.IOException;
@@ -32,10 +28,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Component
-public class CohortCharacterizationRequestHandler extends BaseAtlas2_7Mapper<CohortCharacterization> implements AtlasRequestHandler<CommonEntityDTO, List<MultipartFile>> {
+public class CohortCharacterizationRequestHandler implements AtlasRequestHandler<CommonEntityDTO, List<MultipartFile>> {
 
 	private static final int PAGE_SIZE = 10000;
 	private static final String PACKAGE_NAME = "CohortCharacterization%d";
+	private static final String SKELETON_RESOURCE = "/cc/hydra/CohortCharacterization_v0.0.1.zip";
 	private final AtlasService atlasService;
 	private final GenericConversionService conversionService;
 	private final CommonEntityService commonEntityService;
@@ -76,12 +73,11 @@ public class CohortCharacterizationRequestHandler extends BaseAtlas2_7Mapper<Coh
 
 			JsonNode analysis = atlasService.<AtlasClient2_7, JsonNode>execute(entity.getOrigin(), c -> c.getCohortCharacterization(entity.getLocalId()));
 
-			byte[] ccPackage = atlasService.execute(entity.getOrigin(), c -> c.getCohortCharacterizationPackage(entity.getLocalId(),
-							packageName));
-			String filename = packageName + ".zip";
-			MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, ccPackage);
-			files.add(file);
 			try {
+				byte[] ccPackage = atlasService.hydrateAnalysis(analysis, packageName, SKELETON_RESOURCE);
+				String filename = packageName + ".zip";
+				MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, ccPackage);
+				files.add(file);
 				files.add(getRunner(packageName, file.getName(), String.format("analysis_%d", localId), localId));
 			} catch (IOException e) {
 				throw new RuntimeIOException("Failed to build analysis data", e);
@@ -113,27 +109,4 @@ public class CohortCharacterizationRequestHandler extends BaseAtlas2_7Mapper<Coh
 		return new MockMultipartFile("runAnalysis.R", result.getBytes());
 	}
 
-	@Override
-	protected String getPackageName(CommonEntity entity) {
-
-		return null;
-	}
-
-	@Override
-	protected Template getRunnerTemplate() {
-
-		return null;
-	}
-
-	@Override
-	public List<CohortCharacterization> getEntityList(AtlasClient2_7 client) {
-
-		return null;
-	}
-
-	@Override
-	public List<MultipartFile> mapEntity(CommonEntity entity) {
-
-		return null;
-	}
 }
