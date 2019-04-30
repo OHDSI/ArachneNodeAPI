@@ -15,6 +15,7 @@ library({{packageName}})
 tryCatch({
         maxCores <- parallel::detectCores()
 
+        dataSourceName <- (function(name) if (name == "") "default" else name)( Sys.getenv("DATA_SOURCE_NAME") )
         dbms <- Sys.getenv("DBMS_TYPE")
         connectionString <- Sys.getenv("CONNECTION_STRING")
         user <- Sys.getenv("DBMS_USERNAME")
@@ -40,7 +41,7 @@ tryCatch({
                 cohortTable = cohortTable,
                 oracleTempSchema = resultsDatabaseSchema,
                 outputFolder = outputFolder,
-                databaseId = 'Synpuf',
+                databaseId = gsub("[^-a-zA-Z0-9\\(\\)]", "_", dataSourceName),
                 synthesizePositiveControls = TRUE,
                 runAnalyses = TRUE,
                 runDiagnostics = TRUE,
