@@ -145,7 +145,9 @@ public class AtlasServiceImpl implements AtlasService {
 
         atlas.setCentralId(updatedDTO.getCentralId());
 
-        return save(atlas);
+        Atlas updated = save(atlas);
+        atlasClientPool.replace(updated, buildAtlasClient(updated));
+        return updated;
     }
 
     @Override

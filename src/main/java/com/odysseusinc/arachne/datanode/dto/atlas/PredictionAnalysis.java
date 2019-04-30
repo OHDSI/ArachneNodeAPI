@@ -22,5 +22,27 @@
 
 package com.odysseusinc.arachne.datanode.dto.atlas;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.ObjectUtils;
+
 public class PredictionAnalysis extends CommonAnalysis {
+
+	//for Atlas 2.7
+	@JsonProperty("analysisId")
+	private Integer analysisId;
+
+	//for Atlas 2.8+
+	@JsonProperty("id")
+	private Integer id;
+
+	@Override
+	public Integer getId() {
+
+		return ObjectUtils.firstNonNull(id, analysisId);
+	}
+
+	public void setId(Integer id) {
+
+		this.id = id;
+	}
 }
