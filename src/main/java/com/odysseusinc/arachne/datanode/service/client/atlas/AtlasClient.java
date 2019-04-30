@@ -26,6 +26,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
 import com.odysseusinc.arachne.datanode.Constants;
+import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysisInfo;
@@ -44,9 +45,6 @@ public interface AtlasClient {
     @RequestLine("GET /exchange/cohorts/{guid}")
     CommonCohortDTO getCohort(@Param("guid") String guid);
 
-    @RequestLine("GET " + Constants.Atlas.INFO)
-    Info getInfo();
-
     @RequestLine("GET /exchange/estimations")
     List<CommonCohortAnalysisDTO> getAllEstimations();
 
@@ -59,27 +57,12 @@ public interface AtlasClient {
     @RequestLine("GET /cohortdefinition/{id}")
     CohortDefinition getCohortDefinition(@Param("id")  Integer id);
 
-    @RequestLine("GET /comparativecohortanalysis")
-    List<ComparativeCohortAnalysis> getComparativeCohortAnalyses();
-
-    @RequestLine("GET /comparativecohortanalysis/{id}")
-    ComparativeCohortAnalysisInfo getComparativeCohortAnalysisInfo(@Param("id") Integer id);
-
-    @RequestLine("GET /plp")
-    List<PatientLevelPredictionInfo> getPatientLevelPredictions();
-
-    @RequestLine("GET /plp/{id}")
-    Map<String, Object> getPatientLevelPrediction(@Param("id") Integer id);
-
     @RequestLine("GET /ir")
     List<IRAnalysis> getIncidenceRates();
 
     @RequestLine("GET /ir/{id}")
     Map<String, Object> getIncidenceRate(@Param("id") Integer localId);
     
-    @RequestLine("GET " + Constants.Atlas.INFO)
-    Info checkVersion();
-
     class Info {
         public String version;
     }
