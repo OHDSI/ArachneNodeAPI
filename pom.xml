@@ -34,6 +34,7 @@
         <build.number>${BUILD_NUMBER}</build.number>
         <build.id>${BUILD_TIMESTAMP}</build.id>
         <dockerImagePrefix>hub.arachnenetwork.com</dockerImagePrefix>
+        <flyway.locations>db/migration</flyway.locations>
         <!-- Overrides SpringBoot defaults to conform Hydra -->
         <json.version>20170516</json.version>
     </properties>
@@ -480,6 +481,7 @@
             <properties>
                 <env>integration</env>
                 <latestSuffix>-snapshot</latestSuffix>
+                <flyway.locations>db/migration,db/testmigration</flyway.locations>
             </properties>
         </profile>
         <profile>
@@ -487,6 +489,7 @@
             <properties>
                 <env>selenium-test</env>
                 <latestSuffix>-selenium-test</latestSuffix>
+                <flyway.locations>db/migration,db/qamigration</flyway.locations>
             </properties>
         </profile>
         <profile>
@@ -504,6 +507,7 @@
             <properties>
                 <env>dev</env>
                 <latestSuffix>-dev</latestSuffix>
+                <flyway.locations>db/migration,db/devmigration</flyway.locations>
             </properties>
             <build>
                 <resources>
@@ -522,6 +526,7 @@
             <properties>
                 <env>qa</env>
                 <latestSuffix>-qa</latestSuffix>
+                <flyway.locations>db/migration,db/qamigration</flyway.locations>
             </properties>
         </profile>
     </profiles>

@@ -23,6 +23,7 @@ flyway:
     username: ${spring.datasource.username}
     password: ${spring.datasource.password}
   out-of-order: true
+  locations: @flyway.locations@
 api:
   loginEnteryPoint: /api/v1/auth/login
   logoutEntryPoint: /api/v1/auth/logout
