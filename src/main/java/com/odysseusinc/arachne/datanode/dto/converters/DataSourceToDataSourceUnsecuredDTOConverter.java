@@ -58,6 +58,7 @@ public class DataSourceToDataSourceUnsecuredDTOConverter implements Converter<Da
     public DataSourceUnsecuredDTO convert(DataSource source) {
 
         DataSourceUnsecuredDTO target = new DataSourceUnsecuredDTO();
+        target.setName(source.getName());
         target.setConnectionString(source.getConnectionString());
         target.setUsername(source.getUsername());
         target.setPassword(source.getPassword());
