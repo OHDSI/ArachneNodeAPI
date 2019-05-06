@@ -9,6 +9,11 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ *  In older Atlas versions Cohort expression was a String containing json inside,
+ *  but starting from version 2.8 it becomes an Object.
+ *  ExpressionDeserializer is required to remain consistent w/o changing internal logic of DataNode.
+ */
 public class ExpressionDeserializer extends JsonDeserializer<String> {
 	@Override
 	public String deserialize(JsonParser parser, DeserializationContext context) throws IOException, JsonProcessingException {

@@ -33,7 +33,7 @@ public interface AtlasRequestHandler<L extends CommonEntityDTO, T> {
 
     T getAtlasObject(String guid);
 
-    CommonAnalysisType getAnalysisType();
+    abstract CommonAnalysisType getAnalysisType();
 
     void sendResponse(T response, String id);
 }

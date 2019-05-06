@@ -20,41 +20,28 @@
  *
  */
 
-package com.odysseusinc.arachne.datanode.dto.atlas;
+package com.odysseusinc.arachne.datanode.dto.converters;
 
-public class AtlasUserDTO {
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityDTO;
+import com.odysseusinc.arachne.datanode.dto.atlas.CommonAnalysis;
+import org.springframework.core.convert.support.GenericConversionService;
 
-	private Integer id;
-	private String login;
-	private String name;
+public abstract class BaseCommonAnalysisToCommonEntityDTOConverter<S extends CommonAnalysis, D extends CommonEntityDTO> extends BaseAtlasEntityToCommonEntityDTOConverter<S, D> {
 
-	public Integer getId() {
+	public BaseCommonAnalysisToCommonEntityDTOConverter(GenericConversionService conversionService) {
 
-		return id;
+		super(conversionService);
 	}
 
-	public void setId(Integer id) {
+	@Override
+	public D convert(S source) {
 
-		this.id = id;
+		D dto = super.convert(source);
+		dto.setLocalId(source.getId().longValue());
+		dto.setName(source.getName());
+		dto.setDescription(source.getDescription());
+		dto.setModified(source.getModifiedDate());
+		return dto;
 	}
 
-	public String getLogin() {
-
-		return login;
-	}
-
-	public void setLogin(String login) {
-
-		this.login = login;
-	}
-
-	public String getName() {
-
-		return name;
-	}
-
-	public void setName(String name) {
-
-		this.name = name;
-	}
 }

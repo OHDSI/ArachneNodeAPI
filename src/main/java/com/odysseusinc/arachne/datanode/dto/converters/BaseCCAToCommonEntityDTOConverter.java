@@ -14,40 +14,36 @@
  * limitations under the License.
  *
  * Company: Odysseus Data Services, Inc.
- * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: July 27, 2017
+ * Authors: Pavel Grafkin
+ * Created: April 30, 2019
  *
  */
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisType;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.stereotype.Component;
 
-@Component
-public class CCAToCommonCohortAnalysisDTOConverter
-        extends BaseCCAToCommonEntityDTOConverter<CommonCohortAnalysisDTO> {
+public abstract class BaseCCAToCommonEntityDTOConverter<T extends CommonEntityDTO>
+        extends BaseAtlasEntityToCommonEntityDTOConverter<ComparativeCohortAnalysis, T> {
 
-    public CCAToCommonCohortAnalysisDTOConverter(GenericConversionService conversionService) {
+    public BaseCCAToCommonEntityDTOConverter(GenericConversionService conversionService) {
 
         super(conversionService);
     }
 
     @Override
-    public CommonCohortAnalysisDTO convert(ComparativeCohortAnalysis source) {
+    public T convert(ComparativeCohortAnalysis source) {
 
-        CommonCohortAnalysisDTO result = super.convert(source);
-        result.setAnalysisType(CommonCohortAnalysisType.ESTIMATION);
+        T result = super.convert(source);
+        result.setLocalId(source.getAnalysisId().longValue());
+        result.setModified(source.getModified());
+        result.setType(CommonAnalysisType.ESTIMATION);
         return result;
     }
 
     @Override
-    protected CommonCohortAnalysisDTO getTargetClass() {
-
-        return new CommonCohortAnalysisDTO();
-    }
+    protected abstract T getTargetClass();
 }

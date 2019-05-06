@@ -27,6 +27,7 @@ import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CohortService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
+import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasInfoClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import feign.FeignException;
 import java.util.HashSet;
@@ -99,7 +100,7 @@ public class CohortScheduler {
 
                 LOGGER.debug(ATLAS_VERSION_CHECKING_LOG);
                 try {
-                    final AtlasClient.Info info = atlasService.execute(atlas, AtlasClient::getInfo);
+                    final AtlasClient.Info info = atlasService.executeInfo(atlas, AtlasInfoClient::getInfo);
                     version = info.version;
                 } catch (FeignException e) {
                     LOGGER.debug(ATLAS_NOT_INSTALLED_LOG, e.getMessage());

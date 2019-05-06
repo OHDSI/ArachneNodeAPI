@@ -22,39 +22,27 @@
 
 package com.odysseusinc.arachne.datanode.dto.atlas;
 
-public class AtlasUserDTO {
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.ObjectUtils;
 
+public class PredictionAnalysis extends CommonAnalysis {
+
+	//for Atlas 2.7
+	@JsonProperty("analysisId")
+	private Integer analysisId;
+
+	//for Atlas 2.8+
+	@JsonProperty("id")
 	private Integer id;
-	private String login;
-	private String name;
 
+	@Override
 	public Integer getId() {
 
-		return id;
+		return ObjectUtils.firstNonNull(id, analysisId);
 	}
 
 	public void setId(Integer id) {
 
 		this.id = id;
-	}
-
-	public String getLogin() {
-
-		return login;
-	}
-
-	public void setLogin(String login) {
-
-		this.login = login;
-	}
-
-	public String getName() {
-
-		return name;
-	}
-
-	public void setName(String name) {
-
-		this.name = name;
 	}
 }
