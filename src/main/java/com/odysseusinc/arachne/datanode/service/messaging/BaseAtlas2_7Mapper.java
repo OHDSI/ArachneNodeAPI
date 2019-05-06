@@ -52,10 +52,11 @@ public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements E
 		final Integer localId = entity.getLocalId();
 		final String packageName = getPackageName(entity);
 		JsonNode analysis = atlasService.execute(entity.getOrigin(), requestFunc);
+		((ObjectNode)analysis).put("packageName", packageName);
 		try {
 			List<MultipartFile> files = new ArrayList<>();
 			String filename = String.format("%s.zip", packageName);
-			byte[] data = atlasService.hydrateAnalysis(analysis, packageName);
+			byte[] data = hydrate(analysis);
 			MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, data);
 			files.add(file);
 			files.add(getRunner(packageName, file.getName(), String.format("analysis_%d", localId)));
@@ -66,4 +67,14 @@ public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements E
 		}
 	}
 
+	protected byte[] hydrate(JsonNode analysis) throws IOException {
+
+		Hydra hydra = new Hydra(analysis.toString());
+		byte[] data;
+		try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+			hydra.hydrate(out);
+			data = out.toByteArray();
+		}
+		return data;
+	}
 }

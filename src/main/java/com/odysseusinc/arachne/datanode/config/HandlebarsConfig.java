@@ -34,17 +34,18 @@ import org.springframework.context.annotation.Configuration;
 public class HandlebarsConfig {
 
     public static final String INCIDENCE_RATES_RUNNER_TEMPLATE = "ir/main.r";
-    private static final String ESTIMATION_RUNNER_TEMPLATE = "estimation/runner.mustache";
+    private static final String POPULATION_LEVEL_ESTIMATION_RUNNER_TEMPLATE = "estimation/runner.mustache";
     private static final String PATIENT_LEVEL_PREDICTION_RUNNER_TEMPLATE = "plp/main.r";
+    private static final String COHORT_CHARACTERIZATION_RUNNER_TEMPLATE = "cc/main.r";
     private static final String PREDICTION_RUNNER_TEMPLATE = "plp/runAnalysis.R"; //for Atlas 2.7.0+
-    private static final String NEW_ESTIMATION_RUNNER_TEMPLATE = "estimation/runAnalysis.R"; //for Atlas 2.7.0+
+    private static final String ESTIMATION_RUNNER_TEMPLATE = "estimation/runAnalysis.R"; //for Atlas 2.7.0+
     private static final String COHORT_HERACLES_RUNNER_TEMPLATE = "heracles/main.r";
     private static final String COHORT_CHARACTERIZATION_TEMPLATE = "cc/r/runAnalysis.R";
 
     @Bean
     public Template estimationRunnerTemplate() {
 
-        return loadTemplate(ESTIMATION_RUNNER_TEMPLATE);
+        return loadTemplate(POPULATION_LEVEL_ESTIMATION_RUNNER_TEMPLATE);
     }
 
     @Bean
@@ -80,6 +81,6 @@ public class HandlebarsConfig {
     @Bean
     public Template newEstimationRunnerTemplate() {
 
-        return loadTemplate(NEW_ESTIMATION_RUNNER_TEMPLATE);
+        return loadTemplate(ESTIMATION_RUNNER_TEMPLATE);
     }
 }

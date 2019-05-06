@@ -29,7 +29,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
-import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.commons.utils.ComparableVersion;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
@@ -157,7 +156,9 @@ public class AtlasServiceImpl implements AtlasService {
 
         atlas.setCentralId(updatedDTO.getCentralId());
 
-        return save(atlas);
+        Atlas updated = save(atlas);
+        atlasClientPool.replace(updated, buildAtlasClient(updated));
+        return updated;
     }
 
     @Override

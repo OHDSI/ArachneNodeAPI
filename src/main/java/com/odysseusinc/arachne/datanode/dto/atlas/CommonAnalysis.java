@@ -24,24 +24,16 @@ package com.odysseusinc.arachne.datanode.dto.atlas;
 
 import java.util.Date;
 
-public class CommonAnalysis extends BaseAtlasEntity {
-	private Integer id;
+public abstract class CommonAnalysis extends BaseAtlasEntity {
 	private String name;
 	private String description;
-	private AtlasUserDTO createdBy;
+	//TODO add custom deserializer to resolve case with insecure Atlas returning empty string as createdBy
+//	private AtlasUserDTO createdBy;
 	private Date createdDate;
-	private AtlasUserDTO modifiedBy;
+//	private AtlasUserDTO modifiedBy;
 	private Date modifiedDate;
 
-	public Integer getId() {
-
-		return id;
-	}
-
-	public void setId(Integer id) {
-
-		this.id = id;
-	}
+	public abstract Integer getId();
 
 	@Override
 	public String getName() {
@@ -65,6 +57,7 @@ public class CommonAnalysis extends BaseAtlasEntity {
 		this.description = description;
 	}
 
+/*
 	public AtlasUserDTO getCreatedBy() {
 
 		return createdBy;
@@ -74,6 +67,7 @@ public class CommonAnalysis extends BaseAtlasEntity {
 
 		this.createdBy = createdBy;
 	}
+*/
 
 	public Date getCreatedDate() {
 
@@ -85,6 +79,7 @@ public class CommonAnalysis extends BaseAtlasEntity {
 		this.createdDate = createdDate;
 	}
 
+/*
 	public AtlasUserDTO getModifiedBy() {
 
 		return modifiedBy;
@@ -94,6 +89,7 @@ public class CommonAnalysis extends BaseAtlasEntity {
 
 		this.modifiedBy = modifiedBy;
 	}
+*/
 
 	public Date getModifiedDate() {
 
