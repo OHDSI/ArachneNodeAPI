@@ -39,6 +39,8 @@ public class HandlebarsConfig {
     private static final String COHORT_CHARACTERIZATION_RUNNER_TEMPLATE = "cc/main.r";
     private static final String PREDICTION_RUNNER_TEMPLATE = "plp/runAnalysis.R"; //for Atlas 2.7.0+
     private static final String ESTIMATION_RUNNER_TEMPLATE = "estimation/runAnalysis.R"; //for Atlas 2.7.0+
+    private static final String COHORT_HERACLES_RUNNER_TEMPLATE = "heracles/main.r";
+    private static final String COHORT_CHARACTERIZATION_TEMPLATE = "cc/r/runAnalysis.R";
     private static final String PATHWAYS_RUNNER_TEMPLATE = "pathways/main.R";
 
     @Bean
@@ -66,6 +68,12 @@ public class HandlebarsConfig {
     }
 
     @Bean
+    public Template cohortCharacterizationTemplate() {
+
+        return loadTemplate(COHORT_CHARACTERIZATION_TEMPLATE);
+    }
+
+    @Bean
     public Template predictionRunnerTemplate() {
 
         return loadTemplate(PREDICTION_RUNNER_TEMPLATE);
@@ -75,12 +83,6 @@ public class HandlebarsConfig {
     public Template newEstimationRunnerTemplate() {
 
         return loadTemplate(ESTIMATION_RUNNER_TEMPLATE);
-    }
-
-    @Bean
-    public Template cohortCharacterizationTemplate() {
-
-        return loadTemplate(COHORT_CHARACTERIZATION_TEMPLATE);
     }
 
     @Bean

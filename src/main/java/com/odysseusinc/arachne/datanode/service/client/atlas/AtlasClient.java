@@ -22,25 +22,16 @@
 
 package com.odysseusinc.arachne.datanode.service.client.atlas;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
 import com.odysseusinc.arachne.datanode.Constants;
-import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
-import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
-import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysisInfo;
 import com.odysseusinc.arachne.datanode.dto.atlas.IRAnalysis;
-import com.odysseusinc.arachne.datanode.dto.atlas.Pathway;
-import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
-import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import java.util.List;
 import java.util.Map;
-import org.springframework.data.domain.Page;
-import org.springframework.http.MediaType;
 
 public interface AtlasClient {
 
