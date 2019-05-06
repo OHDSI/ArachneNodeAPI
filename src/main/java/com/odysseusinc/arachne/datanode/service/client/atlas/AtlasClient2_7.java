@@ -3,6 +3,7 @@ package com.odysseusinc.arachne.datanode.service.client.atlas;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortCharacterization;
 import com.odysseusinc.arachne.datanode.dto.atlas.EstimationAnalysis;
+import com.odysseusinc.arachne.datanode.dto.atlas.Pathway;
 import com.odysseusinc.arachne.datanode.dto.atlas.PredictionAnalysis;
 import feign.Headers;
 import feign.Param;
@@ -32,4 +33,10 @@ public interface AtlasClient2_7 extends AtlasClient {
 	@RequestLine("GET /cohort-characterization/{id}/export")
 	@Headers("Accepts: " + MediaType.APPLICATION_JSON_VALUE)
 	JsonNode getCohortCharacterization(@Param("id") Integer id);
+
+	@RequestLine("GET /pathway-analysis?size={pageSize}")
+	Page<Pathway> getPathways(@Param("pageSize") int pageSize);
+
+	@RequestLine("GET /pathway-analysis/{id}/export")
+	JsonNode exportPathwayDesign(@Param("id") Integer id);
 }

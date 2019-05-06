@@ -14,7 +14,9 @@ import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
+import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_7;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
+import com.odysseusinc.arachne.datanode.util.AtlasUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,7 +64,8 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
     @Override
     public List<CommonPathwayDTO> getObjectsList(List<Atlas> atlasList) {
 
-        List<Pathway> pathways = atlasService.execute(atlasList, c -> c.getPathways(PAGE_SIZE).getContent());
+    		List<Atlas> atlases27 = AtlasUtils.filterAtlasByVersion27(atlasList);
+        List<Pathway> pathways = atlasService.<AtlasClient2_7, Pathway>execute(atlases27, c -> c.getPathways(PAGE_SIZE).getContent());
         return pathways.stream()
                 .map(pathway -> conversionService.convert(pathway, CommonPathwayDTO.class))
                 .collect(Collectors.toList());
@@ -73,7 +76,7 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
 
         return commonEntityService.findByGuid(guid).map(entity -> {
             Atlas origin = entity.getOrigin();
-            JsonNode design = atlasService.execute(origin, atlasClient -> atlasClient.exportPathwayDesign(entity.getLocalId()));
+            JsonNode design = atlasService.<AtlasClient2_7, JsonNode>execute(origin, atlasClient -> atlasClient.exportPathwayDesign(entity.getLocalId()));
             List<MultipartFile> files = new ArrayList<>();
             try {
 							String prettyPrint;
