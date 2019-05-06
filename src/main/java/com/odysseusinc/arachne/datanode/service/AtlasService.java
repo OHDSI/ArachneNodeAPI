@@ -27,6 +27,7 @@ import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasInfoClient;
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
 import org.springframework.data.domain.Page;

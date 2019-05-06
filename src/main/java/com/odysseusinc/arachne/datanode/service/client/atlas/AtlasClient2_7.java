@@ -32,8 +32,4 @@ public interface AtlasClient2_7 extends AtlasClient {
 	@RequestLine("GET /cohort-characterization/{id}/export")
 	@Headers("Accepts: " + MediaType.APPLICATION_JSON_VALUE)
 	JsonNode getCohortCharacterization(@Param("id") Integer id);
-
-	@RequestLine("GET /cohort-characterization/{id}/download?packageName={packageName}")
-	@Headers("Accept: " + MediaType.APPLICATION_OCTET_STREAM_VALUE)
-	byte[] getCohortCharacterizationPackage(@Param("id") int id, @Param("packageName") String packageName);
 }
