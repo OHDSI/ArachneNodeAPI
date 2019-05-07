@@ -1,7 +1,8 @@
 setwd("./")
 tryCatch({
   unzip('{{packageFile}}', exdir = file.path(".", "{{analysisDir}}"))
-  install.packages(file.path(".", "{{analysisDir}}"), repos = NULL, type = "source", INSTALL_opts=c("--no-multiarch"))
+  callr::rcmd("build", c("{{analysisDir}}", c("--no-build-vignettes")), echo = TRUE, show = TRUE)
+  install.packages(list.files(path = ".", pattern = "\\.tar\\.gz")[1], repo=NULL, type="source", INSTALL_opts=c("--no-multiarch"))
 }, finally = {
   unlink('{{analysisDir}}', recursive = TRUE, force = TRUE)
 })
