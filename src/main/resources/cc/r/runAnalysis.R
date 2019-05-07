@@ -1,9 +1,7 @@
-library(devtools)
-
 setwd("./")
 tryCatch({
   unzip('{{packageFile}}', exdir = file.path(".", "{{analysisDir}}"))
-  install_local(file.path(".", "{{analysisDir}}"))
+  install.packages(file.path(".", "{{analysisDir}}"), repos = NULL, type = "source", INSTALL_opts=c("--no-multiarch"))
 }, finally = {
   unlink('{{analysisDir}}', recursive = TRUE, force = TRUE)
 })
@@ -20,11 +18,16 @@ tryCatch({
   resultsDatabaseSchema <- Sys.getenv("RESULT_SCHEMA")
   cohortsDatabaseSchema <- Sys.getenv("TARGET_SCHEMA")
   cohortTable <- Sys.getenv("COHORT_TARGET_TABLE")
+  driversPath <- (function(path) if (path == "") NULL else path)( Sys.getenv("JDBC_DRIVER_PATH") )
+
+  outputFolder <- file.path(getwd(), 'results')
+  dir.create(outputFolder)
 
   connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
     connectionString = connectionString,
     user = user,
-    password = pwd)
+    password = pwd,
+    pathToDriver = driversPath)
 
   runAnalysis(connectionDetails = connectionDetails,
       cdmSchema = cdmDatabaseSchema,
@@ -33,7 +36,7 @@ tryCatch({
       cohortTable = cohortTable,
       sessionId = NULL,
       analysisId = {{analysisId}},
-      outputFolder = file.path('.', 'results'))
+      outputFolder = outputFolder)
 }, finally = {
   remove.packages('{{packageName}}')
 })
