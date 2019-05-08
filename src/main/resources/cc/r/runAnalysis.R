@@ -28,7 +28,7 @@ tryCatch({
   resultsDatabaseSchema <- Sys.getenv("RESULT_SCHEMA")
   cohortsDatabaseSchema <- Sys.getenv("TARGET_SCHEMA")
   driversPath <- (function(path) if (path == "") NULL else path)( Sys.getenv("JDBC_DRIVER_PATH") )
-  analysisId <- (function(id) if (id == "") NULL else id)( Sys.getenv("ANALYSIS_ID") )
+  analysisId <- (function(id) if (id == "") {{analysisId}} else id)( Sys.getenv("ANALYSIS_ID") )
 
   outputFolder <- file.path(getwd(), 'results')
   dir.create(outputFolder)
