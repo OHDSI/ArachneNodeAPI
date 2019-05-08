@@ -22,9 +22,12 @@
 
 package com.odysseusinc.arachne.datanode.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
+import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasInfoClient;
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
 import org.springframework.data.domain.Page;
@@ -48,7 +51,13 @@ public interface AtlasService {
 
     void delete(Long atlasId);
 
-    <R extends BaseAtlasEntity> List<R> execute(List<Atlas> atlasList, Function<? super AtlasClient, ? extends List<R>> sendAtlasRequest);
+    <C extends AtlasClient, R extends BaseAtlasEntity> List<R> execute(List<Atlas> atlasList, Function<C, ? extends List<R>> sendAtlasRequest);
 
-    <R> R execute(Atlas atlas, Function<? super AtlasClient, R> sendAtlasRequest);
+    <C extends AtlasClient, R> R execute(Atlas atlas, Function<C, R> sendAtlasRequest);
+
+    <R> R executeInfo(Atlas atlas, Function<AtlasInfoClient, R> sendAtlasRequest);
+
+    byte[] hydrateAnalysis(JsonNode analysis, String packageName) throws IOException;
+
+    byte[] hydrateAnalysis(JsonNode analysis, String packageName, String skeletonResource) throws IOException;
 }

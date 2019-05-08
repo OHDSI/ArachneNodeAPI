@@ -186,10 +186,15 @@ public class AchillesProcessors {
             case Types.DOUBLE:
             case Types.REAL:
             case Types.DECIMAL:
+            case Types.NUMERIC:
                 result = resultSet.getDouble(columnName);
+                break;
+            case Types.BIGINT:
+                result = resultSet.getLong(columnName);
                 break;
             default:
                 result = resultSet.getString(columnName);
+                LOGGER.warn("using default string type for mapping column: {} type: {} value: {}",columnName, type, result);
                 break;
         }
         return result;
