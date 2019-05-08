@@ -1,11 +1,20 @@
 setwd("./")
+libs_local <- file.path(getwd(), "libs-local")
 tryCatch({
   unzip('{{packageFile}}', exdir = file.path(".", "{{analysisDir}}"))
+  dir.create(libs_local)
   callr::rcmd("build", c("{{analysisDir}}", c("--no-build-vignettes")), echo = TRUE, show = TRUE)
-  install.packages(list.files(path = ".", pattern = "\\.tar\\.gz")[1], repo=NULL, type="source", INSTALL_opts=c("--no-multiarch"))
+  pkg_file <- list.files(path = ".", pattern = "\\.tar\\.gz")[1]
+  tryCatch({
+    install.packages(pkg_file, lib = libs_local, repos = NULL, type="source", INSTALL_opts=c("--no-multiarch"))
+  }, finally = {
+    file.remove(pkg_file)
+  })
 }, finally = {
   unlink('{{analysisDir}}', recursive = TRUE, force = TRUE)
 })
+
+.libPaths(c(.libPaths(), libs_local))
 
 library(DatabaseConnector)
 library({{packageName}})
@@ -19,6 +28,7 @@ tryCatch({
   resultsDatabaseSchema <- Sys.getenv("RESULT_SCHEMA")
   cohortsDatabaseSchema <- Sys.getenv("TARGET_SCHEMA")
   driversPath <- (function(path) if (path == "") NULL else path)( Sys.getenv("JDBC_DRIVER_PATH") )
+  analysisId <- (function(id) if (id == "") NULL else id)( Sys.getenv("ANALYSIS_ID") )
 
   outputFolder <- file.path(getwd(), 'results')
   dir.create(outputFolder)
@@ -43,8 +53,9 @@ tryCatch({
       resultsSchema = resultsDatabaseSchema,
       cohortTable = cohortTable,
       sessionId = NULL,
-      analysisId = {{analysisId}},
+      analysisId = analysisId,
       outputFolder = outputFolder)
 }, finally = {
-  remove.packages('{{packageName}}')
+  remove.packages('{{packageName}}', lib = libs_local)
+  unlink(libs_local, recursive = TRUE, force = TRUE)
 })
