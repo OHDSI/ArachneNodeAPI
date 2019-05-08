@@ -55,6 +55,12 @@ tryCatch({
       sessionId = NULL,
       analysisId = analysisId,
       outputFolder = outputFolder)
+
+  cleanupCohortTable(
+    connectionDetails = connectionDetails,
+    resultSchema = resultsDatabaseSchema,
+    cohortTable = cohortTable
+  )
 }, finally = {
   remove.packages('{{packageName}}', lib = libs_local)
   unlink(libs_local, recursive = TRUE, force = TRUE)
