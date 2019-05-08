@@ -26,12 +26,8 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
 import com.odysseusinc.arachne.datanode.Constants;
-import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
-import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
-import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysisInfo;
 import com.odysseusinc.arachne.datanode.dto.atlas.IRAnalysis;
-import com.odysseusinc.arachne.datanode.dto.atlas.PatientLevelPredictionInfo;
 import feign.Param;
 import feign.RequestLine;
 import java.util.List;
@@ -62,7 +58,7 @@ public interface AtlasClient {
 
     @RequestLine("GET /ir/{id}")
     Map<String, Object> getIncidenceRate(@Param("id") Integer localId);
-    
+
     class Info {
         public String version;
     }

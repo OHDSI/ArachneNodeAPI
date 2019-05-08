@@ -25,10 +25,15 @@ package com.odysseusinc.arachne.datanode.service.impl;
 import static com.odysseusinc.arachne.datanode.Constants.Atlas.ATLAS_2_7_VERSION;
 import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
+import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.commons.utils.ComparableVersion;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
+import com.odysseusinc.arachne.datanode.dto.serialize.PageModule;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
@@ -51,7 +56,11 @@ import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -60,6 +69,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.ComparatorUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.ohdsi.hydra.Hydra;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,6 +95,7 @@ public class AtlasServiceImpl implements AtlasService {
     private HttpHeaders headers;
 
     private Map<Atlas, ? extends AtlasClient> atlasClientPool = new ConcurrentHashMap<>();
+    private static final List<Module> MODULES = Collections.singletonList(new PageModule());
 
     @Autowired
     public AtlasServiceImpl(GenericConversionService genericConversionService,
@@ -237,6 +249,29 @@ public class AtlasServiceImpl implements AtlasService {
         return sendAtlasRequest.apply(infoClient);
     }
 
+    @Override
+    public byte[] hydrateAnalysis(JsonNode analysis, String packageName) throws IOException {
+
+        return hydrateAnalysis(analysis, packageName, null);
+    }
+
+    @Override
+    public byte[] hydrateAnalysis(JsonNode analysis, String packageName, String skeletonResource) throws IOException {
+
+        ((ObjectNode)analysis).put("packageName", packageName);
+        Hydra hydra = new Hydra(analysis.toString());
+        if (StringUtils.isNotBlank(skeletonResource)) {
+            File skeletonFile = CommonFileUtils.copyResourceToTempFile(skeletonResource, "skeleton-", ".zip");
+            hydra.setExternalSkeletonFileName(skeletonFile.getAbsolutePath());
+        }
+        byte[] data;
+        try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            hydra.hydrate(out);
+            data = out.toByteArray();
+        }
+        return data;
+    }
+
     private AtlasShortDTO syncWithCentral(Atlas atlas) {
 
         AtlasShortDTO atlasShortDTO = conversionService.convert(atlas, AtlasShortDTO.class);
@@ -290,7 +325,7 @@ public class AtlasServiceImpl implements AtlasService {
         return Feign.builder()
                 .client(httpClient)
                 .encoder(new JacksonEncoder())
-                .decoder(new ByteArrayDecoder(new JacksonDecoder()))
+                .decoder(new ByteArrayDecoder(new JacksonDecoder(MODULES)))
                 .logger(new Slf4jLogger(AtlasClient.class))
                 .logLevel(feign.Logger.Level.FULL)
                 .requestInterceptor(new AtlasAuthRequestInterceptor(buildAtlasLoginClient(atlas.getUrl(), httpClient), atlas.getAuthType(), atlas.getUsername(), atlas.getPassword()))
