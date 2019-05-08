@@ -18,7 +18,6 @@ tryCatch({
   cdmDatabaseSchema <- Sys.getenv("DBMS_SCHEMA")
   resultsDatabaseSchema <- Sys.getenv("RESULT_SCHEMA")
   cohortsDatabaseSchema <- Sys.getenv("TARGET_SCHEMA")
-  cohortTable <- Sys.getenv("COHORT_TARGET_TABLE")
   driversPath <- (function(path) if (path == "") NULL else path)( Sys.getenv("JDBC_DRIVER_PATH") )
 
   outputFolder <- file.path(getwd(), 'results')
@@ -29,6 +28,14 @@ tryCatch({
     user = user,
     password = pwd,
     pathToDriver = driversPath)
+
+  cohortTable <- createCohorts(
+    pckg = "{{packageName}}",
+    connectionDetails = connectionDetails,
+    cdmSchema = cdmDatabaseSchema,
+    vocabularySchema = cdmDatabaseSchema,
+    resultSchema = resultsDatabaseSchema
+  )
 
   runAnalysis(connectionDetails = connectionDetails,
       cdmSchema = cdmDatabaseSchema,
