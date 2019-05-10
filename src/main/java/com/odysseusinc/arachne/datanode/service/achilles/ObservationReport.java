@@ -22,6 +22,8 @@
 
 package com.odysseusinc.arachne.datanode.service.achilles;
 
+import static com.odysseusinc.arachne.datanode.Constants.CDM.CONCEPT_ID;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.concept_id;
 import static com.odysseusinc.arachne.datanode.service.achilles.AchillesProcessors.plainResultSet;
 import static com.odysseusinc.arachne.datanode.util.datasource.QueryProcessors.statement;
 import static com.odysseusinc.arachne.datanode.util.datasource.ResultTransformers.toJsonMap;
@@ -41,11 +43,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class ObservationReport extends BaseReport {
 
-    public static final String OBSERVATION_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export_v5/observation/sqlPrevalenceByGenderAgeYear.sql";
-    public static final String OBSERVATION_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export_v5/observation/sqlPrevalenceByMonth.sql";
-    public static final String OBSERVATION_FREQUENCY_DISTRIBUTION_SQL = "classpath:/achilles/data/export_v5/observation/sqlFrequencyDistribution.sql";
-    public static final String OBSERVATION_OBSERVATIONS_BY_TYPE_SQL = "classpath:/achilles/data/export_v5/observation/sqlObservationsByType.sql";
-    public static final String OBSERVATION_AGE_AT_FIRST_OCCURRENCE_SQL = "classpath:/achilles/data/export_v5/observation/sqlAgeAtFirstOccurrence.sql";
+    public static final String OBSERVATION_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export/observation/sqlPrevalenceByGenderAgeYear.sql";
+    public static final String OBSERVATION_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export/observation/sqlPrevalenceByMonth.sql";
+    public static final String OBSERVATION_FREQUENCY_DISTRIBUTION_SQL = "classpath:/achilles/data/export/observation/sqlFrequencyDistribution.sql";
+    public static final String OBSERVATION_OBSERVATIONS_BY_TYPE_SQL = "classpath:/achilles/data/export/observation/sqlObservationsByType.sql";
+    public static final String OBSERVATION_AGE_AT_FIRST_OCCURRENCE_SQL = "classpath:/achilles/data/export/observation/sqlAgeAtFirstOccurrence.sql";
 
     @Autowired
     public ObservationReport(SqlUtils sqlUtils) {
@@ -64,20 +66,20 @@ public class ObservationReport extends BaseReport {
 
         return DataSourceUtils.<Map<Integer,String>>withDataSource(dataSource)
                 .run(statement(prevalenceByGender))
-                .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_GENDER_AGE_YEAR",
-                        plainResultSet("concept_id", "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
+                .forMapResults(concepts, CONCEPT_ID, "PREVALENCE_BY_GENDER_AGE_YEAR",
+                        plainResultSet(concept_id, "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
                 .run(statement(prevalenceByMonth))
-                .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_MONTH",
-                        plainResultSet("concept_id", "x_calendar_month", "y_prevalence_1000pp"))
+                .forMapResults(concepts, CONCEPT_ID, "PREVALENCE_BY_MONTH",
+                        plainResultSet(concept_id, "x_calendar_month", "y_prevalence_1000pp"))
                 .run(statement(frequency))
-                .forMapResults(concepts, "CONCEPT_ID", "OBS_FREQUENCY_DISTRIBUTION",
-                        plainResultSet("concept_id", "y_num_persons", "x_count"))
+                .forMapResults(concepts, CONCEPT_ID, "OBS_FREQUENCY_DISTRIBUTION",
+                        plainResultSet(concept_id, "y_num_persons", "x_count"))
                 .run(statement(byType))
-                .forMapResults(concepts, "CONCEPT_ID", "OBSERVATIONS_BY_TYPE",
-                        plainResultSet("concept_id", "concept_name", "count_value"))
+                .forMapResults(concepts, CONCEPT_ID, "OBSERVATIONS_BY_TYPE",
+                        plainResultSet(concept_id, "concept_name", "count_value"))
                 .run(statement(ageAtFirst))
-                .forMapResults(concepts, "CONCEPT_ID", "AGE_AT_FIRST_OCCURRENCE",
-                        plainResultSet("concept_id", "category", "min_value", "p10_value",
+                .forMapResults(concepts, CONCEPT_ID, "AGE_AT_FIRST_OCCURRENCE",
+                        plainResultSet(concept_id, "category", "min_value", "p10_value",
                                 "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .transform(toJsonMap(concepts))
                 .write(toMultipleFiles(targetDir, "observation_%d.json", concepts))

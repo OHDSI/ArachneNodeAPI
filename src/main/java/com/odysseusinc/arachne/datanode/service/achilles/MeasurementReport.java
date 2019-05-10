@@ -22,6 +22,20 @@
 
 package com.odysseusinc.arachne.datanode.service.achilles;
 
+import static com.odysseusinc.arachne.datanode.Constants.CDM.CONCEPT_ID;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.MEASUREMENT_CONCEPT_ID;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.category;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.concept_id;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.concept_name;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.count_value;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.max_value;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.measurement_concept_id;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.median_value;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.min_value;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.p10_value;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.p25_value;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.p75_value;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.p90_value;
 import static com.odysseusinc.arachne.datanode.service.achilles.AchillesProcessors.plainResultSet;
 import static com.odysseusinc.arachne.datanode.util.datasource.QueryProcessors.statement;
 import static com.odysseusinc.arachne.datanode.util.datasource.ResultTransformers.toJsonMap;
@@ -41,16 +55,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class MeasurementReport extends BaseReport {
 
-    public static final String PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export_v5/measurement/sqlPrevalenceByGenderAgeYear.sql";
-    public static final String PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export_v5/measurement/sqlPrevalenceByMonth.sql";
-    public static final String FREQUENCY_DISTRIBUTION_SQL = "classpath:/achilles/data/export_v5/measurement/sqlFrequencyDistribution.sql";
-    public static final String MEASUREMENTS_BY_TYPE_SQL = "classpath:/achilles/data/export_v5/measurement/sqlMeasurementsByType.sql";
-    public static final String AGE_AT_FIRST_OCCURRENCE_SQL = "classpath:/achilles/data/export_v5/measurement/sqlAgeAtFirstOccurrence.sql";
-    public static final String RECORDS_BY_UNIT_SQL = "classpath:/achilles/data/export_v5/measurement/sqlRecordsByUnit.sql";
-    public static final String MEASUREMENT_VALUE_DISTRIBUTION_SQL = "classpath:/achilles/data/export_v5/measurement/sqlMeasurementValueDistribution.sql";
-    public static final String LOWER_LIMIT_DISTRIBUTION_SQL = "classpath:/achilles/data/export_v5/measurement/sqlLowerLimitDistribution.sql";
-    public static final String UPPER_LIMIT_DISTRIBUTION_SQL = "classpath:/achilles/data/export_v5/measurement/sqlUpperLimitDistribution.sql";
-    public static final String VALUES_RELATIVE_TO_NORM_SQL = "classpath:/achilles/data/export_v5/measurement/sqlValuesRelativeToNorm.sql";
+    public static final String PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export/measurement/sqlPrevalenceByGenderAgeYear.sql";
+    public static final String PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export/measurement/sqlPrevalenceByMonth.sql";
+    public static final String FREQUENCY_DISTRIBUTION_SQL = "classpath:/achilles/data/export/measurement/sqlFrequencyDistribution.sql";
+    public static final String MEASUREMENTS_BY_TYPE_SQL = "classpath:/achilles/data/export/measurement/sqlMeasurementsByType.sql";
+    public static final String AGE_AT_FIRST_OCCURRENCE_SQL = "classpath:/achilles/data/export/measurement/sqlAgeAtFirstOccurrence.sql";
+    public static final String RECORDS_BY_UNIT_SQL = "classpath:/achilles/data/export/measurement/sqlRecordsByUnit.sql";
+    public static final String MEASUREMENT_VALUE_DISTRIBUTION_SQL = "classpath:/achilles/data/export/measurement/sqlMeasurementValueDistribution.sql";
+    public static final String LOWER_LIMIT_DISTRIBUTION_SQL = "classpath:/achilles/data/export/measurement/sqlLowerLimitDistribution.sql";
+    public static final String UPPER_LIMIT_DISTRIBUTION_SQL = "classpath:/achilles/data/export/measurement/sqlUpperLimitDistribution.sql";
+    public static final String VALUES_RELATIVE_TO_NORM_SQL = "classpath:/achilles/data/export/measurement/sqlValuesRelativeToNorm.sql";
 
     @Autowired
     public MeasurementReport(SqlUtils sqlUtils) {
@@ -74,39 +88,39 @@ public class MeasurementReport extends BaseReport {
 
         return DataSourceUtils.<Map<Integer, String>>withDataSource(dataSource)
                 .run(statement(prevalenceByGender))
-                .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_GENDER_AGE_YEAR",
-                        plainResultSet("concept_id", "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
+                .forMapResults(concepts, CONCEPT_ID, "PREVALENCE_BY_GENDER_AGE_YEAR",
+                        plainResultSet(concept_id, "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
                 .run(statement(prevalenceByMonth))
-                .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_MONTH",
-                        plainResultSet("concept_id", "x_calendar_month", "y_prevalence_1000pp"))
+                .forMapResults(concepts, CONCEPT_ID, "PREVALENCE_BY_MONTH",
+                        plainResultSet(concept_id, "x_calendar_month", "y_prevalence_1000pp"))
                 .run(statement(frequency))
-                .forMapResults(concepts, "CONCEPT_ID", "FREQUENCY_DISTRIBUTION",
-                        plainResultSet("concept_id", "y_num_persons", "x_count"))
+                .forMapResults(concepts, CONCEPT_ID, "FREQUENCY_DISTRIBUTION",
+                        plainResultSet(concept_id, "y_num_persons", "x_count"))
                 .run(statement(byType))
-                .forMapResults(concepts, "MEASUREMENT_CONCEPT_ID", "MEASUREMENTS_BY_TYPE",
-                        plainResultSet("measurement_concept_id", "concept_name", "count_value"))
+                .forMapResults(concepts, MEASUREMENT_CONCEPT_ID, "MEASUREMENTS_BY_TYPE",
+                        plainResultSet(measurement_concept_id, concept_name, count_value))
                 .run(statement(ageAtFirst))
-                .forMapResults(concepts, "CONCEPT_ID", "AGE_AT_FIRST_OCCURRENCE",
-                        plainResultSet("concept_id", "category", "min_value", "p10_value",
-                                "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
+                .forMapResults(concepts, CONCEPT_ID, "AGE_AT_FIRST_OCCURRENCE",
+                        plainResultSet(concept_id, category, min_value, p10_value,
+                                p25_value, median_value, p75_value, p90_value, max_value))
                 .run(statement(recordByUnit))
-                .forMapResults(concepts, "MEASUREMENT_CONCEPT_ID", "RECORDS_BY_UNIT",
-                        plainResultSet("measurement_concept_id", "concept_name", "count_value"))
+                .forMapResults(concepts, MEASUREMENT_CONCEPT_ID, "RECORDS_BY_UNIT",
+                        plainResultSet(measurement_concept_id, concept_name, count_value))
                 .run(statement(valueDist))
-                .forMapResults(concepts, "CONCEPT_ID", "MEASUREMENT_VALUE_DISTRIBUTION",
-                        plainResultSet("concept_id","category", "min_value", "p10_value",
-                                "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
+                .forMapResults(concepts, CONCEPT_ID, "MEASUREMENT_VALUE_DISTRIBUTION",
+                        plainResultSet(concept_id, category, min_value, p10_value,
+                                p25_value, median_value, p75_value, p90_value, max_value))
                 .run(statement(lowerLimit))
-                .forMapResults(concepts, "CONCEPT_ID", "LOWER_LIMIT_DISTRIBUTION",
-                        plainResultSet("concept_id","category", "min_value", "p10_value",
-                                "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
+                .forMapResults(concepts, CONCEPT_ID, "LOWER_LIMIT_DISTRIBUTION",
+                        plainResultSet(concept_id, category, min_value, p10_value,
+                                p25_value, median_value, p75_value, p90_value, max_value))
                 .run(statement(upperLimit))
-                .forMapResults(concepts, "CONCEPT_ID", "UPPER_LIMIT_DISTRIBUTION",
-                        plainResultSet("concept_id","category", "min_value", "p10_value",
-                                "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
+                .forMapResults(concepts, CONCEPT_ID, "UPPER_LIMIT_DISTRIBUTION",
+                        plainResultSet(concept_id, category, min_value, p10_value,
+                                p25_value, median_value, p75_value, p90_value, max_value))
                 .run(statement(valuesRelative))
-                .forMapResults(concepts, "MEASUREMENT_CONCEPT_ID", "VALUES_RELATIVE_TO_NORM",
-                        plainResultSet("measurement_concept_id", "concept_name", "count_value"))
+                .forMapResults(concepts, MEASUREMENT_CONCEPT_ID, "VALUES_RELATIVE_TO_NORM",
+                        plainResultSet(measurement_concept_id, concept_name, count_value))
                 .transform(toJsonMap(concepts))
                 .write(toMultipleFiles(targetDir, "measurement_%d.json", concepts))
                 .getResultsCount();

@@ -427,8 +427,8 @@
                 <version>1.9.5</version>
                 <configuration>
                     <connectionType>developerConnection</connectionType>
-                    <scmVersion>v1.5.0</scmVersion>
-                    <scmVersionType>tag</scmVersionType>
+                    <scmVersion>master</scmVersion>
+                    <scmVersionType>branch</scmVersionType>
                     <checkoutDirectory>src/achilles</checkoutDirectory>
                     <skipCheckoutIfExists/>
                 </configuration>

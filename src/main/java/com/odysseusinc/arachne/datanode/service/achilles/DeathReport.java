@@ -39,10 +39,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class DeathReport extends BaseReport {
 
-    public static final String DEATH_AGE_AT_FIRST_EXPOSURE_SQL = "classpath:/achilles/data/export_v5/death/sqlAgeAtDeath.sql";
-    public static final String DEATH_DRUGS_BY_TYPE_SQL = "classpath:/achilles/data/export_v5/death/sqlDeathByType.sql";
-    public static final String DEATH_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export_v5/death/sqlPrevalenceByGenderAgeYear.sql";
-    public static final String DEATH_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export_v5/death/sqlPrevalenceByMonth.sql";
+    public static final String DEATH_AGE_AT_FIRST_EXPOSURE_SQL = "classpath:/achilles/data/export/death/sqlAgeAtDeath.sql";
+    public static final String DEATH_DRUGS_BY_TYPE_SQL = "classpath:/achilles/data/export/death/sqlDeathByType.sql";
+    public static final String DEATH_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export/death/sqlPrevalenceByGenderAgeYear.sql";
+    public static final String DEATH_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export/death/sqlPrevalenceByMonth.sql";
 
     public DeathReport(SqlUtils sqlUtils) {
 
