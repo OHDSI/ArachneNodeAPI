@@ -42,12 +42,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class PersonReport extends BaseReport {
 
-    public static final String PERSON_POPULATION_SQL = "classpath:/achilles/data/export_v5/person/population.sql";
-    public static final String PERSON_GENDER_SQL = "classpath:/achilles/data/export_v5/person/gender.sql";
-    public static final String PERSON_RACE_SQL = "classpath:/achilles/data/export_v5/person/race.sql";
-    public static final String PERSON_ETHNICITY_SQL = "classpath:/achilles/data/export_v5/person/ethnicity.sql";
-    public static final String PERSON_YEAROFBIRTH_STATS_SQL = "classpath:/achilles/data/export_v5/person/yearofbirth_stats.sql";
-    public static final String PERSON_YEAROFBIRTH_DATA_SQL = "classpath:/achilles/data/export_v5/person/yearofbirth_data.sql";
+    public static final String PERSON_POPULATION_SQL = "classpath:/achilles/data/export/person/population.sql";
+    public static final String PERSON_GENDER_SQL = "classpath:/achilles/data/export/person/gender.sql";
+    public static final String PERSON_RACE_SQL = "classpath:/achilles/data/export/person/race.sql";
+    public static final String PERSON_ETHNICITY_SQL = "classpath:/achilles/data/export/person/ethnicity.sql";
+    public static final String PERSON_YEAROFBIRTH_STATS_SQL = "classpath:/achilles/data/export/person/yearofbirth_stats.sql";
+    public static final String PERSON_YEAROFBIRTH_DATA_SQL = "classpath:/achilles/data/export/person/yearofbirth_data.sql";
 
     @Autowired
     public PersonReport(SqlUtils sqlUtils) {

@@ -22,6 +22,9 @@
 
 package com.odysseusinc.arachne.datanode.service.achilles;
 
+import static com.odysseusinc.arachne.datanode.Constants.CDM.CONCEPT_ID;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.concept_id;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.DRUG_CONCEPT_ID;
 import static com.odysseusinc.arachne.datanode.service.achilles.AchillesProcessors.plainResultSet;
 import static com.odysseusinc.arachne.datanode.util.datasource.QueryProcessors.statement;
 
@@ -41,14 +44,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class DrugReport extends BaseReport {
 
-    public static final String DRUG_AGE_AT_FIRST_EXPOSURE_SQL = "classpath:/achilles/data/export_v5/drug/sqlAgeAtFirstExposure.sql";
-    public static final String DRUG_DAYS_SUPPLY_DISTRIBUTION_SQL = "classpath:/achilles/data/export_v5/drug/sqlDaysSupplyDistribution.sql";
-    public static final String DRUG_DRUGS_BY_TYPE_SQL = "classpath:/achilles/data/export_v5/drug/sqlDrugsByType.sql";
-    public static final String DRUG_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export_v5/drug/sqlPrevalenceByGenderAgeYear.sql";
-    public static final String DRUG_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export_v5/drug/sqlPrevalenceByMonth.sql";
-    public static final String DRUG_FREQUENCY_DISTRIBUTION_SQL = "classpath:/achilles/data/export_v5/drug/sqlFrequencyDistribution.sql";
-    public static final String DRUG_QUANTITY_DISTRIBUTION_SQL = "classpath:/achilles/data/export_v5/drug/sqlQuantityDistribution.sql";
-    public static final String DRUG_REFILLS_DISTRIBUTION_SQL = "classpath:/achilles/data/export_v5/drug/sqlRefillsDistribution.sql";
+    public static final String DRUG_AGE_AT_FIRST_EXPOSURE_SQL = "classpath:/achilles/data/export/drug/sqlAgeAtFirstExposure.sql";
+    public static final String DRUG_DAYS_SUPPLY_DISTRIBUTION_SQL = "classpath:/achilles/data/export/drug/sqlDaysSupplyDistribution.sql";
+    public static final String DRUG_DRUGS_BY_TYPE_SQL = "classpath:/achilles/data/export/drug/sqlDrugsByType.sql";
+    public static final String DRUG_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export/drug/sqlPrevalenceByGenderAgeYear.sql";
+    public static final String DRUG_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export/drug/sqlPrevalenceByMonth.sql";
+    public static final String DRUG_FREQUENCY_DISTRIBUTION_SQL = "classpath:/achilles/data/export/drug/sqlFrequencyDistribution.sql";
+    public static final String DRUG_QUANTITY_DISTRIBUTION_SQL = "classpath:/achilles/data/export/drug/sqlQuantityDistribution.sql";
+    public static final String DRUG_REFILLS_DISTRIBUTION_SQL = "classpath:/achilles/data/export/drug/sqlRefillsDistribution.sql";
 
     public DrugReport(SqlUtils sqlUtils) {
 
@@ -71,29 +74,29 @@ public class DrugReport extends BaseReport {
                 "p90_value", "max_value");
         return DataSourceUtils.<Map<Integer, String>>withDataSource(dataSource)
                 .run(statement(ageQuery))
-                .forMapResults(concepts, "DRUG_CONCEPT_ID", "AGE_AT_FIRST_EXPOSURE",
+                .forMapResults(concepts, DRUG_CONCEPT_ID, "AGE_AT_FIRST_EXPOSURE",
                         plainResultSet)
                 .run(statement(daysSupplyQuery))
-                .forMapResults(concepts, "DRUG_CONCEPT_ID", "DAYS_SUPPLY_DISTRIBUTION",
+                .forMapResults(concepts, DRUG_CONCEPT_ID, "DAYS_SUPPLY_DISTRIBUTION",
                         plainResultSet)
                 .run(statement(drugsByTypeQuery))
-                .forMapResults(concepts, "DRUG_CONCEPT_ID", "DRUGS_BY_TYPE",
+                .forMapResults(concepts, DRUG_CONCEPT_ID, "DRUGS_BY_TYPE",
                         plainResultSet("drug_concept_id", "concept_name", "count_value"))
                 .run(statement(prevalenceByGenderQuery))
-                .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_GENDER_AGE_YEAR",
-                        plainResultSet("concept_id",
+                .forMapResults(concepts, CONCEPT_ID, "PREVALENCE_BY_GENDER_AGE_YEAR",
+                        plainResultSet(concept_id,
                                 "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
                 .run(statement(prevalenceByMonthQuery))
-                .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_MONTH",
-                        plainResultSet("concept_id", "x_calendar_month", "y_prevalence_1000pp"))
+                .forMapResults(concepts, CONCEPT_ID, "PREVALENCE_BY_MONTH",
+                        plainResultSet(concept_id, "x_calendar_month", "y_prevalence_1000pp"))
                 .run(statement(frequencyQuery))
-                .forMapResults(concepts, "CONCEPT_ID", "DRUG_FREQUENCY_DISTRIBUTION",
-                        plainResultSet("concept_id", "y_num_persons", "x_count"))
+                .forMapResults(concepts, CONCEPT_ID, "DRUG_FREQUENCY_DISTRIBUTION",
+                        plainResultSet(concept_id, "y_num_persons", "x_count"))
                 .run(statement(quantityQuery))
-                .forMapResults(concepts, "DRUG_CONCEPT_ID", "QUANTITY_DISTRIBUTION",
+                .forMapResults(concepts, DRUG_CONCEPT_ID, "QUANTITY_DISTRIBUTION",
                         plainResultSet)
                 .run(statement(refillsQuery))
-                .forMapResults(concepts, "DRUG_CONCEPT_ID", "REFILLS_DISTRIBUTION",
+                .forMapResults(concepts, DRUG_CONCEPT_ID, "REFILLS_DISTRIBUTION",
                         plainResultSet)
                 .transform(ResultTransformers.toJsonMap(concepts))
                 .write(ResultWriters.toMultipleFiles(targetDir, "drug_%d.json", concepts))

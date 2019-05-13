@@ -43,11 +43,15 @@ public class AchillesProcessors {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AchillesProcessors.class);
 
+    private AchillesProcessors(){
+    }
+
     public static ResultSetProcessor<Map> achillesHeel() {
 
         return resultSet -> {
             Map<String, Object> data = new HashMap<>();
-            data.put("MESSAGES", resultSet().process(resultSet));
+            ResultSetContainer<Map> resultContainer = resultSet().process(resultSet);
+            data.put("MESSAGES", resultContainer.getValues());
             return new ResultSetContainer<>(data, null);
         };
     }
@@ -100,7 +104,7 @@ public class AchillesProcessors {
 
         return resultSet -> {
             Map<String, Object> data = new HashMap<>();
-            data.put("DATA", resultSet().process(resultSet));
+            data.put("DATA", resultSet().process(resultSet).getValues());
             return new ResultSetContainer<>(data, null);
         };
     }
@@ -146,7 +150,7 @@ public class AchillesProcessors {
                 Map values = columns.entrySet().stream()
                         .filter(e -> !Objects.equals(e.getKey(), primaryKey))
                         .collect(Collectors.toMap(
-                                e -> e.getKey(),
+                                Map.Entry::getKey,
                                 e -> {
                                     try {
                                         return getColumnValue(resultSet, e.getKey(), e.getValue());
