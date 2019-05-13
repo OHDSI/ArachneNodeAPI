@@ -22,6 +22,8 @@
 
 package com.odysseusinc.arachne.datanode.service.achilles;
 
+import static com.odysseusinc.arachne.datanode.Constants.CDM.CONCEPT_ID;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.concept_id;
 import static com.odysseusinc.arachne.datanode.service.achilles.AchillesProcessors.plainResultSet;
 
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
@@ -41,10 +43,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class ConditionReport extends BaseReport {
 
-    public static final String CONDITION_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export_v5/condition/sqlPrevalenceByGenderAgeYear.sql";
-    public static final String CONDITION_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export_v5/condition/sqlPrevalenceByMonth.sql";
-    public static final String CONDITION_CONDITIONS_BY_TYPE_SQL = "classpath:/achilles/data/export_v5/condition/sqlConditionsByType.sql";
-    public static final String CONDITION_AGE_AT_FIRST_DIAGNOSIS_SQL = "classpath:/achilles/data/export_v5/condition/sqlAgeAtFirstDiagnosis.sql";
+    public static final String CONDITION_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export/condition/sqlPrevalenceByGenderAgeYear.sql";
+    public static final String CONDITION_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export/condition/sqlPrevalenceByMonth.sql";
+    public static final String CONDITION_CONDITIONS_BY_TYPE_SQL = "classpath:/achilles/data/export/condition/sqlConditionsByType.sql";
+    public static final String CONDITION_AGE_AT_FIRST_DIAGNOSIS_SQL = "classpath:/achilles/data/export/condition/sqlAgeAtFirstDiagnosis.sql";
 
     @Autowired
     public ConditionReport(SqlUtils sqlUtils) {
@@ -61,17 +63,17 @@ public class ConditionReport extends BaseReport {
         String ageQuery = sqlUtils.transformSqlTemplate(dataSource, CONDITION_AGE_AT_FIRST_DIAGNOSIS_SQL);
         return DataSourceUtils.<Map<Integer, String>>withDataSource(dataSource)
                 .run(QueryProcessors.statement(prevalenceByGenderAgeQuery))
-                .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_GENDER_AGE_YEAR",
-                        plainResultSet("concept_id", "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
+                .forMapResults(concepts, CONCEPT_ID, "PREVALENCE_BY_GENDER_AGE_YEAR",
+                        plainResultSet(concept_id, "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
                 .run(QueryProcessors.statement(prevalenceByMonthQuery))
-                .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_MONTH",
-                        plainResultSet("concept_id", "x_calendar_month", "y_prevalence_1000pp"))
+                .forMapResults(concepts, CONCEPT_ID, "PREVALENCE_BY_MONTH",
+                        plainResultSet(concept_id, "x_calendar_month", "y_prevalence_1000pp"))
                 .run(QueryProcessors.statement(conditionByTypeQuery))
                 .forMapResults(concepts, "CONDITION_CONCEPT_ID", "CONDITIONS_BY_TYPE",
                         plainResultSet("condition_concept_id", "concept_name", "count_value"))
                 .run(QueryProcessors.statement(ageQuery))
-                .forMapResults(concepts, "CONCEPT_ID", "AGE_AT_FIRST_DIAGNOSIS",
-                        plainResultSet("concept_id", "category", "min_value", "p10_value",
+                .forMapResults(concepts, CONCEPT_ID, "AGE_AT_FIRST_DIAGNOSIS",
+                        plainResultSet(concept_id, "category", "min_value", "p10_value",
                                 "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .transform(ResultTransformers.toJsonMap(concepts))
                 .write(ResultWriters.toMultipleFiles(targetDir, "condition_%d.json", concepts))

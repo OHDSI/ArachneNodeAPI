@@ -43,17 +43,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class ObservationPeriodReport extends BaseReport {
 
-    public static final String OBSERVATIONPERIOD_AGEATFIRST_SQL = "classpath:/achilles/data/export_v5/observationperiod/ageatfirst.sql";
-    public static final String OBSERVATIONPERIOD_AGEBYGENDER_SQL = "classpath:/achilles/data/export_v5/observationperiod/agebygender.sql";
-    public static final String OBSERVATIONPERIOD_OBSERVATIONLENGTH_STATS_SQL = "classpath:/achilles/data/export_v5/observationperiod/observationlength_stats.sql";
-    public static final String OBSERVATIONPERIOD_OBSERVATIONLENGTH_DATA_SQL = "classpath:/achilles/data/export_v5/observationperiod/observationlength_data.sql";
-    public static final String OBSERVATIONPERIOD_CUMULATIVEDURATION_SQL = "classpath:/achilles/data/export_v5/observationperiod/cumulativeduration.sql";
-    public static final String OBSERVATIONPERIOD_OBSERVATIONLENGTHBYGENDER_SQL = "classpath:/achilles/data/export_v5/observationperiod/observationlengthbygender.sql";
-    public static final String OBSERVATIONPERIOD_OBSERVATIONLENGTHBYAGE_SQL = "classpath:/achilles/data/export_v5/observationperiod/observationlengthbyage.sql";
-    public static final String OBSERVATIONPERIOD_OBSERVEDBYYEAR_STATS_SQL = "classpath:/achilles/data/export_v5/observationperiod/observedbyyear_stats.sql";
-    public static final String OBSERVATIONPERIOD_OBSERVEDBYYEAR_DATA_SQL = "classpath:/achilles/data/export_v5/observationperiod/observedbyyear_data.sql";
-    public static final String OBSERVATIONPERIOD_OBSERVEDBYMONTH_SQL = "classpath:/achilles/data/export_v5/observationperiod/observedbymonth.sql";
-    public static final String OBSERVATIONPERIOD_PERIODSPERPERSON_SQL = "classpath:/achilles/data/export_v5/observationperiod/periodsperperson.sql";
+    public static final String OBSERVATIONPERIOD_AGEATFIRST_SQL = "classpath:/achilles/data/export/observationperiod/ageatfirst.sql";
+    public static final String OBSERVATIONPERIOD_AGEBYGENDER_SQL = "classpath:/achilles/data/export/observationperiod/agebygender.sql";
+    public static final String OBSERVATIONPERIOD_OBSERVATIONLENGTH_STATS_SQL = "classpath:/achilles/data/export/observationperiod/observationlength_stats.sql";
+    public static final String OBSERVATIONPERIOD_OBSERVATIONLENGTH_DATA_SQL = "classpath:/achilles/data/export/observationperiod/observationlength_data.sql";
+    public static final String OBSERVATIONPERIOD_CUMULATIVEDURATION_SQL = "classpath:/achilles/data/export/observationperiod/cumulativeduration.sql";
+    public static final String OBSERVATIONPERIOD_OBSERVATIONLENGTHBYGENDER_SQL = "classpath:/achilles/data/export/observationperiod/observationlengthbygender.sql";
+    public static final String OBSERVATIONPERIOD_OBSERVATIONLENGTHBYAGE_SQL = "classpath:/achilles/data/export/observationperiod/observationlengthbyage.sql";
+    public static final String OBSERVATIONPERIOD_OBSERVEDBYYEAR_STATS_SQL = "classpath:/achilles/data/export/observationperiod/observedbyyear_stats.sql";
+    public static final String OBSERVATIONPERIOD_OBSERVEDBYYEAR_DATA_SQL = "classpath:/achilles/data/export/observationperiod/observedbyyear_data.sql";
+    public static final String OBSERVATIONPERIOD_OBSERVEDBYMONTH_SQL = "classpath:/achilles/data/export/observationperiod/observedbymonth.sql";
+    public static final String OBSERVATIONPERIOD_PERIODSPERPERSON_SQL = "classpath:/achilles/data/export/observationperiod/periodsperperson.sql";
 
     @Autowired
     public ObservationPeriodReport(SqlUtils sqlUtils) {
