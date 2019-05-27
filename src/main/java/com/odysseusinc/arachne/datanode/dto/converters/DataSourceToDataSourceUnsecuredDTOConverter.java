@@ -58,6 +58,7 @@ public class DataSourceToDataSourceUnsecuredDTOConverter implements Converter<Da
     public DataSourceUnsecuredDTO convert(DataSource source) {
 
         DataSourceUnsecuredDTO target = new DataSourceUnsecuredDTO();
+        target.setName(source.getName());
         target.setConnectionString(source.getConnectionString());
         target.setUsername(source.getUsername());
         target.setPassword(source.getPassword());
@@ -77,7 +78,7 @@ public class DataSourceToDataSourceUnsecuredDTOConverter implements Converter<Da
             target.setKrbRealm(source.getKrbRealm());
             target.setKrbUser(source.getKrbUser());
             target.setKrbPassword(source.getKrbPassword());
-            target.setKrbKeytab(source.getKrbKeytab());
+            target.setKeyfile(source.getKeyfile());
             target.setKrbAuthMethod(source.getKrbAuthMechanism());
         }
 

@@ -22,19 +22,15 @@
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortAnalysisType;
 import com.odysseusinc.arachne.datanode.dto.atlas.ComparativeCohortAnalysis;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CCAToCommonCohortAnalysisDTOConverter
-        extends BaseAtlasEntityToCommonEntityDTOConverter<ComparativeCohortAnalysis, CommonCohortAnalysisDTO> {
+        extends BaseCCAToCommonEntityDTOConverter<CommonCohortAnalysisDTO> {
 
     public CCAToCommonCohortAnalysisDTOConverter(GenericConversionService conversionService) {
 
@@ -46,9 +42,6 @@ public class CCAToCommonCohortAnalysisDTOConverter
 
         CommonCohortAnalysisDTO result = super.convert(source);
         result.setAnalysisType(CommonCohortAnalysisType.ESTIMATION);
-        result.setLocalId(source.getAnalysisId().longValue());
-        result.setModified(source.getModified());
-        result.setType(CommonAnalysisType.ESTIMATION);
         return result;
     }
 

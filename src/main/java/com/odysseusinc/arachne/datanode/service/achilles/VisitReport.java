@@ -22,6 +22,8 @@
 
 package com.odysseusinc.arachne.datanode.service.achilles;
 
+import static com.odysseusinc.arachne.datanode.Constants.CDM.CONCEPT_ID;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.concept_id;
 import static com.odysseusinc.arachne.datanode.service.achilles.AchillesProcessors.plainResultSet;
 import static com.odysseusinc.arachne.datanode.util.datasource.QueryProcessors.statement;
 import static com.odysseusinc.arachne.datanode.util.datasource.ResultTransformers.toJsonMap;
@@ -41,10 +43,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class VisitReport extends BaseReport {
 
-    public static final String VISIT_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export_v5/visit/sqlPrevalenceByGenderAgeYear.sql";
-    public static final String VISIT_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export_v5/visit/sqlPrevalenceByMonth.sql";
-    public static final String VISIT_DURATION_BY_TYPE_SQL = "classpath:/achilles/data/export_v5/visit/sqlVisitDurationByType.sql";
-    public static final String VISIT_AGE_AT_FIRST_OCCURRENCE_SQL = "classpath:/achilles/data/export_v5/visit/sqlAgeAtFirstOccurrence.sql";
+    public static final String VISIT_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export/visit/sqlPrevalenceByGenderAgeYear.sql";
+    public static final String VISIT_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export/visit/sqlPrevalenceByMonth.sql";
+    public static final String VISIT_DURATION_BY_TYPE_SQL = "classpath:/achilles/data/export/visit/sqlVisitDurationByType.sql";
+    public static final String VISIT_AGE_AT_FIRST_OCCURRENCE_SQL = "classpath:/achilles/data/export/visit/sqlAgeAtFirstOccurrence.sql";
 
     @Autowired
     public VisitReport(SqlUtils sqlUtils) {
@@ -62,17 +64,17 @@ public class VisitReport extends BaseReport {
 
         return DataSourceUtils.<Map<Integer, String>>withDataSource(dataSource)
                 .run(statement(prevalenceByGender))
-                .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_GENDER_AGE_YEAR",
-                        plainResultSet("concept_id", "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
+                .forMapResults(concepts, CONCEPT_ID, "PREVALENCE_BY_GENDER_AGE_YEAR",
+                        plainResultSet(concept_id, "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
                 .run(statement(prevalenceByMonth))
-                .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_MONTH",
-                        plainResultSet("concept_id", "x_calendar_month", "y_prevalence_1000pp"))
+                .forMapResults(concepts, CONCEPT_ID, "PREVALENCE_BY_MONTH",
+                        plainResultSet(concept_id, "x_calendar_month", "y_prevalence_1000pp"))
                 .run(statement(visitDuration))
-                .forMapResults(concepts, "CONCEPT_ID", "VISIT_DURATION_BY_TYPE",
-                        plainResultSet("concept_id"))
+                .forMapResults(concepts, CONCEPT_ID, "VISIT_DURATION_BY_TYPE",
+                        plainResultSet(concept_id))
                 .run(statement(ageAtFirst))
-                .forMapResults(concepts, "CONCEPT_ID", "AGE_AT_FIRST_OCCURRENCE",
-                        plainResultSet("concept_id"))
+                .forMapResults(concepts, CONCEPT_ID, "AGE_AT_FIRST_OCCURRENCE",
+                        plainResultSet(concept_id))
                 .transform(toJsonMap(concepts))
                 .write(toMultipleFiles(targetDir, "visit_%d.json", concepts))
                 .getResultsCount();

@@ -73,9 +73,9 @@ public class CreateDataSourceDTOToDataSourceConverter implements Converter<Creat
         dataSource.setKrbUser(createDataSourceDTO.getKrbUser());
         dataSource.setKrbPassword(createDataSourceDTO.getKrbPassword());
         dataSource.setKrbAuthMechanism(createDataSourceDTO.getKrbAuthMechanism());
-        if (Objects.nonNull(createDataSourceDTO.getKrbKeytab())) {
+        if (Objects.nonNull(createDataSourceDTO.getKeyfile())) {
             try {
-                dataSource.setKrbKeytab(createDataSourceDTO.getKrbKeytab().getBytes());
+                dataSource.setKeyfile(createDataSourceDTO.getKeyfile().getBytes());
             } catch (IOException ignored) {
             }
         }

@@ -39,9 +39,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class DataDensityReport extends BaseReport {
 
-    public static final String DATADENSITY_TOTALRECORDS_SQL = "classpath:/achilles/data/export_v5/datadensity/totalrecords.sql";
-    public static final String DATADENSITY_RECORDSPERPERSON_SQL = "classpath:/achilles/data/export_v5/datadensity/recordsperperson.sql";
-    public static final String DATADENSITY_CONCEPTSPERPERSON_SQL = "classpath:/achilles/data/export_v5/datadensity/conceptsperperson.sql";
+    public static final String DATADENSITY_TOTALRECORDS_SQL = "classpath:/achilles/data/export/datadensity/totalrecords.sql";
+    public static final String DATADENSITY_RECORDSPERPERSON_SQL = "classpath:/achilles/data/export/datadensity/recordsperperson.sql";
+    public static final String DATADENSITY_CONCEPTSPERPERSON_SQL = "classpath:/achilles/data/export/datadensity/conceptsperperson.sql";
 
     public DataDensityReport(SqlUtils sqlUtils) {
 

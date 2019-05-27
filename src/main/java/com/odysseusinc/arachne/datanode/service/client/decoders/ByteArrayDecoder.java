@@ -10,6 +10,7 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
+import javax.mail.internet.ContentDisposition;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.util.StreamUtils;

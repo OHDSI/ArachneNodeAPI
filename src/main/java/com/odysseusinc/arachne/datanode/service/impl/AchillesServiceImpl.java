@@ -25,14 +25,17 @@ package com.odysseusinc.arachne.datanode.service.impl;
 import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_CDM_SCHEMA;
 import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_CDM_VERSION;
 import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_DB_URI;
+import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_NUM_THREADS;
 import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_RES_SCHEMA;
 import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_SOURCE;
 import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_VOCAB_SCHEMA;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.CONCEPT_ID;
 import static com.odysseusinc.arachne.datanode.model.achilles.AchillesJobStatus.FAILED;
 import static com.odysseusinc.arachne.datanode.model.achilles.AchillesJobStatus.IN_PROGRESS;
 import static com.odysseusinc.arachne.datanode.model.achilles.AchillesJobStatus.SUCCESSFUL;
 import static com.odysseusinc.arachne.datanode.service.achilles.AchillesProcessors.resultSet;
 import static com.odysseusinc.arachne.datanode.util.datasource.QueryProcessors.statement;
+import static java.lang.String.valueOf;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CopyArchiveFromContainerCmd;
@@ -130,20 +133,20 @@ import org.springframework.retry.RetryCallback;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class AchillesServiceImpl implements AchillesService {
 
-    public static final String ACHILLES_HEEL_SQL = "classpath:/achilles/data/export_v5/achillesheel/sqlAchillesHeel.sql";
-    public static final String DRUG_ERA_SQL = "classpath:/achilles/data/export_v5/drugera/sqlDrugEraTreemap.sql";
-    public static final String DRUG_TREEMAP_SQL = "classpath:/achilles/data/export_v5/drug/sqlDrugTreemap.sql";
-    public static final String CONDITION_TREEMAP_SQL = "classpath:/achilles/data/export_v5/condition/sqlConditionTreemap.sql";
-    public static final String CONDITION_ERA_TREEMAP_SQL = "classpath:/achilles/data/export_v5/conditionera/sqlConditionEraTreemap.sql";
-    public static final String PROCEDURE_TREEMAP_SQL = "classpath:/achilles/data/export_v5/procedure/sqlProcedureTreemap.sql";
-    public static final String MEASUREMENT_TREEMAP_SQL = "classpath:/achilles/data/export_v5/measurement/sqlMeasurementTreemap.sql";
-    public static final String OBSERVATION_TREEMAP_SQL = "classpath:/achilles/data/export_v5/observation/sqlObservationTreemap.sql";
+    public static final String ACHILLES_HEEL_SQL = "classpath:/achilles/data/export/achillesheel/sqlAchillesHeel.sql";
+    public static final String DRUG_ERA_SQL = "classpath:/achilles/data/export/drugera/sqlDrugEraTreemap.sql";
+    public static final String DRUG_TREEMAP_SQL = "classpath:/achilles/data/export/drug/sqlDrugTreemap.sql";
+    public static final String CONDITION_TREEMAP_SQL = "classpath:/achilles/data/export/condition/sqlConditionTreemap.sql";
+    public static final String CONDITION_ERA_TREEMAP_SQL = "classpath:/achilles/data/export/conditionera/sqlConditionEraTreemap.sql";
+    public static final String PROCEDURE_TREEMAP_SQL = "classpath:/achilles/data/export/procedure/sqlProcedureTreemap.sql";
+    public static final String MEASUREMENT_TREEMAP_SQL = "classpath:/achilles/data/export/measurement/sqlMeasurementTreemap.sql";
+    public static final String OBSERVATION_TREEMAP_SQL = "classpath:/achilles/data/export/observation/sqlObservationTreemap.sql";
+    public static final String VISIT_SQL = "classpath:/achilles/data/export/visit/sqlVisitTreemap.sql";
     protected static final Logger LOGGER = LoggerFactory.getLogger(AchillesService.class);
     protected static final String DATA_NODE_NOT_EXISTS_EXCEPTION = "DataNode is not registered, please register";
     public static final String ACHILLES_RESULTS_EXCEPTION = "Achilles results is not available, table %s was not found";
@@ -315,83 +318,13 @@ public class AchillesServiceImpl implements AchillesService {
                     .build();
             ExecutorService executorService = Executors.newCachedThreadPool(threadFactory);
             try {
-                List<Callable<String>> tasks = new LinkedList<>();
-                tasks.add(achillesTask("Heel", () -> runAchillesQuery(dataSource, ACHILLES_HEEL_SQL, tempDir.resolve("achillesheel.json"),
-                        AchillesProcessors.achillesHeel())));
-                tasks.add(achillesTask("DrugEra", () -> {
-                    List<Integer> drugEraConcepts = new LinkedList<>();
-                    Integer result = runAchillesQuery(dataSource, DRUG_ERA_SQL, tempDir.resolve("drugera_treemap.json"),
-                            resultSet(),
-                            transmitToList("CONCEPT_ID", drugEraConcepts));
-                    result += drugEraReport.runReports(dataSource, tempDir.resolve("drugeras"), drugEraConcepts);
-                    return result;
-                }));
-                tasks.add(achillesTask("Drugs", () -> {
-                    List<Integer> drugConcepts = new LinkedList<>();
-                    Integer result = runAchillesQuery(dataSource, DRUG_TREEMAP_SQL, tempDir.resolve("drug_treemap.json"),
-                            resultSet(),
-                            transmitToList("CONCEPT_ID", drugConcepts));
-                    result += drugReport.runReports(dataSource, tempDir.resolve("drugs"), drugConcepts);
-                    return result;
-                }));
-                tasks.add(achillesTask("Conditions", () -> {
-                    List<Integer> conditionConcepts = new LinkedList<>();
-                    Integer result = runAchillesQuery(dataSource, CONDITION_TREEMAP_SQL, tempDir.resolve("condition_treemap.json"),
-                            resultSet(),
-                            transmitToList("CONCEPT_ID", conditionConcepts));
-                    result += conditionReport.runReports(dataSource, tempDir.resolve("conditions"), conditionConcepts);
-                    return result;
-                }));
-                tasks.add(achillesTask("ConditionEra", () -> {
-                    List<Integer> conditionEraConcepts = new LinkedList<>();
-                    Integer result = runAchillesQuery(dataSource, CONDITION_ERA_TREEMAP_SQL, tempDir.resolve("conditionera_treemap.json"),
-                            resultSet(),
-                            transmitToList("CONCEPT_ID", conditionEraConcepts));
-                    result += conditionEraReport.runReports(dataSource, tempDir.resolve("conditioneras"), conditionEraConcepts);
-                    return result;
-                }));
-                tasks.add(achillesTask("Procedure", () -> {
-                    List<Integer> procedureConcepts = new LinkedList<>();
-                    Integer result = runAchillesQuery(dataSource, PROCEDURE_TREEMAP_SQL, tempDir.resolve("procedure_treemap.json"),
-                            resultSet(),
-                            transmitToList("CONCEPT_ID", procedureConcepts));
-                    result += procedureReport.runReports(dataSource, tempDir.resolve("procedures"), procedureConcepts);
-                    return result;
-                }));
-                tasks.add(achillesTask("Person", () -> personReport.runReports(dataSource, tempDir.resolve("person.json"), null)));
-                tasks.add(achillesTask("Death", () -> deathReport.runReports(dataSource, tempDir.resolve("death.json"), null)));
-                tasks.add(achillesTask("ObservationPeriod", () -> observationPeriodReport.runReports(dataSource, tempDir.resolve("observationperiod.json"), null)));
-                tasks.add(achillesTask("Dashboard", () -> dashboardReport.runReports(dataSource, tempDir.resolve("dashboard.json"), null)));
-                tasks.add(achillesTask("DataDensity", () -> dataDensityReport.runReports(dataSource, tempDir.resolve("datadensity.json"), null)));
-                tasks.add(achillesTask("Measurement", () -> {
-                    List<Integer> measurementConcepts = new LinkedList<>();
-                    Integer result = runAchillesQuery(dataSource, MEASUREMENT_TREEMAP_SQL, tempDir.resolve("measurement_treemap.json"),
-                            resultSet(),
-                            transmitToList("CONCEPT_ID", measurementConcepts));
-                    result += measurementReport.runReports(dataSource, tempDir.resolve("measurements"), measurementConcepts);
-                    return result;
-                }));
-                tasks.add(achillesTask("Observation", () -> {
-                    List<Integer> observationConcepts = new LinkedList<>();
-                    Integer result = runAchillesQuery(dataSource, OBSERVATION_TREEMAP_SQL, tempDir.resolve("observation_treemap.json"),
-                            resultSet(),
-                            transmitToList("CONCEPT_ID", observationConcepts));
-                    result += observationReport.runReports(dataSource, tempDir.resolve("observations"), observationConcepts);
-                    return result;
-                }));
-                tasks.add(achillesTask("Visit", () -> {
-                    List<Integer> visitConcepts = new LinkedList<>();
-                    Integer result = runAchillesQuery(dataSource, "classpath:/achilles/data/export_v5/visit/sqlVisitTreemap.sql", tempDir.resolve("visit_treemap.json"),
-                            resultSet(),
-                            transmitToList("CONCEPT_ID", visitConcepts));
-                    result += visitReport.runReports(dataSource, tempDir.resolve("visits"), visitConcepts);
-                    return result;
-                }));
+                List<Callable<String>> tasks = buildReportTasks(dataSource, tempDir);
 
                 try {
                     List<Future<String>> futures = executorService.invokeAll(tasks);
                     for (Future<String> future : futures) {
-                        LOGGER.info(future.get());
+                        String taskResultInfo = future.get();
+                        LOGGER.info(taskResultInfo);
                     }
                 } catch (InterruptedException | ExecutionException e) {
                     LOGGER.warn("Achilles pull interrupted", e);
@@ -413,6 +346,93 @@ public class AchillesServiceImpl implements AchillesService {
             LOGGER.error("Failed to pull achilles results", e);
             updateJob(job, FAILED);
         }
+    }
+
+    private List<Callable<String>> buildReportTasks(DataSource dataSource, Path tempDir) {
+        List<Callable<String>> tasks = new ArrayList<>();
+
+        tasks.add(achillesTask("Heel", () -> runAchillesQuery(dataSource, ACHILLES_HEEL_SQL, tempDir.resolve("achillesheel.json"),
+                AchillesProcessors.achillesHeel())));
+
+        tasks.add(achillesTask("DrugEra", () -> {
+            List<Integer> drugEraConcepts = new LinkedList<>();
+            Integer result = runAchillesQuery(dataSource, DRUG_ERA_SQL, tempDir.resolve("drugera_treemap.json"),
+                    resultSet(),
+                    transmitToList(CONCEPT_ID, drugEraConcepts));
+            result += drugEraReport.runReports(dataSource, tempDir.resolve("drugeras"), drugEraConcepts);
+            return result;
+        }));
+
+        tasks.add(achillesTask("Drugs", () -> {
+            List<Integer> drugConcepts = new LinkedList<>();
+            Integer result = runAchillesQuery(dataSource, DRUG_TREEMAP_SQL, tempDir.resolve("drug_treemap.json"),
+                    resultSet(),
+                    transmitToList(CONCEPT_ID, drugConcepts));
+            result += drugReport.runReports(dataSource, tempDir.resolve("drugs"), drugConcepts);
+            return result;
+        }));
+
+        tasks.add(achillesTask("Conditions", () -> {
+            List<Integer> conditionConcepts = new LinkedList<>();
+            Integer result = runAchillesQuery(dataSource, CONDITION_TREEMAP_SQL, tempDir.resolve("condition_treemap.json"),
+                    resultSet(),
+                    transmitToList(CONCEPT_ID, conditionConcepts));
+            result += conditionReport.runReports(dataSource, tempDir.resolve("conditions"), conditionConcepts);
+            return result;
+        }));
+
+        tasks.add(achillesTask("ConditionEra", () -> {
+            List<Integer> conditionEraConcepts = new LinkedList<>();
+            Integer result = runAchillesQuery(dataSource, CONDITION_ERA_TREEMAP_SQL, tempDir.resolve("conditionera_treemap.json"),
+                    resultSet(),
+                    transmitToList(CONCEPT_ID, conditionEraConcepts));
+            result += conditionEraReport.runReports(dataSource, tempDir.resolve("conditioneras"), conditionEraConcepts);
+            return result;
+        }));
+
+        tasks.add(achillesTask("Procedure", () -> {
+            List<Integer> procedureConcepts = new LinkedList<>();
+            Integer result = runAchillesQuery(dataSource, PROCEDURE_TREEMAP_SQL, tempDir.resolve("procedure_treemap.json"),
+                    resultSet(),
+                    transmitToList(CONCEPT_ID, procedureConcepts));
+            result += procedureReport.runReports(dataSource, tempDir.resolve("procedures"), procedureConcepts);
+            return result;
+        }));
+
+        tasks.add(achillesTask("Person", () -> personReport.runReports(dataSource, tempDir.resolve("person.json"), null)));
+
+        tasks.add(achillesTask("Death", () -> deathReport.runReports(dataSource, tempDir.resolve("death.json"), null)));
+
+        tasks.add(achillesTask("Dashboard", () -> dashboardReport.runReports(dataSource, tempDir.resolve("dashboard.json"), null)));
+        tasks.add(achillesTask("DataDensity", () -> dataDensityReport.runReports(dataSource, tempDir.resolve("datadensity.json"), null)));
+
+        tasks.add(achillesTask("Measurement", () -> {
+            List<Integer> measurementConcepts = new LinkedList<>();
+            Integer result = runAchillesQuery(dataSource, MEASUREMENT_TREEMAP_SQL, tempDir.resolve("measurement_treemap.json"),
+                    resultSet(),
+                    transmitToList(CONCEPT_ID, measurementConcepts));
+            result += measurementReport.runReports(dataSource, tempDir.resolve("measurements"), measurementConcepts);
+            return result;
+        }));
+
+        tasks.add(achillesTask("Observation", () -> {
+            List<Integer> observationConcepts = new LinkedList<>();
+            Integer result = runAchillesQuery(dataSource, OBSERVATION_TREEMAP_SQL, tempDir.resolve("observation_treemap.json"),
+                    resultSet(),
+                    transmitToList(CONCEPT_ID, observationConcepts));
+            result += observationReport.runReports(dataSource, tempDir.resolve("observations"), observationConcepts);
+            return result;
+        }));
+        tasks.add(achillesTask("Visit", () -> {
+            List<Integer> visitConcepts = new LinkedList<>();
+            Integer result = runAchillesQuery(dataSource, VISIT_SQL, tempDir.resolve("visit_treemap.json"),
+                    resultSet(),
+                    transmitToList(CONCEPT_ID, visitConcepts));
+            result += visitReport.runReports(dataSource, tempDir.resolve("visits"), visitConcepts);
+            return result;
+        }));
+
+        return tasks;
     }
 
     private String getResultSchema(DataSource dataSource) {
@@ -439,12 +459,6 @@ public class AchillesServiceImpl implements AchillesService {
             List conceptIds = (List) results.getOrDefault(key, new ArrayList<>());
             identities.addAll(conceptIds);
         };
-    }
-
-    private Integer runAchillesQuery(DataSource dataSource, String queryPath, Path targetPath)
-            throws IOException, SQLException {
-
-        return runAchillesQuery(dataSource, queryPath, targetPath, resultSet(), null);
     }
 
     private Integer runAchillesQuery(DataSource dataSource, String queryPath, Path targetPath,
@@ -546,7 +560,8 @@ public class AchillesServiceImpl implements AchillesService {
                         env(ACHILLES_CDM_SCHEMA, dataSource.getCdmSchema()),
                         env(ACHILLES_VOCAB_SCHEMA, dataSource.getCdmSchema()),
                         env(ACHILLES_RES_SCHEMA, getResultSchema(dataSource)),
-                        env(ACHILLES_CDM_VERSION, Constants.Achilles.DEFAULT_CDM_VERSION)
+                        env(ACHILLES_CDM_VERSION, Constants.Achilles.DEFAULT_CDM_VERSION),
+                        env(ACHILLES_NUM_THREADS, valueOf(1))
                 )
                 .withVolumes(outputVolume)
                 .withBinds(new Bind(getTempLocationOnHost(workDir), outputVolume))
@@ -566,7 +581,7 @@ public class AchillesServiceImpl implements AchillesService {
                 public void onNext(Frame item) {
 
                     logEntries.add(item.toString());
-                    LOGGER.debug(item.toString());
+                    LOGGER.debug("{}", item);
                 }
             };
             dockerClient.logContainerCmd(container.getId())
