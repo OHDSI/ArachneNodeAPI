@@ -167,6 +167,7 @@ public interface Constants {
         String ACHILLES_RES_SCHEMA = "ACHILLES_RES_SCHEMA";
         String ACHILLES_CDM_VERSION = "ACHILLES_CDM_VERSION";
         String DEFAULT_CDM_VERSION = "5";
+        String ACHILLES_NUM_THREADS = "ACHILLES_NUM_THREADS";
     }
 
     interface Atlas {
@@ -178,4 +179,23 @@ public interface Constants {
 
         ComparableVersion ATLAS_2_7_VERSION = new ComparableVersion("2.7.0");
     }
+
+    interface CDM {
+        String category = "category";
+        String concept_id = "concept_id";
+        String CONCEPT_ID = "CONCEPT_ID";
+        String concept_name = "concept_name";
+        String count_value = "count_value";
+        String DRUG_CONCEPT_ID = "DRUG_CONCEPT_ID";
+        String max_value = "max_value";
+        String measurement_concept_id = "measurement_concept_id";
+        String MEASUREMENT_CONCEPT_ID = "MEASUREMENT_CONCEPT_ID";
+        String median_value = "median_value";
+        String min_value = "min_value";
+        String p10_value = "p10_value";
+        String p25_value = "p25_value";
+        String p75_value = "p75_value";
+        String p90_value = "p90_value";
+    }
+
 }

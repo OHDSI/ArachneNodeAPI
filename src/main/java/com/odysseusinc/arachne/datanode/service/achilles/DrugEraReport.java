@@ -22,6 +22,9 @@
 
 package com.odysseusinc.arachne.datanode.service.achilles;
 
+import static com.odysseusinc.arachne.datanode.Constants.CDM.CONCEPT_ID;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.concept_id;
+
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.util.DataSourceUtils;
 import com.odysseusinc.arachne.datanode.util.SqlUtils;
@@ -38,10 +41,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class DrugEraReport extends BaseReport {
-    public static final String DRUGERA_AGE_AT_FIRST_EXPOSURE_SQL = "classpath:/achilles/data/export_v5/drugera/sqlAgeAtFirstExposure.sql";
-    public static final String DRUGERA_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export_v5/drugera/sqlPrevalenceByGenderAgeYear.sql";
-    public static final String DRUGERA_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export_v5/drugera/sqlPrevalenceByMonth.sql";
-    public static final String DRUGERA_LENGTH_OF_ERA_SQL = "classpath:/achilles/data/export_v5/drugera/sqlLengthOfEra.sql";
+    public static final String DRUGERA_AGE_AT_FIRST_EXPOSURE_SQL = "classpath:/achilles/data/export/drugera/sqlAgeAtFirstExposure.sql";
+    public static final String DRUGERA_PREVALENCE_BY_GENDER_AGE_YEAR_SQL = "classpath:/achilles/data/export/drugera/sqlPrevalenceByGenderAgeYear.sql";
+    public static final String DRUGERA_PREVALENCE_BY_MONTH_SQL = "classpath:/achilles/data/export/drugera/sqlPrevalenceByMonth.sql";
+    public static final String DRUGERA_LENGTH_OF_ERA_SQL = "classpath:/achilles/data/export/drugera/sqlLengthOfEra.sql";
 
     @Autowired
     public DrugEraReport(SqlUtils sqlUtils) {
@@ -58,17 +61,17 @@ public class DrugEraReport extends BaseReport {
         String lengthQuery = sqlUtils.transformSqlTemplate(dataSource, DRUGERA_LENGTH_OF_ERA_SQL);
         return DataSourceUtils.<Map<Integer, String>>withDataSource(dataSource)
                 .run(QueryProcessors.statement(ageExposureQuery))
-                .forMapResults(concepts, "CONCEPT_ID", "AGE_AT_FIRST_EXPOSURE",
-                        AchillesProcessors.plainResultSet("concept_id", "category", "min_value", "p10_value", "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
+                .forMapResults(concepts, CONCEPT_ID, "AGE_AT_FIRST_EXPOSURE",
+                        AchillesProcessors.plainResultSet(concept_id, "category", "min_value", "p10_value", "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .run(QueryProcessors.statement(prevalenceByGenderQuery))
-                .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_GENDER_AGE_YEAR",
-                        AchillesProcessors.plainResultSet("concept_id", "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
+                .forMapResults(concepts, CONCEPT_ID, "PREVALENCE_BY_GENDER_AGE_YEAR",
+                        AchillesProcessors.plainResultSet(concept_id, "trellis_name", "series_name", "x_calendar_year", "y_prevalence_1000pp"))
                 .run(QueryProcessors.statement(prevalenceByMonth))
-                .forMapResults(concepts, "CONCEPT_ID", "PREVALENCE_BY_MONTH",
-                        AchillesProcessors.plainResultSet("concept_id", "x_calendar_month", "y_prevalence_1000pp"))
+                .forMapResults(concepts, CONCEPT_ID, "PREVALENCE_BY_MONTH",
+                        AchillesProcessors.plainResultSet(concept_id, "x_calendar_month", "y_prevalence_1000pp"))
                 .run(QueryProcessors.statement(lengthQuery))
-                .forMapResults(concepts, "CONCEPT_ID", "LENGTH_OF_ERA",
-                        AchillesProcessors.plainResultSet("concept_id", "category", "min_value", "p10_value", "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
+                .forMapResults(concepts, CONCEPT_ID, "LENGTH_OF_ERA",
+                        AchillesProcessors.plainResultSet(concept_id, "category", "min_value", "p10_value", "p25_value", "median_value", "p75_value", "p90_value", "max_value"))
                 .transform(ResultTransformers.toJsonMap(concepts))
                 .write(ResultWriters.toMultipleFiles(targetDir, "drug_%d.json", concepts))
                 .getResultsCount();
