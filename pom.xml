@@ -22,20 +22,21 @@
     </scm>
 
     <properties>
-        <start-class>com.odysseusinc.arachne.datanode.WebApplicationStarter</start-class>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>1.8</java.version>
-        <jjwt.version>0.6.0</jjwt.version>
-        <postgresql.version>42.2.1</postgresql.version>
-        <flywayVersion>4.2.0</flywayVersion>
-        <javaDockerVersion>3.0.6</javaDockerVersion>
-        <springRetryVersion>1.2.0.RELEASE</springRetryVersion>
-        <hikaricp.version>2.6.3</hikaricp.version>
-        <build.number>${BUILD_NUMBER}</build.number>
         <build.id>${BUILD_TIMESTAMP}</build.id>
+        <build.number>${BUILD_NUMBER}</build.number>
         <dockerImagePrefix>hub.arachnenetwork.com</dockerImagePrefix>
+        <feign.version>10.2.3</feign.version>
+        <flywayVersion>4.2.0</flywayVersion>
+        <hikaricp.version>2.6.3</hikaricp.version>
+        <java.version>1.8</java.version>
+        <javaDockerVersion>3.0.6</javaDockerVersion>
+        <jjwt.version>0.6.0</jjwt.version>
         <!-- Overrides SpringBoot defaults to conform Hydra -->
         <json.version>20170516</json.version>
+        <postgresql.version>42.2.1</postgresql.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <springRetryVersion>1.2.0.RELEASE</springRetryVersion>
+        <start-class>com.odysseusinc.arachne.datanode.WebApplicationStarter</start-class>
     </properties>
 
     <dependencyManagement>
@@ -172,22 +173,17 @@
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-okhttp</artifactId>
-            <version>9.3.1</version>
+            <version>${feign.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-jackson</artifactId>
-            <version>9.3.1</version>
+            <version>${feign.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-slf4j</artifactId>
-            <version>9.3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.openfeign.form</groupId>
-            <artifactId>feign-form</artifactId>
-            <version>2.2.1</version>
+            <version>${feign.version}</version>
         </dependency>
 
         <dependency>

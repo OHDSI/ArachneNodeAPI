@@ -22,11 +22,11 @@
 
 package com.odysseusinc.arachne.datanode.service.client.atlas;
 
-import feign.FeignException;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
-import java.io.IOException;
+import org.apache.http.HttpStatus;
+
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Objects;
@@ -36,11 +36,11 @@ public class TokenDecoder implements Decoder {
     public static final String AUTH_RESPONSE_HEADER = "Bearer";
 
     @Override
-    public Object decode(Response response, Type type) throws IOException, DecodeException, FeignException {
-
-        if (response.status() == 401){
-            throw new DecodeException("Authentication failed");
-        } else if (response.status() == 404) {
+    public Object decode(Response response, Type type) {
+        final int statusCode = response.status();
+        if (statusCode == HttpStatus.SC_UNAUTHORIZED) {
+            throw new DecodeException(statusCode, "Authentication failed");
+        } else if (statusCode == HttpStatus.SC_NOT_FOUND) {
             return null;
         }
         Collection<String> authHeader = response.headers().get(AUTH_RESPONSE_HEADER);

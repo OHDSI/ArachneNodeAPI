@@ -30,8 +30,6 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
-import com.odysseusinc.arachne.commons.utils.ComparableVersion;
-import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.dto.serialize.PageModule;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
@@ -50,9 +48,9 @@ import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasLoginClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.TokenDecoder;
 import com.odysseusinc.arachne.datanode.service.client.decoders.ByteArrayDecoder;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
+import com.odysseusinc.arachne.execution_engine_common.client.FeignSpringFormEncoder;
 import feign.Client;
 import feign.Feign;
-import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
@@ -68,7 +66,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.commons.collections.ComparatorUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.ohdsi.hydra.Hydra;
 import org.slf4j.Logger;
@@ -342,7 +339,7 @@ public class AtlasServiceImpl implements AtlasService {
 
         return Feign.builder()
                 .client(httpClient)
-                .encoder(new FormEncoder(new JacksonEncoder()))
+                .encoder(new FeignSpringFormEncoder())
                 .decoder(new TokenDecoder())
                 .logger(new Slf4jLogger(AtlasLoginClient.class))
                 .target(AtlasLoginClient.class, url);
