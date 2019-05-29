@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -138,7 +139,7 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
                 .map(s -> "'" + s + "'")
                 .collect(Collectors.joining(",")));
         String result = incidenceRatesTemplate.apply(params);
-        return new MockMultipartFile("main.r", result.getBytes());
+        return new MockMultipartFile("file", "main.r", MediaType.TEXT_PLAIN_VALUE, result.getBytes());
     }
 
     @Override

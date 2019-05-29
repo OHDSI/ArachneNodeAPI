@@ -30,6 +30,7 @@ import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,7 +48,8 @@ public abstract class BaseRequestHandler {
 
         ObjectMapper mapper = new ObjectMapper();
         String result = mapper.writeValueAsString(info);
-        return new MockMultipartFile("analysisDescription.json", result.getBytes());
+        String filename = "analysisDescription.json";
+        return new MockMultipartFile(filename, filename, MediaType.APPLICATION_JSON_VALUE, result.getBytes());
     }
 
     protected MultipartFile getCohortFile(Atlas origin, Integer cohortId, String name){
@@ -60,7 +62,7 @@ public abstract class BaseRequestHandler {
          if (Objects.nonNull(cohort)) {
              String content = sqlRenderService.renderSql(cohort, parameters, values);
              if (Objects.nonNull(content)) {
-                 return new MockMultipartFile(name, content.getBytes());
+                 return new MockMultipartFile(name, name, MediaType.TEXT_PLAIN_VALUE, content.getBytes());
              }
          }
          return null;
