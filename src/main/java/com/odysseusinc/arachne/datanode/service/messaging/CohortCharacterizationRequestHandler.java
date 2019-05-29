@@ -106,7 +106,7 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 		params.put("analysisDir", analysisDir);
 		params.put("analysisId", analysisId);
 		String result = runnerTemplate.apply(params);
-		return new MockMultipartFile("runAnalysis.R", result.getBytes());
+		return new MockMultipartFile("file", "runAnalysis.R", MediaType.TEXT_PLAIN_VALUE, result.getBytes());
 	}
 
 }
