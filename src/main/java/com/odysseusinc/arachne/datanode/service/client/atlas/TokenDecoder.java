@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Objects;
+import org.springframework.http.HttpStatus;
 
 public class TokenDecoder implements Decoder {
 
@@ -38,9 +39,9 @@ public class TokenDecoder implements Decoder {
     @Override
     public Object decode(Response response, Type type) throws IOException, DecodeException, FeignException {
 
-        if (response.status() == 401){
-            throw new DecodeException("Authentication failed");
-        } else if (response.status() == 404) {
+        if (response.status() == HttpStatus.UNAUTHORIZED.value()){
+            throw new DecodeException(HttpStatus.UNAUTHORIZED.value(), "Authentication failed");
+        } else if (response.status() == HttpStatus.NOT_FOUND.value()) {
             return null;
         }
         Collection<String> authHeader = response.headers().get(AUTH_RESPONSE_HEADER);
