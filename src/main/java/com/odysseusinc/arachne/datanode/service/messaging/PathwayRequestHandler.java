@@ -143,7 +143,7 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
 							.collect(Collectors.joining(","));
     	params.put("cohortDefinitions", cohortDefinitions);
     	String result = pathwaysRunnerTemplate.apply(params);
-    	return new MockMultipartFile("main.R", result.getBytes());
+    	return new MockMultipartFile("file", "main.R", MediaType.TEXT_PLAIN_VALUE, result.getBytes());
 		}
 
 		private class CohortDefinition {
