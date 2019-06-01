@@ -39,7 +39,7 @@ public class TokenDecoder implements Decoder {
     public Object decode(Response response, Type type) throws IOException, DecodeException, FeignException {
 
         if (response.status() == 401){
-            throw new DecodeException("Authentication failed");
+            throw new DecodeException(401, "Authentication failed");
         } else if (response.status() == 404) {
             return null;
         }
