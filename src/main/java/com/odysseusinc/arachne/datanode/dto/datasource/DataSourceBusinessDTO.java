@@ -22,10 +22,11 @@
 
 package com.odysseusinc.arachne.datanode.dto.datasource;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+
+import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
 import org.hibernate.validator.constraints.NotBlank;
 
 public class DataSourceBusinessDTO {

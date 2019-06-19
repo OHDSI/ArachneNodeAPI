@@ -1,7 +1,7 @@
 package com.odysseusinc.arachne.datanode.model.datasource;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
+import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
 
 public class AutoDetectedFields {
 
