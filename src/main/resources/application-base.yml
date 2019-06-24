@@ -108,7 +108,7 @@ datanode:
     writeTimeout: 60
     readTimeout: 60
 swagger:
-  enabled: false
+  enable: false
 proxy:
   enabled: false
   enabledForEngine: false

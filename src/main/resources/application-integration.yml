@@ -6,10 +6,6 @@ datanode:
     host: https://testcommunity.arachnenetwork.com
 swagger:
   enable: true
-  title: Arachne Data Node
-  description: Arachne Data Node API
-  version: 1.0.1
-  basePackage: com.odysseusinc.arachne.datanode.controller
 atlas:
   host: https://testatlas.arachnenetwork.com
   port: 443
