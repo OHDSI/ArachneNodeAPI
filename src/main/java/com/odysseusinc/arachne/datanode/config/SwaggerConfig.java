@@ -42,10 +42,14 @@ public class SwaggerConfig {
     @Value("${arachne.token.header}")
     private String arachneTokenHeader;
 
+    @Bean
+    public Docket docket(DocketWrapper docketWrapper) {
+        return docketWrapper.getDocket();
+    }
 
     @Bean
-    public Docket docket() {
-        return DocketWrapper.buildDocket("Arachne Data Node",
+    public DocketWrapper docketWrapper() {
+        return DocketWrapper.createDocketWrapper("Arachne Data Node",
                 "Arachne Data Node API",
                 projectVersion,
                 "",

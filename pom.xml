@@ -29,7 +29,7 @@
         <postgresql.version>42.2.1</postgresql.version>
         <flywayVersion>4.2.0</flywayVersion>
         <javaDockerVersion>3.0.14</javaDockerVersion>
-        <springRetryVersion>1.2.0.RELEASE</springRetryVersion>
+        <springRetryVersion>1.2.4.RELEASE</springRetryVersion>
         <hikaricp.version>2.6.3</hikaricp.version>
         <build.number>${BUILD_NUMBER}</build.number>
         <build.id>${BUILD_TIMESTAMP}</build.id>
