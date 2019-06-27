@@ -245,6 +245,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         return result;
     }
 
+    @ApiOperation("Remove kerberos keytab")
     @RequestMapping(
             value = Constants.Api.DataSource.DELETE_KEYTAB,
             method = RequestMethod.DELETE
@@ -262,6 +263,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         return centralClient.unpublishAndSoftDeleteDataSource(dataSource.getCentralId());
     }
 
+    @ApiOperation("List supported DBMS")
     @RequestMapping(
             value = "/api/v1/data-sources/dbms-types",
             method = RequestMethod.GET
