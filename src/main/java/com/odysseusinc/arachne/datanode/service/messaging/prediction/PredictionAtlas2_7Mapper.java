@@ -1,7 +1,5 @@
 package com.odysseusinc.arachne.datanode.service.messaging.prediction;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.datanode.dto.atlas.PredictionAnalysis;
 import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
