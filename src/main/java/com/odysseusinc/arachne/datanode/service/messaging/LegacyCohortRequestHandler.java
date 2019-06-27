@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -109,8 +110,8 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
                     final String definitionName = definition.getName().trim();
                     final String filteredDefinitionName = filterFileName(definitionName);
                     return new MockMultipartFile[]{
-                            new MockMultipartFile(filteredDefinitionName + CommonFileUtils.OHDSI_JSON_EXT, definition.getExpression().getBytes()),
-                            new MockMultipartFile(filteredDefinitionName + CommonFileUtils.OHDSI_SQL_EXT, content.getBytes())
+                            new MockMultipartFile("file", filteredDefinitionName + CommonFileUtils.OHDSI_JSON_EXT, MediaType.APPLICATION_JSON_VALUE, definition.getExpression().getBytes()),
+                            new MockMultipartFile("file", filteredDefinitionName + CommonFileUtils.OHDSI_SQL_EXT, MediaType.TEXT_PLAIN_VALUE, content.getBytes())
                     };
                 } else {
                     return null;

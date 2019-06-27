@@ -55,6 +55,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -114,7 +115,7 @@ public class CohortHeraclesRequestHandler implements AtlasRequestHandler<CommonC
                 String content = sqlRenderService.renderSql(definition);
                 if (Objects.nonNull(content)) {
                     String cohortSqlFileName = definition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT;
-                    files.add(new MockMultipartFile(cohortSqlFileName, ignorePreprocessingMark(content).getBytes()));
+                    files.add(new MockMultipartFile("file", cohortSqlFileName, MediaType.APPLICATION_OCTET_STREAM_VALUE, ignorePreprocessingMark(content).getBytes()));
                     try {
                         files.add(getRunner(cohortSqlFileName));
                         if (countEnabled) {
@@ -140,7 +141,7 @@ public class CohortHeraclesRequestHandler implements AtlasRequestHandler<CommonC
 
         ClassPathResource resource = new ClassPathResource(resourcePath);
         final String resourceContent = IOUtils.toString(resource.getInputStream(), Charset.defaultCharset());
-        return new MockMultipartFile(outputName, ignorePreprocessingMark(resourceContent).getBytes());
+        return new MockMultipartFile("file", outputName, MediaType.APPLICATION_OCTET_STREAM_VALUE, ignorePreprocessingMark(resourceContent).getBytes());
     }
 
     private MultipartFile getRunner(String initialFileName) throws IOException {
@@ -148,7 +149,7 @@ public class CohortHeraclesRequestHandler implements AtlasRequestHandler<CommonC
         Map<String, Object> params = new HashMap<>();
         params.put("initialFileName", initialFileName);
         String result = runnerTemplate.apply(params);
-        return new MockMultipartFile("main.r", result.getBytes());
+        return new MockMultipartFile("file", "main.r", MediaType.APPLICATION_OCTET_STREAM_VALUE, result.getBytes());
     }
 
     @Override

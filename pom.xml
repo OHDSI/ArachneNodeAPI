@@ -36,6 +36,7 @@
         <dockerImagePrefix>hub.arachnenetwork.com</dockerImagePrefix>
         <!-- Overrides SpringBoot defaults to conform Hydra -->
         <json.version>20170516</json.version>
+        <feign.version>10.2.3</feign.version>
     </properties>
 
     <dependencyManagement>
@@ -182,22 +183,22 @@
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-okhttp</artifactId>
-            <version>9.3.1</version>
+            <version>${feign.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-jackson</artifactId>
-            <version>9.3.1</version>
+            <version>${feign.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-slf4j</artifactId>
-            <version>9.3.1</version>
+            <version>${feign.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.openfeign.form</groupId>
             <artifactId>feign-form</artifactId>
-            <version>2.2.1</version>
+            <version>3.8.0</version>
         </dependency>
 
         <dependency>
