@@ -21,6 +21,50 @@ CREATE TABLE IF NOT EXISTS analyses
 	inner_executable_filename VARCHAR
 );
 
+CREATE TABLE IF NOT EXISTS analysis_state_journal
+(
+	id          BIGSERIAL
+		PRIMARY KEY,
+	date        TIMESTAMP DEFAULT now() NOT NULL,
+	state       VARCHAR                 NOT NULL,
+	reason      VARCHAR                 NOT NULL,
+	analysis_id BIGINT                  NOT NULL
+		REFERENCES analyses
+		ON DELETE CASCADE
+);
+
+CREATE SEQUENCE IF NOT EXISTS analysis_state_journal_id_seq MINVALUE 1;
+ALTER SEQUENCE analysis_state_journal_id_seq OWNED BY analysis_state_journal.id;
+SELECT setval('analysis_state_journal_id_seq', (SELECT MAX(id) + 1
+																								FROM analysis_state_journal), FALSE);
+
+CREATE TABLE IF NOT EXISTS analysis_files
+(
+	id          BIGSERIAL
+		PRIMARY KEY,
+	type        VARCHAR                                            NOT NULL,
+	link        VARCHAR                                            NOT NULL,
+	status      VARCHAR DEFAULT 'UNPROCESSED' :: CHARACTER VARYING NOT NULL,
+	retries     BIGINT DEFAULT 0                                   NOT NULL,
+	analysis_id BIGINT                                             NOT NULL
+		REFERENCES analyses
+		ON DELETE CASCADE
+);
+
+CREATE SEQUENCE IF NOT EXISTS analysis_files_id_seq MINVALUE 1;
+ALTER SEQUENCE analysis_files_id_seq OWNED BY analysis_files.id;
+SELECT setval('analysis_files_id_seq', (SELECT MAX(id) + 1
+																				FROM analysis_files), FALSE);
+
+CREATE TABLE IF NOT EXISTS analysis_code_files
+(
+	id           BIGSERIAL NOT NULL,
+	uuid         VARCHAR   NOT NULL,
+	name         VARCHAR   NOT NULL,
+	content_type VARCHAR,
+	analysis_id  BIGINT REFERENCES analyses (id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 ALTER TABLE analyses ADD IF NOT EXISTS central_id BIGINT;
 
 UPDATE analyses SET central_id = id WHERE analyses.central_id IS NULL;
