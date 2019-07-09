@@ -1,0 +1,165 @@
+/*
+ *
+ * Copyright 2019 Odysseus Data Services, inc.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Company: Odysseus Data Services, Inc.
+ * Product Owner/Architecture: Gregory Klebanov
+ * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
+ * Created: Jul 8, 2019
+ *
+ */
+
+package com.odysseusinc.arachne.datanode.controller.analysis;
+
+import com.odysseusinc.arachne.commons.utils.ZipUtils;
+import com.odysseusinc.arachne.datanode.Constants;
+import com.odysseusinc.arachne.datanode.dto.analysis.AnalysisRequestDTO;
+import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
+import com.odysseusinc.arachne.datanode.exception.NotExistException;
+import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
+import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFile;
+import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileStatus;
+import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileType;
+import com.odysseusinc.arachne.datanode.service.AnalysisService;
+import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import net.lingala.zip4j.exception.ZipException;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+@RestController
+@RequestMapping("/api/v1/analysis")
+public class AnalysisController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AnalysisController.class);
+    private static final String ZIP_FILENAME = "analysis.zip";
+    private static final String ERROR_MESSAGE = "Failed to save analysis files";
+    private final AnalysisService analysisService;
+
+    private final GenericConversionService conversionService;
+
+	public AnalysisController(AnalysisService analysisService,
+                              GenericConversionService conversionService) {
+
+		this.analysisService = analysisService;
+        this.conversionService = conversionService;
+    }
+
+	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity executeAnalysis(
+            @RequestPart("file") List<MultipartFile> archive,
+            @RequestPart("analysis") @Valid AnalysisRequestDTO analysisRequestDTO
+            ) {
+
+	    try {
+            Analysis analysis = conversionService.convert(analysisRequestDTO, Analysis.class);
+            saveAnalysisFiles(analysis, archive);
+            analysisService.persist(analysis);
+            analysisService.sendToEngine(analysis);
+
+            return ResponseEntity.ok().build();
+        } catch (IOException | ZipException e) {
+	        logger.error(ERROR_MESSAGE, e);
+	        throw new IllegalOperationException(ERROR_MESSAGE);
+        }
+    }
+
+    private void saveAnalysisFiles(Analysis analysis, List<MultipartFile> files) throws IOException, ZipException {
+
+	    final File analysisDir = new File(analysis.getAnalysisFolder());
+	    final File zipDir = Paths.get(analysisDir.getPath(), Constants.Analysis.SUBMISSION_ARCHIVE_SUBDIR).toFile();
+	    FileUtils.forceMkdir(zipDir);
+
+	    try {
+            if (files.size() == 1) { // single file can be zipped archive
+                MultipartFile archive = files.stream().findFirst().get();
+                File archiveFile = new File(zipDir, ZIP_FILENAME);
+                archive.transferTo(archiveFile);
+                CommonFileUtils.unzipFiles(archiveFile, analysisDir);
+            } else {
+                files.forEach(f -> {
+                    try {
+                        f.transferTo(new File(analysisDir, f.getOriginalFilename()));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            File[] filesList = analysisDir.listFiles();
+
+            if (Objects.nonNull(filesList)) {
+                List<AnalysisFile> analysisFiles = Arrays.stream(filesList)
+                        .filter(File::isFile)
+                        .map(f -> {
+                            AnalysisFile analysisFile = new AnalysisFile();
+                            analysisFile.setAnalysis(analysis);
+                            analysisFile.setType(AnalysisFileType.ANALYSIS);
+                            analysisFile.setStatus(AnalysisFileStatus.UNPROCESSED);
+                            analysisFile.setLink(f.getPath());
+                            return analysisFile;
+                        }).collect(Collectors.toList());
+                analysis.setAnalysisFiles(analysisFiles);
+            }
+        } finally {
+            FileUtils.deleteQuietly(zipDir);
+        }
+    }
+
+    @RequestMapping(
+            method = RequestMethod.GET,
+            path = "{id}/results",
+            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE
+    )
+    public void downloadResults(@PathVariable("id") Long analysisId, HttpServletResponse response) throws IOException {
+
+	    Analysis analysis = analysisService.findAnalysis(analysisId)
+                .orElseThrow(() -> new NotExistException(Analysis.class));
+	    List<AnalysisFile> resultFiles = analysisService.getAnalysisResults(analysis);
+	    List<Path> files = resultFiles.stream()
+                .map(AnalysisFile::getLink)
+                .map(f -> Paths.get(f))
+                .collect(Collectors.toList());
+        Path archive = Files.createTempFile("results", ".zip");
+        ZipUtils.zipFiles(archive, files);
+        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        response.setHeader("Content-disposition", "attachment; filename=" + archive.getFileName().toString());
+        try(InputStream in = new FileInputStream(archive.toFile())) {
+            IOUtils.copy(in, response.getOutputStream());
+        }
+    }
+
+}

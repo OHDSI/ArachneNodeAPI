@@ -107,6 +107,8 @@ datanode:
     connectTimeout: 60
     writeTimeout: 60
     readTimeout: 60
+  baseURL: https://localhost
+  port: 8880
 swagger:
   enable: false
 proxy:
@@ -170,3 +172,13 @@ tmp:
   location-on-host:
   holder:
     cron: 0 * * ? * *
+analysis:
+  file.maxsize: 1048576
+  scheduler:
+    resendFailuresInterval: 600000
+    invalidateExecutingInterval: 86400000
+    invalidateMaxDaysExecutingInterval: 3
+submission:
+  result:
+    files:
+      exclusions:
