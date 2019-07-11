@@ -25,7 +25,6 @@ package com.odysseusinc.arachne.datanode.service.impl;
 import com.odysseusinc.arachne.datanode.repository.AnalysisFileRepository;
 import com.odysseusinc.arachne.datanode.repository.AnalysisRepository;
 import com.odysseusinc.arachne.datanode.repository.AnalysisStateJournalRepository;
-import com.odysseusinc.arachne.datanode.repository.StudyRepository;
 import com.odysseusinc.arachne.datanode.service.ExecutionEngineIntegrationService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Service;
@@ -37,14 +36,12 @@ public class AnalysisServiceImpl extends BaseAnalysisServiceImpl {
 														 AnalysisRepository analysisRepository,
 														 AnalysisStateJournalRepository analysisStateJournalRepository,
 														 AnalysisFileRepository analysisFileRepository,
-														 StudyRepository studyRepository,
 														 ExecutionEngineIntegrationService engineIntegrationService) {
 
 		super(conversionService,
 						analysisRepository,
 						analysisStateJournalRepository,
 						analysisFileRepository,
-						studyRepository,
 						engineIntegrationService);
 	}
 }

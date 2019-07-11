@@ -2,7 +2,6 @@ package com.odysseusinc.arachne.datanode.model.analysis;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.datanode.model.study.Study;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -67,8 +66,8 @@ public class Analysis {
     private AnalysisResultStatusDTO status;
     @Column(name = "title")
     private String title;
-    @ManyToOne
-    private Study study;
+    @Column(name = "study_title")
+    private String studyTitle;
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "email", column = @Column(name = "author_email")),
@@ -220,16 +219,6 @@ public class Analysis {
         this.status = status;
     }
 
-    public Study getStudy() {
-
-        return study;
-    }
-
-    public void setStudy(Study study) {
-
-        this.study = study;
-    }
-
     public AnalysisAuthor getAuthor() {
 
         return author;
@@ -307,5 +296,15 @@ public class Analysis {
     public void setInnerExecutableFilename(String exectubleInnerFileName) {
 
         this.innerExecutableFilename = exectubleInnerFileName;
+    }
+
+    public String getStudyTitle() {
+
+        return studyTitle;
+    }
+
+    public void setStudyTitle(String studyTitle) {
+
+        this.studyTitle = studyTitle;
     }
 }

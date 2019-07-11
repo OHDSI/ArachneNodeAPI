@@ -33,6 +33,11 @@ public class AnalysisRequestDTO {
     @NotNull
     private Long datasourceId;
 
+    @NotNull
+    private String title;
+
+    private String study;
+
     public String getExecutableFileName() {
 
         return executableFileName;
@@ -51,5 +56,25 @@ public class AnalysisRequestDTO {
     public void setDatasourceId(Long datasourceId) {
 
         this.datasourceId = datasourceId;
+    }
+
+    public String getTitle() {
+
+        return title;
+    }
+
+    public void setTitle(String title) {
+
+        this.title = title;
+    }
+
+    public String getStudy() {
+
+        return study;
+    }
+
+    public void setStudy(String study) {
+
+        this.study = study;
     }
 }

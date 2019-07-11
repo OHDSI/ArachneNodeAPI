@@ -35,6 +35,7 @@ import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.util.AnalysisUtils;
 import java.util.Date;
 import java.util.Objects;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -71,6 +72,11 @@ public class AnalysisRequestDTOToAnalysisConverter implements Converter<Analysis
         analysis.setExecutableFileName(dto.getExecutableFileName());
         final String analysisFolder = AnalysisUtils.createUniqueDir(filesStorePath).getAbsolutePath();
         analysis.setAnalysisFolder(analysisFolder);
+
+        analysis.setTitle(dto.getTitle());
+        if (StringUtils.isNotBlank(dto.getStudy())) {
+            analysis.setStudyTitle(dto.getStudy());
+        }
 
         DataSource dataSource = dataSourceService.getById(dto.getDatasourceId());
         if (Objects.isNull(dataSource)) {

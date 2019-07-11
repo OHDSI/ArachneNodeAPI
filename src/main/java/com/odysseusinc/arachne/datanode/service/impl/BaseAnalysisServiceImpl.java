@@ -33,12 +33,10 @@ import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileStatus;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileType;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisState;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisStateEntry;
-import com.odysseusinc.arachne.datanode.model.study.Study;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.AnalysisFileRepository;
 import com.odysseusinc.arachne.datanode.repository.AnalysisRepository;
 import com.odysseusinc.arachne.datanode.repository.AnalysisStateJournalRepository;
-import com.odysseusinc.arachne.datanode.repository.StudyRepository;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.ExecutionEngineIntegrationService;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
@@ -80,7 +78,6 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
     protected final AnalysisRepository analysisRepository;
     protected final AnalysisStateJournalRepository analysisStateJournalRepository;
     protected final AnalysisFileRepository analysisFileRepository;
-    protected final StudyRepository studyRepository;
     private final ExecutionEngineIntegrationService engineIntegrationService;
     @Value("${datanode.arachneCentral.host}")
     protected String centralHost;
@@ -100,7 +97,6 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
                                    AnalysisRepository analysisRepository,
                                    AnalysisStateJournalRepository analysisStateJournalRepository,
                                    AnalysisFileRepository analysisFileRepository,
-                                   StudyRepository studyRepository,
                                    ExecutionEngineIntegrationService engineIntegrationService) {
 
         this.engineIntegrationService = engineIntegrationService;
@@ -108,7 +104,6 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
         this.analysisRepository = analysisRepository;
         this.analysisStateJournalRepository = analysisStateJournalRepository;
         this.analysisFileRepository = analysisFileRepository;
-        this.studyRepository = studyRepository;
     }
 
     @Override
@@ -192,7 +187,6 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
         if (exists == null) {
             throw new NotExistException(Analysis.class);
         }
-        ensureStudyExists(analysis);
         File analysisFolder = new File(exists.getAnalysisFolder());
         try {
             FileUtils.deleteDirectory(analysisFolder);
@@ -211,7 +205,6 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
 
         Analysis exists = Objects.nonNull(analysis.getId()) ? analysisRepository.findOne(analysis.getId()) : null;
 		if (exists == null) {
-			ensureStudyExists(analysis);
 			LOGGER.debug("Analysis with id: '{}' is not exist. Saving...", analysis.getId());
 			return analysisRepository.save(analysis);
 		} else {
@@ -285,18 +278,6 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTime();
-    }
-
-    protected void ensureStudyExists(Analysis analysis) {
-
-        if (analysis.getStudy() != null) {
-            Study result = studyRepository.findOne(analysis.getStudy().getId());
-            if (result == null) {
-                LOGGER.info("Analysis with id: '{}' did not have saved study, saving study",
-                        analysis.getId());
-                studyRepository.save(analysis.getStudy());
-            }
-        }
     }
 
     @Override
