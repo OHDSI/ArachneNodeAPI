@@ -27,11 +27,15 @@ import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.analysis.AnalysisRequestDTO;
 import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
+import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
+import com.odysseusinc.arachne.datanode.model.analysis.AnalysisAuthor;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFile;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileStatus;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileType;
+import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
+import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,6 +44,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -69,24 +74,33 @@ public class AnalysisController {
     private static final String ZIP_FILENAME = "analysis.zip";
     private static final String ERROR_MESSAGE = "Failed to save analysis files";
     private final AnalysisService analysisService;
+    private final UserService userService;
 
     private final GenericConversionService conversionService;
 
 	public AnalysisController(AnalysisService analysisService,
+                              UserService userService,
                               GenericConversionService conversionService) {
 
 		this.analysisService = analysisService;
+        this.userService = userService;
         this.conversionService = conversionService;
     }
 
 	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity executeAnalysis(
             @RequestPart("file") List<MultipartFile> archive,
-            @RequestPart("analysis") @Valid AnalysisRequestDTO analysisRequestDTO
-            ) {
+            @RequestPart("analysis") @Valid AnalysisRequestDTO analysisRequestDTO,
+            Principal principal
+            ) throws PermissionDeniedException {
 
 	    try {
             Analysis analysis = conversionService.convert(analysisRequestDTO, Analysis.class);
+            User user = userService.getUser(principal);
+            if (Objects.nonNull(user)) {
+                AnalysisAuthor author = conversionService.convert(user, AnalysisAuthor.class);
+                analysis.setAuthor(author);
+            }
             saveAnalysisFiles(analysis, archive);
             analysisService.persist(analysis);
             analysisService.sendToEngine(analysis);

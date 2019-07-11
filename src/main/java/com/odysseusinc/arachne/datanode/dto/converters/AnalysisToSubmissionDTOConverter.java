@@ -54,7 +54,7 @@ public class AnalysisToSubmissionDTOConverter implements Converter<Analysis, Sub
 
         SubmissionDTO dto = new SubmissionDTO();
         dto.setAnalysis(analysis.getTitle());
-        dto.setId(analysis.getCentralId());
+        dto.setId(analysis.getId());
         if (analysis.getStudy() != null) {
             dto.setStudy(analysis.getStudy().getTitle());
         }
