@@ -111,6 +111,7 @@ public class AuthController {
     @ApiOperation("Refresh session token.")
     @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
     public JsonResult<String> refresh(HttpServletRequest request) {
+
         User user = extractUser(request);
         String currentCentralToken = user.getToken();
         Map<String, String> header = Collections.singletonMap(this.tokenHeader, currentCentralToken);
@@ -203,6 +204,7 @@ public class AuthController {
     @ApiOperation("Register new user via form.")
     @RequestMapping(value = "/api/v1/auth/registration", method = RequestMethod.POST)
     public JsonResult<CommonUserDTO> register(@RequestBody CommonUserRegistrationDTO dto) {
+
         return integrationService.getRegisterUser(dto);
     }
 
@@ -214,12 +216,14 @@ public class AuthController {
     }
 
     private User extractUser(HttpServletRequest request) {
+
         String currentNodeToken = request.getHeader(this.tokenHeader);
         return userService.findByUsername(tokenUtils.getUsernameFromToken(currentNodeToken))
                 .orElseThrow(() -> new AuthException("user not registered"));
     }
 
     private void validateCentralTokenCreated(String centralToken) {
+
         if (centralToken == null) {
             throw new AuthException("central auth error");
         }
