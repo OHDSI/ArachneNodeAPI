@@ -44,8 +44,8 @@ import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import io.swagger.annotations.ApiOperation;
 import java.net.URISyntaxException;
 import java.security.Principal;
+import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -53,14 +53,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-//import static com.odysseusinc.arachne.datanode.Constants.Api.Auth.LOGIN_ENTRY_POINT;
 
 @RestController
 public class AuthController {
@@ -91,52 +89,40 @@ public class AuthController {
     @ApiOperation(value = "Sign in user. Returns JWT token.")
     @RequestMapping(value = "${api.loginEnteryPoint}", method = RequestMethod.POST)
     public JsonResult<CommonAuthenticationResponse> login(
-            @RequestBody CommonAuthenticationRequest authenticationRequest)
-            throws AuthenticationException {
+            @RequestBody CommonAuthenticationRequest authenticationRequest) {
 
-        JsonResult<CommonAuthenticationResponse> jsonResult;
-        final String token;
         String username = authenticationRequest.getUsername();
         String centralToken = integrationService.loginToCentral(username, authenticationRequest.getPassword());
-        if (centralToken == null) {
-            throw new AuthException("central auth error");
-        }
+        validateCentralTokenCreated(centralToken);
         User centralUser = integrationService.getUserInfoFromCentral(centralToken);
         User user = userService.findByUsername(username).orElseGet(() -> userService.createIfFirst(centralUser));
         userService.updateUserInfo(centralUser);
         userService.setToken(user, centralToken);
-        String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
+        String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf('.') + 1);
         Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
-        token = tokenUtils.generateToken(user, createdDateFromToken);
+        final String nodeToken = tokenUtils.generateToken(user, createdDateFromToken);
 
-        jsonResult = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-        CommonAuthenticationResponse authenticationResponse = new CommonAuthenticationResponse(token);
+        JsonResult<CommonAuthenticationResponse> jsonResult = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+        CommonAuthenticationResponse authenticationResponse = new CommonAuthenticationResponse(nodeToken);
         jsonResult.setResult(authenticationResponse);
-        // Return the token
         return jsonResult;
     }
 
     @ApiOperation("Refresh session token.")
     @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
     public JsonResult<String> refresh(HttpServletRequest request) {
-
-        JsonResult<String> result;
-        String token = request.getHeader(this.tokenHeader);
-        User user = userService.findByUsername(tokenUtils.getUsernameFromToken(token))
-                .orElseThrow(() -> new AuthException("user not registered"));
-        Map<String, String> header = new HashMap<>();
-        header.put(this.tokenHeader, token);
-        String centralToken = centralClient.refreshToken(header).getResult();
-        if (centralToken == null) {
-            throw new AuthException("central auth error");
-        }
-        userService.setToken(user, centralToken);
-        String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
+        User user = extractUser(request);
+        String currentCentralToken = user.getToken();
+        Map<String, String> header = Collections.singletonMap(this.tokenHeader, currentCentralToken);
+        String newCentralToken = centralClient.refreshToken(header).getResult();
+        validateCentralTokenCreated(newCentralToken);
+        userService.setToken(user, newCentralToken);
+        String notSignedToken = newCentralToken.substring(0, newCentralToken.lastIndexOf('.') + 1);
         Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
-        token = tokenUtils.generateToken(user, createdDateFromToken);
+        String newNodeToken = tokenUtils.generateToken(user, createdDateFromToken);
 
-        result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-        result.setResult(token);
+        JsonResult<String> result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+        result.setResult(newNodeToken);
         return result;
     }
 
@@ -216,10 +202,8 @@ public class AuthController {
 
     @ApiOperation("Register new user via form.")
     @RequestMapping(value = "/api/v1/auth/registration", method = RequestMethod.POST)
-    public JsonResult<CommonUserDTO> register(@RequestBody CommonUserRegistrationDTO dto) throws Exception {
-
+    public JsonResult<CommonUserDTO> register(@RequestBody CommonUserRegistrationDTO dto) {
         return integrationService.getRegisterUser(dto);
-
     }
 
     @ApiOperation("Password restrictions")
@@ -227,5 +211,17 @@ public class AuthController {
     public ArachnePasswordInfoDTO getPasswordPolicies() throws URISyntaxException {
 
         return integrationService.getPasswordInfo();
+    }
+
+    private User extractUser(HttpServletRequest request) {
+        String currentNodeToken = request.getHeader(this.tokenHeader);
+        return userService.findByUsername(tokenUtils.getUsernameFromToken(currentNodeToken))
+                .orElseThrow(() -> new AuthException("user not registered"));
+    }
+
+    private void validateCentralTokenCreated(String centralToken) {
+        if (centralToken == null) {
+            throw new AuthException("central auth error");
+        }
     }
 }
