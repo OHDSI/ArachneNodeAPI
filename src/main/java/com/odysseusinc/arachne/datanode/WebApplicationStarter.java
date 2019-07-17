@@ -36,7 +36,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
-@ComponentScan(basePackages = {"com.odysseusinc.arachne.*"})
+@ComponentScan(basePackages = {"com.odysseusinc.arachne.*", "org.ohdsi.authenticator.*"})
 @EnableAutoConfiguration
 @EnableAsync
 @EnableScheduling

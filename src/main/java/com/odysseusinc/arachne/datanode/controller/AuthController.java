@@ -37,22 +37,22 @@ import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.user.UserInfoDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.model.user.User;
-import com.odysseusinc.arachne.datanode.security.TokenUtils;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.UserService;
-import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import io.swagger.annotations.ApiOperation;
 import java.net.URISyntaxException;
 import java.security.Principal;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+
+import org.ohdsi.authenticator.model.AuthenticationRequest;
+import org.ohdsi.authenticator.model.UserInfo;
+import org.ohdsi.authenticator.service.Authenticator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -68,16 +68,19 @@ public class AuthController {
     private CentralIntegrationService integrationService;
 
     @Autowired
-    private TokenUtils tokenUtils;
-
-    @Autowired
     private UserService userService;
 
     @Autowired
-    private CentralClient centralClient;
+    private Authenticator authenticator;
+
+    @Autowired
+    private ConversionService conversionService;
 
     @Value("${datanode.jwt.header}")
     private String tokenHeader;
+
+    @Value("${security.method}")
+    private String authMethod;
 
     @ApiOperation("Get auth method")
     @RequestMapping(value = "/api/v1/auth/method", method = GET)
@@ -89,42 +92,35 @@ public class AuthController {
     @ApiOperation(value = "Sign in user. Returns JWT token.")
     @RequestMapping(value = "${api.loginEnteryPoint}", method = RequestMethod.POST)
     public JsonResult<CommonAuthenticationResponse> login(
-            @RequestBody CommonAuthenticationRequest authenticationRequest) {
+            @RequestBody CommonAuthenticationRequest request) {
 
-        String username = authenticationRequest.getUsername();
-        String centralToken = integrationService.loginToCentral(username, authenticationRequest.getPassword());
+        UserInfo userInfo = authenticator.authenticate(
+            authMethod,
+            new AuthenticationRequest(request.getUsername(), request.getPassword())
+        );
+        String centralToken = userInfo.getAdditionalInfo().get("token");
         validateCentralTokenCreated(centralToken);
-        User centralUser = integrationService.getUserInfoFromCentral(centralToken);
-        User user = userService.findByUsername(username).orElseGet(() -> userService.createIfFirst(centralUser));
+        User centralUser = conversionService.convert(userInfo, User.class);
+        User user = userService.findByUsername(userInfo.getUsername()).orElseGet(() -> userService.createIfFirst(centralUser));
         userService.updateUserInfo(centralUser);
+        // TODO: there should be no need in Central token if DN runs in standalone mode
         userService.setToken(user, centralToken);
-        String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf('.') + 1);
-        Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
-        final String nodeToken = tokenUtils.generateToken(user, createdDateFromToken);
 
-        JsonResult<CommonAuthenticationResponse> jsonResult = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-        CommonAuthenticationResponse authenticationResponse = new CommonAuthenticationResponse(nodeToken);
-        jsonResult.setResult(authenticationResponse);
-        return jsonResult;
+        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getToken()));
     }
 
     @ApiOperation("Refresh session token.")
     @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
     public JsonResult<String> refresh(HttpServletRequest request) {
 
-        User user = extractUser(request);
-        String currentCentralToken = user.getToken();
-        Map<String, String> header = Collections.singletonMap(this.tokenHeader, currentCentralToken);
-        String newCentralToken = centralClient.refreshToken(header).getResult();
+        String token = request.getHeader(tokenHeader);
+        UserInfo userInfo = authenticator.refreshToken(token);
+        String newCentralToken = userInfo.getAdditionalInfo().get("token");
+        User user = userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
         validateCentralTokenCreated(newCentralToken);
         userService.setToken(user, newCentralToken);
-        String notSignedToken = newCentralToken.substring(0, newCentralToken.lastIndexOf('.') + 1);
-        Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
-        String newNodeToken = tokenUtils.generateToken(user, createdDateFromToken);
 
-        JsonResult<String> result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-        result.setResult(newNodeToken);
-        return result;
+        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
     }
 
     @ApiOperation("Get current principal")
@@ -157,7 +153,7 @@ public class AuthController {
         try {
             String token = request.getHeader(tokenHeader);
             if (token != null) {
-                tokenUtils.addInvalidateToken(token);
+                authenticator.invalidateToken(token);
             }
             result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
             result.setResult(true);
@@ -213,13 +209,6 @@ public class AuthController {
     public ArachnePasswordInfoDTO getPasswordPolicies() throws URISyntaxException {
 
         return integrationService.getPasswordInfo();
-    }
-
-    private User extractUser(HttpServletRequest request) {
-
-        String currentNodeToken = request.getHeader(this.tokenHeader);
-        return userService.findByUsername(tokenUtils.getUsernameFromToken(currentNodeToken))
-                .orElseThrow(() -> new AuthException("user not registered"));
     }
 
     private void validateCentralTokenCreated(String centralToken) {

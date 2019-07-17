@@ -157,46 +157,6 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
-    public void registerUserOnCentral(CentralRegisterUserDTO registerUserDTO) {
-
-        try {
-            centralClient.registerUser(registerUserDTO);
-        } catch (Exception ex) {
-            throw new AuthException("unable to register user on central " + ex.getMessage());
-        }
-    }
-
-    @Override
-    public String loginToCentral(String username, String password) {
-
-        JsonResult result = centralClient.login(new CommonAuthenticationRequest(username, password));
-
-        if (result == null) {
-            throw new AuthException("Empty response body");
-        }
-        if (result.getErrorCode() != 0) {
-            throw new AuthException(result.getErrorMessage());
-        }
-        if (result.getResult() == null) {
-            throw new AuthException("Missing JWT token from central");
-        }
-        if (((Map) result.getResult()).get("token") == null) {
-            throw new AuthException("JWT token from central is empty");
-        }
-
-        return ((Map) result.getResult()).get("token").toString();
-    }
-
-    @Override
-    public User getUserInfoFromCentral(String centralToken) {
-
-        Map<String, Object> headers = new HashMap<>();
-        headers.put(authHeader, centralToken);
-        JsonResult<UserDTO> userDTO = centralClient.getUserInfo(headers);
-        return conversionService.convert(userDTO.getResult(), User.class);
-    }
-
-    @Override
     public JsonResult<List<CommonProfessionalTypeDTO>> getProfessionalTypes() {
 
         return centralClient.getProfessionalTypes();

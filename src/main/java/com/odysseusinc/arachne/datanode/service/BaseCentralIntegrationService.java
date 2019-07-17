@@ -56,12 +56,6 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     ArachnePasswordInfoDTO getPasswordInfo() throws URISyntaxException;
 
-    void registerUserOnCentral(CentralRegisterUserDTO registerUserDTO);
-
-    String loginToCentral(String username, String password);
-
-    User getUserInfoFromCentral(String centralToken);
-
     JsonResult<List<CommonProfessionalTypeDTO>> getProfessionalTypes();
 
     JsonResult<List<CommonCountryDTO>> getCountries(String query, Integer limit, Long includeId);

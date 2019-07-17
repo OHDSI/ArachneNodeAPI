@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.datanode.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
+
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -32,6 +33,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.ohdsi.authenticator.service.Authenticator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +55,7 @@ public class AuthenticationTokenFilter extends UsernamePasswordAuthenticationFil
     private String tokenHeader;
 
     @Autowired
-    private TokenUtils tokenUtils;
+    private Authenticator authenticator;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -69,23 +72,14 @@ public class AuthenticationTokenFilter extends UsernamePasswordAuthenticationFil
         String authToken = httpRequest.getHeader(this.tokenHeader);
         try {
             if (authToken != null) {
-                String username = tokenUtils.getUsernameFromToken(authToken);
-                if (tokenUtils.isExpired(authToken)) {
-                    if (((HttpServletRequest) request).getRequestURI().startsWith("/api")) {
-                        if (username != null) {
-                            throw new AuthException("token expired");
-                        }
-                    }
-                }
+                String username = authenticator.resolveUsername(authToken);
 
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-                    if (this.tokenUtils.validateToken(authToken, userDetails)) {
-                        UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpRequest));
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                    }
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpRequest));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
 

@@ -35,7 +35,6 @@ import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.PROFESS
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.REGISTRATION;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.STATES_PROVINCES;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.SUGGEST;
-import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.USER_INFO;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
@@ -51,22 +50,16 @@ import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.commons.types.SuggestionTarget;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
-import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
-import feign.HeaderMap;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import java.util.List;
-import java.util.Map;
 import org.springframework.http.MediaType;
 
 public interface CentralClient {
 
     @RequestLine("DELETE /api/v1/data-sources/{dataSourceId}")
     JsonResult unpublishAndSoftDeleteDataSource(@Param("dataSourceId") Long dataSourceId);
-
-    @RequestLine("POST /api/v1/auth/refresh")
-    JsonResult<String> refreshToken(@HeaderMap Map<String, String> tokenHeader);
 
     @RequestLine("GET " + AUTH_METHOD)
     JsonResult<CommonAuthMethodDTO> getAuthMethod();
@@ -100,9 +93,6 @@ public interface CentralClient {
                                                                @Param("query") String query,
                                                                @Param("limit") Integer limit,
                                                                @Param("includeId") String includeId);
-
-    @RequestLine("GET " + USER_INFO)
-    JsonResult<UserDTO> getUserInfo(@HeaderMap Map<String, Object> headers);
 
     @RequestLine("POST " + REGISTRATION)
     @Headers("Content-Type: application/json")
