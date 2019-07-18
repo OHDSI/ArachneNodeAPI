@@ -71,7 +71,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class AnalysisController {
 
     private static final Logger logger = LoggerFactory.getLogger(AnalysisController.class);
-    private static final String ZIP_FILENAME = "analysis.zip";
     private static final String ERROR_MESSAGE = "Failed to save analysis files";
     private final AnalysisService analysisService;
     private final UserService userService;
@@ -101,7 +100,7 @@ public class AnalysisController {
                 AnalysisAuthor author = conversionService.convert(user, AnalysisAuthor.class);
                 analysis.setAuthor(author);
             }
-            saveAnalysisFiles(analysis, archive);
+            analysisService.saveAnalysisFiles(analysis, archive);
             analysisService.persist(analysis);
             analysisService.sendToEngine(analysis);
 
@@ -109,47 +108,6 @@ public class AnalysisController {
         } catch (IOException | ZipException e) {
 	        logger.error(ERROR_MESSAGE, e);
 	        throw new IllegalOperationException(ERROR_MESSAGE);
-        }
-    }
-
-    private void saveAnalysisFiles(Analysis analysis, List<MultipartFile> files) throws IOException, ZipException {
-
-	    final File analysisDir = new File(analysis.getAnalysisFolder());
-	    final File zipDir = Paths.get(analysisDir.getPath(), Constants.Analysis.SUBMISSION_ARCHIVE_SUBDIR).toFile();
-	    FileUtils.forceMkdir(zipDir);
-
-	    try {
-            if (files.size() == 1) { // single file can be zipped archive
-                MultipartFile archive = files.stream().findFirst().get();
-                File archiveFile = new File(zipDir, ZIP_FILENAME);
-                archive.transferTo(archiveFile);
-                CommonFileUtils.unzipFiles(archiveFile, analysisDir);
-            } else {
-                files.forEach(f -> {
-                    try {
-                        f.transferTo(new File(analysisDir, f.getOriginalFilename()));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            File[] filesList = analysisDir.listFiles();
-
-            if (Objects.nonNull(filesList)) {
-                List<AnalysisFile> analysisFiles = Arrays.stream(filesList)
-                        .filter(File::isFile)
-                        .map(f -> {
-                            AnalysisFile analysisFile = new AnalysisFile();
-                            analysisFile.setAnalysis(analysis);
-                            analysisFile.setType(AnalysisFileType.ANALYSIS);
-                            analysisFile.setStatus(AnalysisFileStatus.UNPROCESSED);
-                            analysisFile.setLink(f.getPath());
-                            return analysisFile;
-                        }).collect(Collectors.toList());
-                analysis.setAnalysisFiles(analysisFiles);
-            }
-        } finally {
-            FileUtils.deleteQuietly(zipDir);
         }
     }
 

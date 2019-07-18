@@ -24,7 +24,7 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 
 
 import com.odysseusinc.arachne.commons.utils.UUIDGenerator;
-import com.odysseusinc.arachne.datanode.controller.analysis.CallbackAnalysisController;
+import com.odysseusinc.arachne.datanode.controller.analysis.BaseCallbackAnalysisController;
 import com.odysseusinc.arachne.datanode.dto.analysis.AnalysisRequestDTO;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
@@ -87,7 +87,7 @@ public class AnalysisRequestDTOToAnalysisConverter implements Converter<Analysis
 
         AnalysisStateEntry stateEntry = new AnalysisStateEntry(new Date(),
                 AnalysisState.CREATED,
-                "Get request to execute analysis",
+                "Request to analysis execution was received",
                 analysis);
         analysis.getStateHistory().add(stateEntry);
 
@@ -96,13 +96,13 @@ public class AnalysisRequestDTOToAnalysisConverter implements Converter<Analysis
                 "%s:%s%s",
                 datanodeBaseURL,
                 datanodePort,
-                CallbackAnalysisController.UPDATE_URI
+                BaseCallbackAnalysisController.UPDATE_URI
         );
         String resultCallback = String.format(
                 "%s:%s%s",
                 datanodeBaseURL,
                 datanodePort,
-                CallbackAnalysisController.RESULT_URI
+                BaseCallbackAnalysisController.RESULT_URI
         );
         analysis.setUpdateStatusCallback(updateStatusCallback);
         analysis.setResultCallback(resultCallback);

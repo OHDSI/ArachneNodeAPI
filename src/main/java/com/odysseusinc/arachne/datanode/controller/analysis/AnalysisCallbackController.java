@@ -16,25 +16,22 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
- * Created: Jul 8, 2019
+ * Created: Jul 18, 2019
  *
  */
 
-package com.odysseusinc.arachne.datanode.config;
+package com.odysseusinc.arachne.datanode.controller.analysis;
 
-import com.odysseusinc.arachne.datanode.controller.analysis.AnalysisEventController;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.web.bind.annotation.RestController;
 
-@Configuration
-public class EventListenerConfig {
+@RestController
+public class AnalysisCallbackController extends BaseCallbackAnalysisController {
 
-	@Bean
-	public AnalysisEventController analysisEventController(GenericConversionService conversionService,
-														   AnalysisService analysisService) {
+    public AnalysisCallbackController(GenericConversionService conversionService,
+                                      AnalysisService analysisService) {
 
-		return new AnalysisEventController(conversionService, analysisService);
-	}
+        super(conversionService, analysisService);
+    }
 }

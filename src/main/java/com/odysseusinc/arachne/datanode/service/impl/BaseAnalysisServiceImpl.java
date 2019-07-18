@@ -42,8 +42,10 @@ import com.odysseusinc.arachne.datanode.service.ExecutionEngineIntegrationServic
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
+import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -54,6 +56,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
+import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,11 +65,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.multipart.MultipartFile;
 
 public abstract class BaseAnalysisServiceImpl implements AnalysisService {
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(BaseAnalysisServiceImpl.class);
     private static List<String> finishedStates = new ArrayList<>(3);
+    private static final String ZIP_FILENAME = "analysis.zip";
 
     static {
         finishedStates.add(AnalysisState.EXECUTED.name());
@@ -304,5 +309,47 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
     public Optional<Analysis> findAnalysis(Long id) {
 
         return analysisRepository.findById(id);
+    }
+
+    @Override
+    public void saveAnalysisFiles(Analysis analysis, List<MultipartFile> files) throws IOException, ZipException {
+
+        final File analysisDir = new File(analysis.getAnalysisFolder());
+        final File zipDir = Paths.get(analysisDir.getPath(), Constants.Analysis.SUBMISSION_ARCHIVE_SUBDIR).toFile();
+        FileUtils.forceMkdir(zipDir);
+
+        try {
+            if (files.size() == 1) { // single file can be zipped archive
+                MultipartFile archive = files.stream().findFirst().get();
+                File archiveFile = new File(zipDir, ZIP_FILENAME);
+                archive.transferTo(archiveFile);
+                CommonFileUtils.unzipFiles(archiveFile, analysisDir);
+            } else {
+                files.forEach(f -> {
+                    try {
+                        f.transferTo(new File(analysisDir, f.getOriginalFilename()));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            File[] filesList = analysisDir.listFiles();
+
+            if (Objects.nonNull(filesList)) {
+                List<AnalysisFile> analysisFiles = Arrays.stream(filesList)
+                        .filter(File::isFile)
+                        .map(f -> {
+                            AnalysisFile analysisFile = new AnalysisFile();
+                            analysisFile.setAnalysis(analysis);
+                            analysisFile.setType(AnalysisFileType.ANALYSIS);
+                            analysisFile.setStatus(AnalysisFileStatus.UNPROCESSED);
+                            analysisFile.setLink(f.getPath());
+                            return analysisFile;
+                        }).collect(Collectors.toList());
+                analysis.setAnalysisFiles(analysisFiles);
+            }
+        } finally {
+            FileUtils.deleteQuietly(zipDir);
+        }
     }
 }

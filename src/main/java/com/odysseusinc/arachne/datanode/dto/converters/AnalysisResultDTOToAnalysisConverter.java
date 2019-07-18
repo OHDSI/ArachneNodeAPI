@@ -22,13 +22,11 @@
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
-import com.odysseusinc.arachne.datanode.controller.analysis.CallbackAnalysisController;
-import com.odysseusinc.arachne.datanode.event.AnalysisResultEvent;
+import com.odysseusinc.arachne.datanode.controller.analysis.BaseCallbackAnalysisController;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisState;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisStateEntry;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
-import java.io.File;
 import java.util.Date;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +36,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AnalysisResultEventToAnalysisConverter implements Converter<AnalysisResultEvent, Analysis>, InitializingBean {
+public class AnalysisResultDTOToAnalysisConverter implements Converter<AnalysisResultDTO, Analysis>, InitializingBean {
 
     private GenericConversionService conversionService;
     @Value("${datanode.baseURL}")
@@ -48,7 +46,7 @@ public class AnalysisResultEventToAnalysisConverter implements Converter<Analysi
 
     @Autowired
     @SuppressWarnings("SpringJavaAutowiringInspection")
-    public AnalysisResultEventToAnalysisConverter(GenericConversionService conversionService) {
+    public AnalysisResultDTOToAnalysisConverter(GenericConversionService conversionService) {
 
         this.conversionService = conversionService;
     }
@@ -60,15 +58,12 @@ public class AnalysisResultEventToAnalysisConverter implements Converter<Analysi
     }
 
     @Override
-    public Analysis convert(AnalysisResultEvent source) {
+    public Analysis convert(AnalysisResultDTO analysisResult) {
 
-        AnalysisResultDTO analysisResult = source.getAnalysisResult();
-        File analysisResultFolder = source.getAnalysisResultFolder();
         Analysis analysis = new Analysis();
         analysis.setId(analysisResult.getId());
         analysis.setStatus(analysisResult.getStatus());
         analysis.setStdout(analysisResult.getStdout());
-        analysis.setAnalysisFolder(analysisResultFolder.getAbsolutePath());
         AnalysisStateEntry stateEntry = new AnalysisStateEntry(new Date(),
                 AnalysisState.EXECUTED,
                 "Received analysisResult from Execution Engine", analysis);
@@ -78,13 +73,13 @@ public class AnalysisResultEventToAnalysisConverter implements Converter<Analysi
                 "%s:%s%s",
                 datanodeBaseURL,
                 datanodePort,
-                CallbackAnalysisController.UPDATE_URI
+                BaseCallbackAnalysisController.UPDATE_URI
         );
         String resultCallback = String.format(
                 "%s:%s%s",
                 datanodeBaseURL,
                 datanodePort,
-                CallbackAnalysisController.RESULT_URI
+                BaseCallbackAnalysisController.RESULT_URI
         );
         analysis.setUpdateStatusCallback(updateStatusCallback);
         analysis.setResultCallback(resultCallback);

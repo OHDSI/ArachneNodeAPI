@@ -22,40 +22,42 @@
 
 package com.odysseusinc.arachne.datanode.controller.analysis;
 
-import com.odysseusinc.arachne.datanode.event.AnalysisResultEvent;
-import com.odysseusinc.arachne.datanode.event.AnalysisUpdateEvent;
+import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
+import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.util.AnalysisUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisExecutionStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-@RestController
-public class CallbackAnalysisController {
+public abstract class BaseCallbackAnalysisController {
 
     public static final String UPDATE_URI = "/api/v1/submissions/{id}/update/{password}";
     public static final String RESULT_URI = "/api/v1/submissions/{id}/result/{password}";
 
-    private final ApplicationEventPublisher publisher;
+    protected final GenericConversionService conversionService;
+    protected final AnalysisService analysisService;
 
     @Value("${files.store.path}")
     private String filesStorePath;
 
     @Autowired
-    public CallbackAnalysisController(ApplicationEventPublisher publisher) {
+    public BaseCallbackAnalysisController(GenericConversionService conversionService,
+                                          AnalysisService analysisService) {
 
-        this.publisher = publisher;
+        this.conversionService = conversionService;
+        this.analysisService = analysisService;
     }
 
     @RequestMapping(value = UPDATE_URI,
@@ -70,7 +72,14 @@ public class CallbackAnalysisController {
             String exceptionMessage = String.format("Path variable id='%s' not equal status.id='%s'", id, status.getId());
             throw new IllegalArgumentException(exceptionMessage);
         }
-        publisher.publishEvent(new AnalysisUpdateEvent(this, status, password));
+        doUpdateSubmission(status, password);
+    }
+
+    protected Optional<Analysis> doUpdateSubmission(AnalysisExecutionStatusDTO status, String password) {
+
+        Long id = status.getId();
+        String stdout = status.getStdout();
+        return analysisService.updateStatus(id, stdout, password);
     }
 
     @RequestMapping(value = RESULT_URI,
@@ -87,7 +96,15 @@ public class CallbackAnalysisController {
             throw new IllegalArgumentException(exceptionMessage);
         }
         File resultDir = AnalysisUtils.storeMultipartFiles(filesStorePath, files);
-        publisher.publishEvent(new AnalysisResultEvent(this, result, resultDir));
+        doSaveResults(result, resultDir);
+    }
+
+    protected Analysis doSaveResults(AnalysisResultDTO result, File resultDir) {
+
+        Analysis analysis = conversionService.convert(result, Analysis.class);
+        analysis.setAnalysisFolder(resultDir.getAbsolutePath());
+
+        return analysisService.saveResults(analysis, resultDir);
     }
 
 }
