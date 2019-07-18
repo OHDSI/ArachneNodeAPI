@@ -33,6 +33,7 @@ import com.odysseusinc.arachne.datanode.model.analysis.AnalysisAuthor;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFile;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileStatus;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileType;
+import com.odysseusinc.arachne.datanode.model.analysis.AnalysisOrigin;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.UserService;
@@ -95,6 +96,7 @@ public class AnalysisController {
 
 	    try {
             Analysis analysis = conversionService.convert(analysisRequestDTO, Analysis.class);
+            analysis.setOrigin(AnalysisOrigin.DIRECT_UPLOAD);
             User user = userService.getUser(principal);
             if (Objects.nonNull(user)) {
                 AnalysisAuthor author = conversionService.convert(user, AnalysisAuthor.class);

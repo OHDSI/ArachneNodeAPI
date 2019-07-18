@@ -84,6 +84,9 @@ public class Analysis {
     @Column
     @Enumerated(EnumType.STRING)
     private CommonAnalysisType type;
+    @Column
+    @Enumerated(EnumType.STRING)
+    private AnalysisOrigin origin;
     @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "analysis")
     private List<AnalysisCodeFile> analysisCodeFiles = new ArrayList<>();
     @Column(name = "inner_executable_filename")
@@ -306,5 +309,15 @@ public class Analysis {
     public void setStudyTitle(String studyTitle) {
 
         this.studyTitle = studyTitle;
+    }
+
+    public AnalysisOrigin getOrigin() {
+
+        return origin;
+    }
+
+    public void setOrigin(AnalysisOrigin origin) {
+
+        this.origin = origin;
     }
 }
