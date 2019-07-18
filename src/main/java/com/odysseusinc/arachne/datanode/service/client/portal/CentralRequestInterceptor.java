@@ -56,13 +56,16 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
 
     private String getToken() throws PermissionDeniedException {
 
+/*
         final Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof org.springframework.security.core.userdetails.User) {
             String userName = ((org.springframework.security.core.userdetails.User) principal).getUsername();
             final Optional<User> userOptional = userService.findByUsername(userName);
             return userOptional.map(User::getToken).orElse(null);
         }
-        return null;
+*/
+        final Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
+        return (credentials instanceof String) ? (String)credentials : null;
     }
 
     @Override

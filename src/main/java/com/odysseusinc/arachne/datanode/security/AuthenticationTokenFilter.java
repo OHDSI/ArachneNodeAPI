@@ -77,14 +77,14 @@ public class AuthenticationTokenFilter extends UsernamePasswordAuthenticationFil
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
                     UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                            new UsernamePasswordAuthenticationToken(userDetails, authToken, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpRequest));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
 
             chain.doFilter(request, response);
-        } catch (AuthenticationException | AuthException ex) {
+        } catch (AuthenticationException | AuthException | org.ohdsi.authenticator.exception.AuthenticationException ex) {
             ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             JsonResult<Boolean> result = new JsonResult<>(JsonResult.ErrorCode.UNAUTHORIZED);
             result.setResult(Boolean.FALSE);
