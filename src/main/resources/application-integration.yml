@@ -4,6 +4,7 @@ server:
 datanode:
   arachneCentral:
     host: https://testcommunity.arachnenetwork.com
+  baseURL: http://odysseusovh03.odysseusinc.com
 swagger:
   enable: true
 atlas:
@@ -17,3 +18,8 @@ proxy:
   auth:
     username: user
     password: Password1234
+executionEngine:
+  host: odysseusovh02.odysseusinc.com
+analysis:
+  scheduler:
+    invalidateExecutingInterval: 3600000

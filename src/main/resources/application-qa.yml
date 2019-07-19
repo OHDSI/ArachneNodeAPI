@@ -10,3 +10,5 @@ jasypt:
     algorythm: SHA-256
 docker:
   host: tcp://149.56.25.6:2375
+executionEngine:
+  host: execution_engine
