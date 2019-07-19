@@ -98,7 +98,7 @@ public class AuthController {
             authMethod,
             new AuthenticationRequest(request.getUsername(), request.getPassword())
         );
-        String centralToken = userInfo.getAdditionalInfo().get("token");
+        String centralToken = (String)userInfo.getAdditionalInfo().get("token");
         validateCentralTokenCreated(centralToken);
         User centralUser = conversionService.convert(userInfo, User.class);
         userService.findByUsername(userInfo.getUsername()).orElseGet(() -> userService.createIfFirst(centralUser));
@@ -113,7 +113,7 @@ public class AuthController {
 
         String token = request.getHeader(tokenHeader);
         UserInfo userInfo = authenticator.refreshToken(token);
-        String newCentralToken = userInfo.getAdditionalInfo().get("token");
+        String newCentralToken = (String)userInfo.getAdditionalInfo().get("token");
         userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
         validateCentralTokenCreated(newCentralToken);
 
