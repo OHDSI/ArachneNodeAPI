@@ -23,11 +23,9 @@
 package com.odysseusinc.arachne.datanode.service.client.portal;
 
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
-import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import feign.RequestTemplate;
 import java.util.Objects;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,7 +83,7 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
 
     private void init(){
 
-        if (Objects.isNull(this.userService)){
+        if (Objects.isNull(this.userService)) {
             this.userService = applicationContext.getBean(UserService.class);
         }
     }
