@@ -22,10 +22,10 @@
 
 package com.odysseusinc.arachne.datanode.service.client.portal;
 
-import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import feign.RequestTemplate;
 import java.util.Objects;
+import org.ohdsi.authenticator.service.Authenticator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +44,7 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
 
     private ApplicationContext applicationContext;
     private UserService userService;
+    private Authenticator authenticator;
 
     @Autowired
     public CentralRequestInterceptor(ApplicationContext applicationContext) {
@@ -52,32 +53,22 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
     }
 
 
-    private String getToken() throws PermissionDeniedException {
+    private String getToken() {
 
-/*
-        final Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof org.springframework.security.core.userdetails.User) {
-            String userName = ((org.springframework.security.core.userdetails.User) principal).getUsername();
-            final Optional<User> userOptional = userService.findByUsername(userName);
-            return userOptional.map(User::getToken).orElse(null);
-        }
-*/
         final Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
-        return (credentials instanceof String) ? (String)credentials : null;
+        return (credentials instanceof String) ?
+                authenticator.resolveAdditionalInfo(credentials.toString(), "token", String.class)
+                : null;
     }
 
     @Override
     public void apply(RequestTemplate template) {
 
         final String token;
-        try {
-            init();
-            token = getToken();
-            if (!StringUtils.isEmpty(token)) {
-                template.header(authHeader, token);
-            }
-        } catch (PermissionDeniedException e) {
-            log.error(e.getMessage());
+        init();
+        token = getToken();
+        if (!StringUtils.isEmpty(token)) {
+            template.header(authHeader, token);
         }
     }
 
@@ -85,6 +76,9 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
 
         if (Objects.isNull(this.userService)) {
             this.userService = applicationContext.getBean(UserService.class);
+        }
+        if (Objects.isNull(this.authenticator)) {
+            this.authenticator = applicationContext.getBean(Authenticator.class);
         }
     }
 }
