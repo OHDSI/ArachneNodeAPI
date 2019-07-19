@@ -80,6 +80,7 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
     }
 
     protected final GenericConversionService conversionService;
+    protected final AnalysisPreprocessorService preprocessorService;
     protected final AnalysisRepository analysisRepository;
     protected final AnalysisStateJournalRepository analysisStateJournalRepository;
     protected final AnalysisFileRepository analysisFileRepository;
@@ -99,10 +100,13 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
 
     @Autowired
     public BaseAnalysisServiceImpl(GenericConversionService conversionService,
+                                   AnalysisPreprocessorService preprocessorService,
                                    AnalysisRepository analysisRepository,
                                    AnalysisStateJournalRepository analysisStateJournalRepository,
                                    AnalysisFileRepository analysisFileRepository,
                                    ExecutionEngineIntegrationService engineIntegrationService) {
+
+        this.preprocessorService = preprocessorService;
 
         this.engineIntegrationService = engineIntegrationService;
         this.conversionService = conversionService;
@@ -140,6 +144,7 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
     @Async
     public void sendToEngine(Analysis analysis) {
 
+        preprocessorService.runPreprocessor(analysis);
         AnalysisRequestDTO analysisRequestDTO = conversionService.convert(analysis, AnalysisRequestDTO.class);
         analysisRequestDTO.setResultExclusions(resultExclusions);
         File analysisFolder = new File(analysis.getAnalysisFolder());

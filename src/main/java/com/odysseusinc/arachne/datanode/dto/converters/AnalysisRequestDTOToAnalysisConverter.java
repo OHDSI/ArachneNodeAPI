@@ -78,6 +78,8 @@ public class AnalysisRequestDTOToAnalysisConverter implements Converter<Analysis
             analysis.setStudyTitle(dto.getStudy());
         }
 
+        analysis.setType(dto.getType());
+
         DataSource dataSource = dataSourceService.getById(dto.getDatasourceId());
         if (Objects.isNull(dataSource)) {
             logger.error("Cannot find datasource with id: {}", dto.getDatasourceId());

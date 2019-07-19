@@ -33,15 +33,17 @@ import org.springframework.stereotype.Service;
 public class AnalysisServiceImpl extends BaseAnalysisServiceImpl {
 
 	public AnalysisServiceImpl(GenericConversionService conversionService,
+														 AnalysisPreprocessorService preprocessorService,
 														 AnalysisRepository analysisRepository,
 														 AnalysisStateJournalRepository analysisStateJournalRepository,
 														 AnalysisFileRepository analysisFileRepository,
 														 ExecutionEngineIntegrationService engineIntegrationService) {
 
 		super(conversionService,
-						analysisRepository,
-						analysisStateJournalRepository,
-						analysisFileRepository,
-						engineIntegrationService);
+                preprocessorService,
+				analysisRepository,
+				analysisStateJournalRepository,
+				analysisFileRepository,
+				engineIntegrationService);
 	}
 }

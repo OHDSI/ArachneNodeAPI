@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.controller.analysis;
 
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.utils.ZipUtils;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.analysis.AnalysisRequestDTO;
@@ -40,16 +41,20 @@ import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import net.lingala.zip4j.exception.ZipException;
@@ -96,6 +101,7 @@ public class AnalysisController {
 
 	    try {
             Analysis analysis = conversionService.convert(analysisRequestDTO, Analysis.class);
+
             analysis.setOrigin(AnalysisOrigin.DIRECT_UPLOAD);
             User user = userService.getUser(principal);
             if (Objects.nonNull(user)) {
@@ -123,16 +129,28 @@ public class AnalysisController {
 	    Analysis analysis = analysisService.findAnalysis(analysisId)
                 .orElseThrow(() -> new NotExistException(Analysis.class));
 	    List<AnalysisFile> resultFiles = analysisService.getAnalysisResults(analysis);
-	    List<Path> files = resultFiles.stream()
+	    Path stdoutDir = Files.createTempDirectory("node_analysis");
+	    Path stdoutFile = stdoutDir.resolve("stdout.txt");
+	    try(Writer writer = new FileWriter(stdoutFile.toFile())) {
+	        IOUtils.write(analysis.getStdout(), writer);
+        }
+
+        List<Path> files = Stream.concat(
+                resultFiles.stream()
                 .map(AnalysisFile::getLink)
-                .map(f -> Paths.get(f))
+                .map(f -> Paths.get(f)),
+                Stream.of(stdoutFile))
                 .collect(Collectors.toList());
         Path archive = Files.createTempFile("results", ".zip");
         ZipUtils.zipFiles(archive, files);
+
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
         response.setHeader("Content-disposition", "attachment; filename=" + archive.getFileName().toString());
         try(InputStream in = new FileInputStream(archive.toFile())) {
             IOUtils.copy(in, response.getOutputStream());
+        } finally {
+            FileUtils.deleteQuietly(archive.toFile());
+            FileUtils.deleteQuietly(stdoutDir.toFile());
         }
     }
 

@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.dto.analysis;
 
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -37,6 +38,9 @@ public class AnalysisRequestDTO {
     private String title;
 
     private String study;
+
+    @NotNull
+    private CommonAnalysisType type;
 
     public String getExecutableFileName() {
 
@@ -76,5 +80,15 @@ public class AnalysisRequestDTO {
     public void setStudy(String study) {
 
         this.study = study;
+    }
+
+    public CommonAnalysisType getType() {
+
+        return type;
+    }
+
+    public void setType(CommonAnalysisType type) {
+
+        this.type = type;
     }
 }
