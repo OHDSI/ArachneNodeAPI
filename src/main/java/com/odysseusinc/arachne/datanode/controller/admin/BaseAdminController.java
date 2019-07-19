@@ -260,7 +260,7 @@ public abstract class BaseAdminController extends BaseController {
             p.add("author.lastName");
         });
         propertiesMap.put("analysis", p -> p.add("title"));
-        propertiesMap.put("study", p -> p.add("study.title"));
+        propertiesMap.put("study", p -> p.add("studyTitle"));
         propertiesMap.put("status", p -> p.add("journal.state"));
     }
 }
