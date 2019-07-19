@@ -23,8 +23,8 @@
 package com.odysseusinc.arachne.datanode.controller.analysis;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
+import com.odysseusinc.arachne.commons.api.v1.dto.OptionDTO;
 import com.odysseusinc.arachne.commons.utils.ZipUtils;
-import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.analysis.AnalysisRequestDTO;
 import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
@@ -32,14 +32,10 @@ import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisAuthor;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFile;
-import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileStatus;
-import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileType;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisOrigin;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.UserService;
-import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -49,8 +45,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Principal;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -152,6 +146,18 @@ public class AnalysisController {
             FileUtils.deleteQuietly(archive.toFile());
             FileUtils.deleteQuietly(stdoutDir.toFile());
         }
+    }
+
+    @RequestMapping(
+            method = RequestMethod.GET,
+            path = "/types",
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    public List<OptionDTO> getTypes() {
+
+	    return Stream.of(CommonAnalysisType.values())
+                .map(type -> new OptionDTO(type.name(), type.getTitle()))
+                .collect(Collectors.toList());
     }
 
 }
