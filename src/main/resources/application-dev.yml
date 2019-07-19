@@ -49,7 +49,7 @@ authenticator:
           targetHeader: Arachne-Auth-Token
           targetFormat: '%s'
           copyExpirationDate: true
-        infoUrl: https://www.arachnenetwork.com/api/v1/auth/me
+        infoUrl: https://localhost:8080/api/v1/auth/me
         fieldsToExtract:
           id: $.result.id
           email: $.result.email

@@ -101,10 +101,8 @@ public class AuthController {
         String centralToken = userInfo.getAdditionalInfo().get("token");
         validateCentralTokenCreated(centralToken);
         User centralUser = conversionService.convert(userInfo, User.class);
-        User user = userService.findByUsername(userInfo.getUsername()).orElseGet(() -> userService.createIfFirst(centralUser));
+        userService.findByUsername(userInfo.getUsername()).orElseGet(() -> userService.createIfFirst(centralUser));
         userService.updateUserInfo(centralUser);
-        // TODO: there should be no need in Central token if DN runs in standalone mode
-//        userService.setToken(user, centralToken);
 
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getToken()));
     }
@@ -116,9 +114,8 @@ public class AuthController {
         String token = request.getHeader(tokenHeader);
         UserInfo userInfo = authenticator.refreshToken(token);
         String newCentralToken = userInfo.getAdditionalInfo().get("token");
-        User user = userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
+        userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
         validateCentralTokenCreated(newCentralToken);
-//        userService.setToken(user, newCentralToken);
 
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
     }
