@@ -42,11 +42,11 @@ public class UserInfoToUserConverter implements Converter<UserInfo, User>{
     public User convert(UserInfo source) {
 
         User user = new User();
-        user.setId(UserIdUtils.uuidToId(source.getAdditionalInfo().get("id")));
-        user.setUsername(source.getAdditionalInfo().get("username"));
-        user.setEmail(source.getAdditionalInfo().get("email"));
-        user.setFirstName(source.getAdditionalInfo().get("firstName"));
-        user.setLastName(source.getAdditionalInfo().get("lastName"));
+        user.setId(UserIdUtils.uuidToId((String) source.getAdditionalInfo().get("id")));
+        user.setUsername((String) source.getAdditionalInfo().get("username"));
+        user.setEmail((String) source.getAdditionalInfo().get("email"));
+        user.setFirstName((String) source.getAdditionalInfo().get("firstName"));
+        user.setLastName((String) source.getAdditionalInfo().get("lastName"));
         return user;
     }
 }

@@ -26,6 +26,7 @@ import com.odysseusinc.arachne.datanode.service.UserService;
 import feign.RequestTemplate;
 import java.util.Objects;
 import org.ohdsi.authenticator.service.Authenticator;
+import org.ohdsi.authenticator.service.TokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +45,7 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
 
     private ApplicationContext applicationContext;
     private UserService userService;
-    private Authenticator authenticator;
+    private TokenService tokenService;
 
     @Autowired
     public CentralRequestInterceptor(ApplicationContext applicationContext) {
@@ -57,7 +58,7 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
 
         final Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
         return (credentials instanceof String) ?
-                authenticator.resolveAdditionalInfo(credentials.toString(), "token", String.class)
+                tokenService.resolveAdditionalInfo(credentials.toString(), "token", String.class)
                 : null;
     }
 
@@ -77,8 +78,8 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
         if (Objects.isNull(this.userService)) {
             this.userService = applicationContext.getBean(UserService.class);
         }
-        if (Objects.isNull(this.authenticator)) {
-            this.authenticator = applicationContext.getBean(Authenticator.class);
+        if (Objects.isNull(this.tokenService)) {
+            this.tokenService = applicationContext.getBean(TokenService.class);
         }
     }
 }
