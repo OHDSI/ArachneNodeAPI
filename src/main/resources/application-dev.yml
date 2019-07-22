@@ -29,12 +29,6 @@ cohorts:
   result:
     countEnabled: true
     summaryEnabled: true
-executionEngine:
-  protocol: https
-  host: localhost
-  port: 8888
-  analysisUri: /api/v1/analyze
-  token:
 analysis:
   scheduler:
     resendFailuresInterval: 60000
