@@ -120,6 +120,12 @@ proxy:
     enabled: false
     username:
     password:
+executionEngine:
+  protocol: https
+  host: localhost
+  port: 8888
+  analysisUri: /api/v1/analyze
+  token:
 docker:
   host: tcp://localhost:2375
   tls-verify: false
