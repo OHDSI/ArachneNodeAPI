@@ -12,6 +12,8 @@ datanode:
     expiration: 604800
 swagger:
   enable: true
+executionEngine:
+  host: localhost
 docker:
   host: unix:///var/run/docker.sock
 atlas:
