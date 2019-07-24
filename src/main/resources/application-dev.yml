@@ -12,6 +12,8 @@ datanode:
     expiration: 604800
 swagger:
   enable: true
+executionEngine:
+  host: localhost
 docker:
   host: unix:///var/run/docker.sock
 atlas:
@@ -29,6 +31,11 @@ cohorts:
   result:
     countEnabled: true
     summaryEnabled: true
+analysis:
+  scheduler:
+    resendFailuresInterval: 60000
+    invalidateExecutingInterval: 120000
+
 
 authenticator:
   methods:

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018 Odysseus Data Services, inc.
+ * Copyright 2019 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,38 +15,34 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: April 20, 2017
+ * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
+ * Created: Jul 11, 2019
  *
  */
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonStudyDTO;
-import com.odysseusinc.arachne.datanode.model.study.Study;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.odysseusinc.arachne.datanode.model.analysis.AnalysisAuthor;
+import com.odysseusinc.arachne.datanode.model.user.User;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
-/**
- * @author vkoulakov
- * @since 4/18/17.
- */
 @Component
-public class CommonStudyDTOToStudyConverter implements Converter<CommonStudyDTO, Study> {
+public class UserToAnalysisAuthorConverter implements Converter<User, AnalysisAuthor> {
 
-    @Autowired
-    public CommonStudyDTOToStudyConverter(GenericConversionService conversionService) {
+    public UserToAnalysisAuthorConverter(GenericConversionService conversionService) {
+
         conversionService.addConverter(this);
     }
 
     @Override
-    public Study convert(final CommonStudyDTO dto) {
+    public AnalysisAuthor convert(User user) {
 
-        Study study = new Study();
-        study.setId(dto.getId());
-        study.setTitle(dto.getName());
-        return study;
+        AnalysisAuthor author = new AnalysisAuthor();
+        author.setEmail(user.getEmail());
+        author.setFirstName(user.getFirstName());
+        author.setLastName(user.getLastName());
+        return author;
     }
 }
