@@ -11,11 +11,9 @@ datanode:
   jwt:
     expiration: 604800
 swagger:
-  enabled: true
-  title: Arachne Data Node
-  description: Arachne Data Node API
-  version: 1.0.1
-  basePackage: com.odysseusinc.arachne.datanode.controller
+  enable: true
+executionEngine:
+  host: localhost
 docker:
   host: unix:///var/run/docker.sock
 atlas:
@@ -33,3 +31,8 @@ cohorts:
   result:
     countEnabled: true
     summaryEnabled: true
+analysis:
+  scheduler:
+    resendFailuresInterval: 60000
+    invalidateExecutingInterval: 120000
+

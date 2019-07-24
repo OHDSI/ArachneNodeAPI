@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018 Odysseus Data Services, inc.
+ * Copyright 2019 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,39 +15,13 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: October 02, 2017
+ * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
+ * Created: Jul 18, 2019
  *
  */
 
-package com.odysseusinc.arachne.datanode.dto;
+package com.odysseusinc.arachne.datanode.model.analysis;
 
-public class OptionDTO {
-
-    private String label;
-    private String value;
-
-    public OptionDTO() {
-
-    }
-
-    public String getLabel() {
-
-        return label;
-    }
-
-    public void setLabel(String label) {
-
-        this.label = label;
-    }
-
-    public String getValue() {
-
-        return value;
-    }
-
-    public void setValue(String value) {
-
-        this.value = value;
-    }
+public enum AnalysisOrigin {
+    CENTRAL, DIRECT_UPLOAD
 }

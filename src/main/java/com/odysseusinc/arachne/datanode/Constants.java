@@ -95,6 +95,10 @@ public interface Constants {
             String CENTRAL_REGISTER = "/centralregister";
         }
 
+        interface Analysis {
+            String INVALIDATE_ALL_UNFINISHED = "/api/v1/admin/analysis/invalidate";
+        }
+
         interface Auth {
             String LOGIN_ENTRY_POINT = "/api/v1/auth/login/";
             String LOGOUT_ENTRY_POINT = "/api/v1/auth/logout/";

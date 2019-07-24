@@ -1,0 +1,81 @@
+/*
+ *
+ * Copyright 2019 Odysseus Data Services, inc.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Company: Odysseus Data Services, Inc.
+ * Product Owner/Architecture: Gregory Klebanov
+ * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
+ * Created: Jul 18, 2019
+ *
+ */
+
+package com.odysseusinc.arachne.datanode.model.analysis;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import javax.persistence.Embeddable;
+
+@Embeddable
+public class AnalysisAuthor {
+    private String firstName;
+    private String lastName;
+    private String email;
+
+    public String getFirstName() {
+
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+
+        this.lastName = lastName;
+    }
+
+    public String getEmail() {
+
+        return email;
+    }
+
+    public void setEmail(String email) {
+
+        this.email = email;
+    }
+
+    @JsonProperty(value = "fullName")
+    public String fullName() {
+
+        String result = "";
+        if (firstName != null) {
+            result += firstName;
+        }
+        if (lastName != null) {
+            if (firstName != null) {
+                result += " ";
+            }
+            result += lastName;
+        } else if (firstName == null) {
+            result = email;
+        }
+        return result;
+    }
+}

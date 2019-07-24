@@ -13,7 +13,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.5.4.RELEASE</version>
+        <version>1.5.20.RELEASE</version>
         <relativePath/>
     </parent>
 
@@ -28,8 +28,8 @@
         <jjwt.version>0.6.0</jjwt.version>
         <postgresql.version>42.2.1</postgresql.version>
         <flywayVersion>4.2.0</flywayVersion>
-        <javaDockerVersion>3.0.6</javaDockerVersion>
-        <springRetryVersion>1.2.0.RELEASE</springRetryVersion>
+        <javaDockerVersion>3.0.14</javaDockerVersion>
+        <springRetryVersion>1.2.4.RELEASE</springRetryVersion>
         <hikaricp.version>2.6.3</hikaricp.version>
         <build.number>${BUILD_NUMBER}</build.number>
         <build.id>${BUILD_TIMESTAMP}</build.id>
@@ -55,6 +55,16 @@
             <artifactId>arachne-commons</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.odysseusinc.arachne</groupId>
+            <artifactId>arachne-common-types</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.odysseusinc.arachne</groupId>
+            <artifactId>arachne-common-utils</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
@@ -121,7 +131,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.5</version>
+            <version>3.8.1</version>
         </dependency>
         <dependency>
             <groupId>org.modelmapper.extensions</groupId>
@@ -132,6 +142,12 @@
             <groupId>com.github.docker-java</groupId>
             <artifactId>docker-java</artifactId>
             <version>${javaDockerVersion}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -188,11 +204,6 @@
         <dependency>
             <groupId>io.github.openfeign.form</groupId>
             <artifactId>feign-form</artifactId>
-            <version>3.8.0</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.openfeign.form</groupId>
-            <artifactId>feign-form-spring</artifactId>
             <version>3.8.0</version>
         </dependency>
 

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018 Odysseus Data Services, inc.
+ * Copyright 2019 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,19 +15,21 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: April 12, 2017
+ * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
+ * Created: Jul 8, 2019
  *
  */
 
 package com.odysseusinc.arachne.datanode.repository;
 
-import com.odysseusinc.arachne.datanode.model.study.Study;
+import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFile;
+import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileStatus;
+import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileType;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-/**
- * @author vkoulakov
- * @since 4/12/17.
- */
-public interface StudyRepository extends JpaRepository<Study, Long> {
+public interface AnalysisFileRepository extends JpaRepository<AnalysisFile, Long> {
+
+    List<AnalysisFile> findAllByAnalysisIdAndTypeAndStatus(Long analysisId, AnalysisFileType type, AnalysisFileStatus status);
+    List<AnalysisFile> findAllByAnalysisIdAndType(Long analysisId, AnalysisFileType type);
 }

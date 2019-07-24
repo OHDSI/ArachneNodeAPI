@@ -1,0 +1,1 @@
+ALTER TABLE analyses ADD IF NOT EXISTS origin VARCHAR;
