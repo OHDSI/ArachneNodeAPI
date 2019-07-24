@@ -41,7 +41,7 @@ public class HandlebarsConfig {
     private static final String ESTIMATION_RUNNER_TEMPLATE = "/estimation/runAnalysis.R"; //for Atlas 2.7.0+
     private static final String COHORT_HERACLES_RUNNER_TEMPLATE = "/heracles/main.r";
     private static final String COHORT_CHARACTERIZATION_TEMPLATE = "/cc/r/runAnalysis.R";
-    private static final String PATHWAYS_RUNNER_TEMPLATE = "pathways/main.R";
+    private static final String PATHWAYS_RUNNER_TEMPLATE = "/pathways/main.R";
 
     @Bean
     public Template estimationRunnerTemplate() {
