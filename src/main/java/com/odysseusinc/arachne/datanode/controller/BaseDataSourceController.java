@@ -38,6 +38,7 @@ import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
@@ -60,6 +61,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.destination.DestinationResolver;
+import org.springframework.security.access.method.P;
 import org.springframework.util.CollectionUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -71,6 +73,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public abstract class BaseDataSourceController<DS extends DataSource, BusinessDTO extends DataSourceBusinessDTO, CommonDTO extends CommonDataSourceDTO> extends BaseController {
 
+    private static final String COMMUNICATION_FAILED = "Failed to communicate with Central, remains in standalone mode";
     protected final DataSourceService dataSourceService;
     protected final BaseCentralIntegrationService<DS, CommonDTO> integrationService;
     protected final ModelMapper modelMapper;
@@ -153,22 +156,30 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
     private List<DataSourceDTO> setFieldsFromCentral(User user, List<DataSourceDTO> dtos) {
 
-        JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs =
-                integrationService.getDataSources(user,
-                        dtos.stream().filter(e -> e.getCentralId() != null).map(DataSourceDTO::getCentralId)
-                                .collect(Collectors.toList()));
+        try {
+            JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs =
+                    integrationService.getDataSources(user,
+                            dtos.stream().filter(e -> e.getCentralId() != null).map(DataSourceDTO::getCentralId)
+                                    .collect(Collectors.toList()));
 
-        Map<Long, CommonDataSourceDTO> idToDto = centralCommonDTOs.getResult()
-                .stream()
-                .collect(Collectors.toMap(CommonDataSourceDTO::getId, e -> e));
+            Map<Long, CommonDataSourceDTO> idToDto = centralCommonDTOs.getResult()
+                    .stream()
+                    .collect(Collectors.toMap(CommonDataSourceDTO::getId, e -> e));
 
-        dtos.forEach(e -> {
-            CommonDataSourceDTO dto = idToDto.get(e.getCentralId());
-            if (!Objects.isNull(dto)) {
-                e.setPublished(dto.getPublished());
-                e.setModelType(dto.getModelType());
+            dtos.forEach(e -> {
+                CommonDataSourceDTO dto = idToDto.get(e.getCentralId());
+                if (!Objects.isNull(dto)) {
+                    e.setPublished(dto.getPublished());
+                    e.setModelType(dto.getModelType());
+                }
+            });
+        } catch (Exception e) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.warn(COMMUNICATION_FAILED, e);
+            } else {
+                LOGGER.warn(COMMUNICATION_FAILED);
             }
-        });
+        }
         return dtos;
     }
 
@@ -259,8 +270,13 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
     public JsonResult unpublishAndDeleteOnCentral(Long dataSourceId) {
 
-        DataSource dataSource = dataSourceService.getById(dataSourceId);
-        return centralClient.unpublishAndSoftDeleteDataSource(dataSource.getCentralId());
+        //TODO think about postponed synchronization
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            DataSource dataSource = dataSourceService.getById(dataSourceId);
+            return centralClient.unpublishAndSoftDeleteDataSource(dataSource.getCentralId());
+        } else {
+            return new JsonResult(NO_ERROR);
+        }
     }
 
     @ApiOperation("List supported DBMS")

@@ -28,10 +28,10 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.converters.CommonUserDTOToUserConverter;
 import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
-import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.Role;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.RoleRepository;
@@ -40,12 +40,12 @@ import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import java.security.Principal;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private CommonUserDTOToUserConverter commonUserDTOToUserConverter;
 
-    @PostConstruct
+    @Override
     public void syncUsers() {
 
         try {
@@ -214,9 +214,13 @@ public class UserServiceImpl implements UserService {
         LOG.info(REMOVING_USER_LOG, id);
         final User user = get(id);
         userRepository.delete(id);
-        dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
-                centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
-        );
+
+        //TODO postpone delete request
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
+                    centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
+            );
+        }
     }
 
     @Override
@@ -253,28 +257,23 @@ public class UserServiceImpl implements UserService {
         return findByUsername(principal.getName()).orElseThrow(PermissionDeniedException::new);
     }
 
-    private User findOrAddFromCentral(User currentUser, Long id) {
-
-        User user = userRepository.findOne(id);
-        if (user == null) {
-            user = addUserFromCentral(currentUser, id);
-        }
-        return user;
-    }
-
     @Override
     public List<User> suggestNotAdmin(User user, final String query, Integer limit) {
 
-        final Set<String> adminsEmails = userRepository
-                .findAll(new Sort(Sort.Direction.ASC, "email")).stream()
-                .map(User::getEmail)
-                .collect(Collectors.toSet());
-        final List<CommonUserDTO> result =
-                centralIntegrationService.suggestUsersFromCentral(user, query, adminsEmails, limit);
-        return result
-                .stream()
-                .map(dto -> conversionService.convert(dto, User.class))
-                .collect(Collectors.toList());
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            final Set<String> adminsEmails = userRepository
+                    .findAll(new Sort(Sort.Direction.ASC, "email")).stream()
+                    .map(User::getEmail)
+                    .collect(Collectors.toSet());
+            final List<CommonUserDTO> result =
+                    centralIntegrationService.suggestUsersFromCentral(user, query, adminsEmails, limit);
+            return result
+                    .stream()
+                    .map(dto -> conversionService.convert(dto, User.class))
+                    .collect(Collectors.toList());
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     @Override

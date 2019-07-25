@@ -35,6 +35,10 @@ analysis:
   scheduler:
     resendFailuresInterval: 60000
     invalidateExecutingInterval: 120000
+central:
+  scheduler:
+    checkingInterval: 20000
+
 
 
 authenticator:

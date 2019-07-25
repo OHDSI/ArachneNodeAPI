@@ -32,6 +32,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.datasource.AutoDetectedFields;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
@@ -95,20 +96,24 @@ public class DataSourceServiceImpl implements DataSourceService {
         DataNode currentDataNode = dataNodeService.findCurrentDataNodeOrCreate(owner);
         dataSource.setDataNode(currentDataNode);
 
-        CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
-        commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
-        commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
-        
-        commonDataSourceDTO.setDbmsType(dataSource.getType());
+        //TODO postpone datasource creation request
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
 
-        CommonDataSourceDTO centralDTO = integrationService.sendDataSourceCreationRequest(
-                owner,
-                dataSource.getDataNode(),
-                commonDataSourceDTO
-        );
-        dataSource.setCentralId(centralDTO.getId());
+            CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
+            commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
+            commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
 
-        checkNotNull(centralDTO.getId(), "central id of datasource is null");
+            commonDataSourceDTO.setDbmsType(dataSource.getType());
+
+            CommonDataSourceDTO centralDTO = integrationService.sendDataSourceCreationRequest(
+                    owner,
+                    dataSource.getDataNode(),
+                    commonDataSourceDTO
+            );
+            dataSource.setCentralId(centralDTO.getId());
+
+            checkNotNull(centralDTO.getId(), "central id of datasource is null");
+        }
         checkNotNull(dataSource, "given datasource is null");
         checkNotNull(owner, "given owner is null");
         return dataSourceRepository.save(dataSource);
@@ -239,14 +244,17 @@ public class DataSourceServiceImpl implements DataSourceService {
         AutoDetectedFields autoDetectedFields = autoDetectFields(exists);
         DataSource updated = dataSourceRepository.save(exists);
 
-        CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(updated, CommonDataSourceDTO.class);
-        commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
-        commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
-        integrationService.sendDataSourceUpdateRequest(
-                user,
-                updated.getCentralId(),
-                commonDataSourceDTO
-        );
+        //TODO postpone update request
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(updated, CommonDataSourceDTO.class);
+            commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
+            commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
+            integrationService.sendDataSourceUpdateRequest(
+                    user,
+                    updated.getCentralId(),
+                    commonDataSourceDTO
+            );
+        }
 
         return updated;
     }

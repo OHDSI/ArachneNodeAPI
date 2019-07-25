@@ -45,9 +45,9 @@ import java.security.Principal;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
-import org.ohdsi.authenticator.model.AuthenticationRequest;
 import org.ohdsi.authenticator.model.UserInfo;
 import org.ohdsi.authenticator.service.Authenticator;
+import org.pac4j.core.credentials.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,8 +82,15 @@ public class AuthController {
     @Value("${security.method}")
     private String authMethod;
 
+    /**
+     * @deprecated not required as authenticator was implemented that provides authentication source
+     *          in a very flexible way.
+     *
+     * @return
+     */
     @ApiOperation("Get auth method")
     @RequestMapping(value = "/api/v1/auth/method", method = GET)
+    @Deprecated
     public JsonResult<CommonAuthMethodDTO> authMethod() {
 
         return integrationService.getAuthMethod();
@@ -96,9 +103,9 @@ public class AuthController {
 
         UserInfo userInfo = authenticator.authenticate(
             authMethod,
-            new AuthenticationRequest(request.getUsername(), request.getPassword())
+            new UsernamePasswordCredentials(request.getUsername(), request.getPassword())
         );
-        String centralToken = (String)userInfo.getAdditionalInfo().get("token");
+        String centralToken = (String)userInfo.getAdditionalInfo().getOrDefault("token", userInfo.getToken());
         validateCentralTokenCreated(centralToken);
         User centralUser = conversionService.convert(userInfo, User.class);
         userService.findByUsername(userInfo.getUsername()).orElseGet(() -> userService.createIfFirst(centralUser));
@@ -113,7 +120,7 @@ public class AuthController {
 
         String token = request.getHeader(tokenHeader);
         UserInfo userInfo = authenticator.refreshToken(token);
-        String newCentralToken = (String)userInfo.getAdditionalInfo().get("token");
+        String newCentralToken = (String)userInfo.getAdditionalInfo().getOrDefault("token", userInfo.getToken());
         userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
         validateCentralTokenCreated(newCentralToken);
 

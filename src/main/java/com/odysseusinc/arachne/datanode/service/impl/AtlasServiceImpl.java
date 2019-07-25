@@ -35,8 +35,10 @@ import com.odysseusinc.arachne.datanode.dto.serialize.PageModule;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthRequestInterceptor;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthSchema;
@@ -89,6 +91,7 @@ public class AtlasServiceImpl implements AtlasService {
     private final ArachneHttpClientBuilder arachneHttpClientBuilder;
     private final AtlasRepository atlasRepository;
     private final CentralSystemClient centralSystemClient;
+    private final DataNodeService dataNodeService;
     private HttpHeaders headers;
 
     private Map<Atlas, ? extends AtlasClient> atlasClientPool = new ConcurrentHashMap<>();
@@ -98,12 +101,14 @@ public class AtlasServiceImpl implements AtlasService {
     public AtlasServiceImpl(GenericConversionService genericConversionService,
                             AtlasRepository atlasRepository,
                             CentralSystemClient centralSystemClient,
-                            ArachneHttpClientBuilder arachneHttpClientBuilder) {
+                            ArachneHttpClientBuilder arachneHttpClientBuilder,
+                            DataNodeService dataNodeService) {
 
         this.conversionService = genericConversionService;
         this.atlasRepository = atlasRepository;
         this.centralSystemClient = centralSystemClient;
         this.arachneHttpClientBuilder = arachneHttpClientBuilder;
+        this.dataNodeService = dataNodeService;
     }
 
     @Override
@@ -209,7 +214,11 @@ public class AtlasServiceImpl implements AtlasService {
 
         Atlas atlas = atlasRepository.findOne(atlasId);
         atlasRepository.delete(atlas.getId());
-        centralSystemClient.deleteAtlas(atlas.getCentralId());
+
+        //TODO postpone delete request
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            centralSystemClient.deleteAtlas(atlas.getCentralId());
+        }
         atlasClientPool.remove(atlas);
     }
 
@@ -272,7 +281,14 @@ public class AtlasServiceImpl implements AtlasService {
     private AtlasShortDTO syncWithCentral(Atlas atlas) {
 
         AtlasShortDTO atlasShortDTO = conversionService.convert(atlas, AtlasShortDTO.class);
-        return centralSystemClient.updateAtlasInfo(atlasShortDTO);
+        try {
+            if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+                atlasShortDTO = centralSystemClient.updateAtlasInfo(atlasShortDTO);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to sync Atlas {} with Central, {}", atlas.getName(), e.getMessage());
+        }
+        return atlasShortDTO;
     }
 
     private <T extends AtlasClient> T getOrCreate(Atlas atlas) {

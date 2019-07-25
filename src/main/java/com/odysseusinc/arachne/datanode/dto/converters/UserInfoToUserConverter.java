@@ -43,7 +43,7 @@ public class UserInfoToUserConverter implements Converter<UserInfo, User>{
 
         User user = new User();
         user.setId(UserIdUtils.uuidToId((String) source.getAdditionalInfo().get("id")));
-        user.setUsername((String) source.getAdditionalInfo().get("username"));
+        user.setUsername((String) source.getAdditionalInfo().getOrDefault("username", source.getUsername()));
         user.setEmail((String) source.getAdditionalInfo().get("email"));
         user.setFirstName((String) source.getAdditionalInfo().get("firstName"));
         user.setLastName((String) source.getAdditionalInfo().get("lastName"));

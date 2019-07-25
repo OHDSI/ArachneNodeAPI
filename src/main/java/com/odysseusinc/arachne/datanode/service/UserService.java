@@ -58,4 +58,6 @@ public interface UserService extends UserDetailsService {
     User addUserFromCentral(User user, Long centralId);
 
     User getUser(Principal principal) throws PermissionDeniedException;
+
+    void syncUsers();
 }

@@ -160,6 +160,10 @@ entities:
   scheduler:
     checkListRequestsInterval: 10000
     checkRequestInterval: 10000
+central:
+  scheduler:
+    checkingInterval: 60000
+
 jasypt:
   encryptor:
     password:
