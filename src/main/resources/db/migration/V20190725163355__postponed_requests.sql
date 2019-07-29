@@ -7,5 +7,6 @@ CREATE TABLE IF NOT EXISTS postponed_requests (
 	reason VARCHAR,
 	created_at TIMESTAMP,
 	last_send TIMESTAMP,
-	retries INT
+	retries INT,
+	tokem VARCHAR
 );
