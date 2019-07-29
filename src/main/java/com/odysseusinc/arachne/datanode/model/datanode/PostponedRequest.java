@@ -32,13 +32,16 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import org.springframework.data.annotation.CreatedDate;
 
 @Entity
 @Table(name = "postponed_requests")
 public class PostponedRequest {
 
     @Id
-    @SequenceGenerator(name = "postponed_requests_id_seq", sequenceName = "postponed_requests_id_seq")
+    @SequenceGenerator(name = "postponed_requests_id_seq", sequenceName = "postponed_requests_id_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "postponed_requests_id_seq")
     private Long id;
 
@@ -58,11 +61,20 @@ public class PostponedRequest {
     @Column(name = "reason")
     private String reason;
 
-    @Column(name = "last_sent")
+    @Column(name = "last_send")
+    @Temporal(TemporalType.TIMESTAMP)
     private Date lastSent;
+
+    @Column(name = "created_at", updatable = false)
+    @CreatedDate
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt;
 
     @Column(name = "retries")
     private Integer retries;
+
+    @Column(name = "token")
+    private String token;
 
     public Long getId() {
 
@@ -142,5 +154,25 @@ public class PostponedRequest {
     public void setRetries(Integer retries) {
 
         this.retries = retries;
+    }
+
+    public Date getCreatedAt() {
+
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+
+        this.createdAt = createdAt;
+    }
+
+    public String getToken() {
+
+        return token;
+    }
+
+    public void setToken(String token) {
+
+        this.token = token;
     }
 }

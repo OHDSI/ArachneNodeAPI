@@ -191,3 +191,6 @@ submission:
   result:
     files:
       exclusions:
+postponed:
+  retry:
+    interval: 3600000

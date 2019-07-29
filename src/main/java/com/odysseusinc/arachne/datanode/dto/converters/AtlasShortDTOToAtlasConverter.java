@@ -22,33 +22,27 @@
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
-import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
-import org.hibernate.Hibernate;
+import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
+import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
-public class DataSourceDTOToDataSourceConverter implements Converter<CommonDataSourceDTO, DataSource> {
+public class AtlasShortDTOToAtlasConverter implements Converter<AtlasShortDTO, Atlas> {
 
-    private DataSourceRepository repository;
+    public AtlasShortDTOToAtlasConverter(GenericConversionService conversionService) {
 
-    public DataSourceDTOToDataSourceConverter(DataSourceRepository repository,
-                                              GenericConversionService conversionService) {
-
-        this.repository = repository;
         conversionService.addConverter(this);
     }
 
     @Override
-    @Transactional
-    public DataSource convert(CommonDataSourceDTO source) {
+    public Atlas convert(AtlasShortDTO source) {
 
-        DataSource dataSource = repository.getOne(source.getId());
-        Hibernate.initialize(dataSource);
-        return dataSource;
+        Atlas atlas = new Atlas();
+        atlas.setCentralId(source.getCentralId());
+        atlas.setName(source.getName());
+        atlas.setVersion(source.getVersion());
+        return atlas;
     }
 }

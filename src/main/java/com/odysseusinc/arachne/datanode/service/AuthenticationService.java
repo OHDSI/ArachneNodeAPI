@@ -16,25 +16,15 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
- * Created: Jul 25, 2019
+ * Created: Jul 29, 2019
  *
  */
 
-package com.odysseusinc.arachne.datanode.service.postpone.annotation;
+package com.odysseusinc.arachne.datanode.service;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import org.springframework.core.convert.converter.Converter;
+import javax.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
 
-/**
- * @author vkoulakov
- * @since 7/25/19.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Postponed {
-    String action();
-    String defaultReturnValue() default "null";
+public interface AuthenticationService {
+    Authentication authenticate(String authToken, HttpServletRequest httpRequest);
 }

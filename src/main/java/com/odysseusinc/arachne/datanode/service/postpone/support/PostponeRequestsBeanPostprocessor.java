@@ -29,21 +29,48 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.PostConstruct;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
+import org.springframework.context.ApplicationContext;
 
-public class PostponeRequestsBeanPostprocessor implements BeanPostProcessor {
+public class PostponeRequestsBeanPostprocessor extends AutowiredAnnotationBeanPostProcessor {
 
     private boolean proxyTargetClass;
 
     private PostponeInterceptor interceptor;
 
-    public PostponeRequestsBeanPostprocessor(boolean proxyTargetClass, PostponeInterceptor interceptor) {
+    private final ApplicationContext applicationContext;
 
+    private PostponedRegistry postponedRegistry;
+
+    public PostponeRequestsBeanPostprocessor(boolean proxyTargetClass,
+                                             ApplicationContext applicationContext,
+                                             PostponeInterceptor interceptor,
+                                             PostponedRegistry postponedRegistry) {
+
+        super();
         this.proxyTargetClass = proxyTargetClass;
         this.interceptor = interceptor;
+        this.applicationContext = applicationContext;
+        this.postponedRegistry = postponedRegistry;
+    }
+
+    @PostConstruct
+    public void init() {
+
+        if (interceptor == null) {
+            synchronized (applicationContext) {
+                interceptor = applicationContext.getBean(PostponeInterceptor.class);
+            }
+        }
+        if (postponedRegistry == null) {
+            synchronized (applicationContext) {
+                postponedRegistry = applicationContext.getBean(PostponedRegistry.class);
+            }
+        }
     }
 
     @Override
@@ -54,6 +81,9 @@ public class PostponeRequestsBeanPostprocessor implements BeanPostProcessor {
         Object result = bean;
 
         if (!annotatedMethods.isEmpty()) {
+            init();
+            annotatedMethods.forEach(m -> postponedRegistry.register(type, bean, m));
+
             ProxyFactory proxyFactory = new ProxyFactory(bean);
             proxyFactory.setProxyTargetClass(proxyTargetClass);
             proxyFactory.addAdvice((MethodInterceptor) invocation -> {
@@ -63,20 +93,16 @@ public class PostponeRequestsBeanPostprocessor implements BeanPostProcessor {
                         Objects.equals(m.getName(), method.getName())
                                 && Objects.equals(m.getReturnType(), method.getReturnType())
                                 && Arrays.equals(m.getParameterTypes(), method.getParameterTypes())).findFirst();
-                return originalMethod
-                        .map(m -> interceptor.invokeAsPostponed(type, bean, method, args))
-                        .orElse(method.invoke(bean, args));
+                if (originalMethod.isPresent()) {
+                    return interceptor.invokeAsPostponed(type, bean, method, args);
+                } else {
+                    return method.invoke(bean, args);
+                }
             });
             result = proxyFactory.getProxy();
         }
 
         return result;
-    }
-
-    @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-
-        return bean;
     }
 
 }

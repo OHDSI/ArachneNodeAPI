@@ -29,6 +29,8 @@ import com.odysseusinc.arachne.datanode.model.user.User;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface UserService extends UserDetailsService {
@@ -55,9 +57,12 @@ public interface UserService extends UserDetailsService {
 
     void remove(Long id) throws NotExistException;
 
+    void unlinkUserOnCentral(User user);
+
     User addUserFromCentral(User user, Long centralId);
 
     User getUser(Principal principal) throws PermissionDeniedException;
 
     void syncUsers();
+
 }

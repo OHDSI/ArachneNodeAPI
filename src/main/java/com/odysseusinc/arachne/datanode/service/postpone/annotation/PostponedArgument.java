@@ -16,7 +16,7 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
- * Created: Jul 25, 2019
+ * Created: Jul 26, 2019
  *
  */
 
@@ -30,11 +30,20 @@ import org.springframework.core.convert.converter.Converter;
 
 /**
  * @author vkoulakov
- * @since 7/25/19.
+ * @since 7/26/19.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Postponed {
-    String action();
-    String defaultReturnValue() default "null";
+@Target({ElementType.PARAMETER, ElementType.TYPE_PARAMETER})
+public @interface PostponedArgument {
+    Class<? extends Converter> serializer() default DEFAULT_CONVERTER.class;
+    Class<? extends Converter> deserializer() default DEFAULT_CONVERTER.class;
+
+    final class DEFAULT_CONVERTER implements Converter{
+
+        @Override
+        public Object convert(Object o) {
+
+            return o;
+        }
+    }
 }

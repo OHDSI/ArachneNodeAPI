@@ -22,19 +22,30 @@
 
 package com.odysseusinc.arachne.datanode.service.postpone.support;
 
+import static java.util.Objects.requireNonNull;
+
 import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.postpone.PostponeService;
 import com.odysseusinc.arachne.datanode.service.postpone.annotation.Postponed;
+import com.odysseusinc.arachne.datanode.service.postpone.annotation.PostponedArgument;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ReflectionUtils;
 
 @Component
 public class PostponeInterceptor {
@@ -43,12 +54,18 @@ public class PostponeInterceptor {
 
     private final DataNodeService dataNodeService;
     private final PostponeService postponeService;
+    private final ApplicationContext applicationContext;
+    private final PostponedRegistry postponedRegistry;
 
     public PostponeInterceptor(DataNodeService dataNodeService,
-                               PostponeService postponeService) {
+                               PostponeService postponeService,
+                               ApplicationContext applicationContext,
+                               PostponedRegistry postponedRegistry) {
 
         this.dataNodeService = dataNodeService;
         this.postponeService = postponeService;
+        this.applicationContext = applicationContext;
+        this.postponedRegistry = postponedRegistry;
     }
 
     public Object invokeAsPostponed(Class type, Object bean, Method method, Object[] args) {
@@ -61,15 +78,35 @@ public class PostponeInterceptor {
                 throw new RuntimeException(e);
             }
         } else {
-            Postponed annotation = method.getAnnotation(Postponed.class);
+            Postponed postponed = method.getAnnotation(Postponed.class);
+            if (Objects.isNull(postponed)) {
+                Method instanceMethod = ReflectionUtils.findMethod(bean.getClass(), method.getName(), method.getParameterTypes());
+                postponed = instanceMethod.getDeclaredAnnotation(Postponed.class);
+            }
+            PostponedRegistry.PostponedMethodInfo methodInfo = postponedRegistry.getPostponedMethodInfo(type, postponed.action());
             try {
-                postponeService.saveRequest(type, annotation.action(), args);
+                Object[] vals = serializeArguments(methodInfo, args);
+                postponeService.saveRequest(type, postponed.action(), vals);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            String returnValue = annotation.defaultReturnValue();
+            String returnValue = postponed.defaultReturnValue();
             ExpressionParser parser = new SpelExpressionParser();
             return parser.parseExpression(returnValue).getValue();
         }
+    }
+
+    private Object[] serializeArguments(PostponedRegistry.PostponedMethodInfo methodInfo, Object[] args) {
+
+        Object[] result = new Object[args.length];
+        final List<Converter> serializers = methodInfo.getParameters().stream()
+                .map(PostponedRegistry.PostponedParamInfo::getSerializer)
+                .collect(Collectors.toList());
+
+        for(int i = 0; i < args.length; i++) {
+            result[i] = serializers.get(i).convert(args[i]);
+        }
+
+        return result;
     }
 }

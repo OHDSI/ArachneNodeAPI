@@ -28,7 +28,6 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import com.google.common.base.Functions;
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCountryDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeCreationResponseDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
@@ -39,20 +38,18 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.commons.types.SuggestionTarget;
-import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
-import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
-import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -70,6 +67,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     protected CentralClient centralClient;
     protected CentralSystemClient centralSystemClient;
     protected final ApplicationContext applicationContext;
+    protected DataNodeService dataNodeService;
 
     @Value("${arachne.token.header}")
     private String authHeader;
@@ -88,12 +86,17 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
 
         centralClient = applicationContext.getBean(CentralClient.class);
         centralSystemClient = applicationContext.getBean(CentralSystemClient.class);
+        dataNodeService = applicationContext.getBean(DataNodeService.class);
     }
 
     @Override
     public JsonResult<CommonAuthMethodDTO> getAuthMethod() {
 
-        return centralClient.getAuthMethod();
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            return centralClient.getAuthMethod();
+        } else {
+            return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+        }
     }
 
     @Override

@@ -22,23 +22,49 @@
 
 package com.odysseusinc.arachne.datanode.service.postpone.impl;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odysseusinc.arachne.datanode.model.datanode.PostponedRequest;
 import com.odysseusinc.arachne.datanode.model.datanode.PostponedRequestState;
 import com.odysseusinc.arachne.datanode.repository.PostponedRequestRepository;
+import com.odysseusinc.arachne.datanode.service.AuthenticationService;
 import com.odysseusinc.arachne.datanode.service.postpone.PostponeService;
+import com.odysseusinc.arachne.datanode.service.postpone.support.PostponedRegistry;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.reflect.Method;
+import java.text.MessageFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class PostponeServiceImpl implements PostponeService {
+public class PostponeServiceImpl implements PostponeService, InitializingBean {
 
+    private static final Logger log = LoggerFactory.getLogger(PostponeService.class);
+    private ApplicationContext applicationContext;
     private final PostponedRequestRepository requestRepository;
+    private final PostponedRegistry registry;
+    private AuthenticationService authenticationService;
 
-    public PostponeServiceImpl(PostponedRequestRepository requestRepository) {
+    public PostponeServiceImpl(ApplicationContext applicationContext,
+                               PostponedRequestRepository requestRepository,
+                               PostponedRegistry registry) {
+
+        this.applicationContext = applicationContext;
 
         this.requestRepository = requestRepository;
+        this.registry = registry;
     }
 
     @Override
@@ -47,12 +73,128 @@ public class PostponeServiceImpl implements PostponeService {
         PostponedRequest request = new PostponedRequest();
         request.setAction(action);
         request.setObjectClass(type.getName());
+        request.setCreatedAt(new Date());
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
+            if (credentials instanceof String) {
+                request.setToken(credentials.toString());
+            }
+        }
         try(StringWriter writer = new StringWriter()) {
-            ObjectMapper mapper = new ObjectMapper();
+            ObjectMapper mapper = resolveObjectMapper();
             mapper.writeValue(writer, args);
             request.setArgs(writer.toString());
         }
         request.setState(PostponedRequestState.POSTPONED);
         return requestRepository.save(request);
+    }
+
+    private ObjectMapper resolveObjectMapper() {
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.OBJECT_AND_NON_CONCRETE, JsonTypeInfo.As.PROPERTY);
+        return mapper;
+    }
+
+    @Override
+    @Async
+    public void executePostponedRequests() {
+
+        log.info("Starting execution of postponed requests");
+        List<PostponedRequest> requests = requestRepository.findAllByStateOrderByCreatedAt(PostponedRequestState.POSTPONED);
+        executeRequests(requests);
+        log.info("Execution of {} postponed requests has finished", requests.size());
+    }
+
+    @Override
+    @Async
+    public void retryFailedRequests() {
+
+        log.info("Retrying to execute previously failed postponed requests");
+        List<PostponedRequest> requests = requestRepository.findAllByStateOrderByCreatedAt(PostponedRequestState.SENT_ERROR);
+        executeRequests(requests);
+        log.info("Retrying of {} postponed requests finished", requests.size());
+    }
+
+    protected void executeRequests(List<PostponedRequest> requests) {
+
+        requests.forEach(r -> {
+            try {
+                if (Objects.nonNull(r.getToken())) {
+                    authenticate(r.getToken());
+                }
+                Class<?> serviceClass = Class.forName(r.getObjectClass());
+                PostponedRegistry.PostponedMethodInfo methodInfo = registry.getPostponedMethodInfo(serviceClass, r.getAction());
+                if (Objects.nonNull(methodInfo)) {
+                    Method method = methodInfo.getMethod();
+                    String args = r.getArgs();
+                    ObjectMapper mapper = resolveObjectMapper();
+                    Object[] argValues = mapper.readValue(args, Object[].class);
+                    Object bean = methodInfo.getBean();
+                    if (Objects.isNull(bean)) {
+                        throw new IllegalArgumentException(MessageFormat.format("Bean of type <{0}> not found in context", serviceClass));
+                    }
+                    if (log.isDebugEnabled()) {
+                        int attempt = getRetries(r) + 1;
+                        log.debug("Executing {}:{}, attempt #: {}", serviceClass, method.getName(), attempt);
+                    }
+                    method.invoke(bean, deserializeArguments(methodInfo, argValues));
+                    completeRequest(r);
+                } else {
+                    throw new IllegalArgumentException("Request method info not found in registry");
+                }
+            } catch (Exception e) {
+                log.error("Failed to execute postponed request {}/{}", r.getObjectClass(), r.getAction(), e);
+                failAttempt(r, e);
+            }
+        });
+    }
+
+    private void authenticate(String token) {
+
+        Authentication authentication = authenticationService.authenticate(token, null);
+        if (Objects.nonNull(authentication) && Objects.isNull(SecurityContextHolder.getContext().getAuthentication())) {
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+    }
+
+    private int getRetries(PostponedRequest request) {
+        return Objects.nonNull(request.getRetries()) ? request.getRetries() : 0;
+    }
+
+    private void failAttempt(PostponedRequest request, Throwable reason) {
+
+        int retries = getRetries(request);
+        request.setLastSent(new Date());
+        request.setRetries(retries + 1);
+        request.setReason(reason.getMessage());
+        request.setState(PostponedRequestState.SENT_ERROR);
+        requestRepository.save(request);
+    }
+
+    private void completeRequest(PostponedRequest request) {
+
+        request.setLastSent(new Date());
+        request.setState(PostponedRequestState.SENT);
+        requestRepository.save(request);
+    }
+
+    private Object[] deserializeArguments(PostponedRegistry.PostponedMethodInfo methodInfo, Object[] args) {
+
+        Object[] result = new Object[args.length];
+        final List<Converter> deserializers = methodInfo.getParameters().stream()
+                .map(PostponedRegistry.PostponedParamInfo::getDeserializer)
+                .collect(Collectors.toList());
+        for(int i = 0; i < args.length; i++) {
+            result[i] = deserializers.get(i).convert(args[i]);
+        }
+        return result;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+
+        authenticationService = applicationContext.getBean(AuthenticationService.class);
     }
 }

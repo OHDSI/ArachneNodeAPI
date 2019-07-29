@@ -23,7 +23,11 @@
 package com.odysseusinc.arachne.datanode.repository;
 
 import com.odysseusinc.arachne.datanode.model.datanode.PostponedRequest;
+import com.odysseusinc.arachne.datanode.model.datanode.PostponedRequestState;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PostponedRequestRepository extends JpaRepository<PostponedRequest, Long> {
+
+    List<PostponedRequest> findAllByStateOrderByCreatedAt(PostponedRequestState state);
 }

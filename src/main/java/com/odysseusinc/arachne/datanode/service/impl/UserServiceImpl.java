@@ -26,7 +26,8 @@ import static com.odysseusinc.arachne.datanode.security.RolesConstants.ROLE_ADMI
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
-import com.odysseusinc.arachne.datanode.dto.converters.CommonUserDTOToUserConverter;
+import com.odysseusinc.arachne.datanode.dto.converters.UserDTOToUserConverter;
+import com.odysseusinc.arachne.datanode.dto.converters.UserToUserDTOConverter;
 import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
@@ -39,6 +40,9 @@ import com.odysseusinc.arachne.datanode.repository.UserRepository;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
+import com.odysseusinc.arachne.datanode.service.events.user.UserDeletedEvent;
+import com.odysseusinc.arachne.datanode.service.postpone.annotation.Postponed;
+import com.odysseusinc.arachne.datanode.service.postpone.annotation.PostponedArgument;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +53,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -79,7 +84,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private DataNodeService dataNodeService;
     @Autowired
-    private CommonUserDTOToUserConverter commonUserDTOToUserConverter;
+    private ApplicationEventPublisher eventPublisher;
 
     @Override
     public void syncUsers() {
@@ -215,12 +220,17 @@ public class UserServiceImpl implements UserService {
         final User user = get(id);
         userRepository.delete(id);
 
-        //TODO postpone delete request
-        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
-            dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
-                    centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
-            );
-        }
+        eventPublisher.publishEvent(new UserDeletedEvent(this, user));
+    }
+
+    @Override
+    @Postponed(action = "remove")
+    public void unlinkUserOnCentral(@PostponedArgument(serializer = UserToUserDTOConverter.class,
+            deserializer = UserDTOToUserConverter.class) User user) {
+
+        dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
+                centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
+        );
     }
 
     @Override

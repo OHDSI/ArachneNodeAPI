@@ -16,33 +16,47 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: December 19, 2016
+ * Created: April 20, 2017
  *
  */
 
-package com.odysseusinc.arachne.datanode.service.impl;
+package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
-import com.odysseusinc.arachne.datanode.service.DataNodeService;
-import com.odysseusinc.arachne.datanode.util.CentralUtil;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
-public class CentralIntegrationServiceImpl extends BaseCentralIntegrationServiceImpl<DataSource, CommonDataSourceDTO>
-        implements CentralIntegrationService {
+@Component
+public class CommonDataSourceDTOToDataSourceConverter implements Converter<CommonDataSourceDTO, DataSource>, InitializingBean {
+
+    private GenericConversionService conversionService;
 
     @Autowired
-    public CentralIntegrationServiceImpl(
-            GenericConversionService conversionService,
-            CentralUtil centralUtil,
-            ApplicationContext applicationContext) {
+    public CommonDataSourceDTOToDataSourceConverter(GenericConversionService conversionService) {
 
-        super(conversionService, centralUtil, applicationContext);
+        this.conversionService = conversionService;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+
+        conversionService.addConverter(this);
+    }
+
+    @Override
+    public DataSource convert(CommonDataSourceDTO commonDataSourceDTO) {
+
+        if (commonDataSourceDTO == null) {
+            return null;
+        }
+        DataSource dataSource = new DataSource();
+        dataSource.setName(commonDataSourceDTO.getName());
+        return dataSource;
+
     }
 
 }

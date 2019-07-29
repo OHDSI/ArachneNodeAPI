@@ -24,8 +24,14 @@ package com.odysseusinc.arachne.datanode.service.postpone;
 
 import com.odysseusinc.arachne.datanode.model.datanode.PostponedRequest;
 import java.io.IOException;
+import org.springframework.scheduling.annotation.Async;
 
 public interface PostponeService {
 
     PostponedRequest saveRequest(Class type, String action, Object[] args) throws IOException;
+
+    void executePostponedRequests();
+
+    @Async
+    void retryFailedRequests();
 }

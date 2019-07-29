@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS postponed_requests (
 	args VARCHAR,
 	state VARCHAR,
 	reason VARCHAR,
+	created_at TIMESTAMP,
 	last_send TIMESTAMP,
 	retries INT
 );

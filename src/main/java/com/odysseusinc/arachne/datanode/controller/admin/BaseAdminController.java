@@ -32,10 +32,12 @@ import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.AnalysisRepository;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
@@ -43,6 +45,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -68,6 +71,7 @@ public abstract class BaseAdminController extends BaseController {
     protected AtlasService atlasService;
     protected AnalysisRepository analysisRepository;
     protected AnalysisService analysisService;
+    protected DataNodeService dataNodeService;
 
     @Autowired
     public BaseAdminController(
@@ -75,13 +79,15 @@ public abstract class BaseAdminController extends BaseController {
             GenericConversionService conversionService,
             AtlasService atlasService,
             AnalysisRepository analysisRepository,
-            AnalysisService analysisService
+            AnalysisService analysisService,
+            DataNodeService dataNodeService
     ) {
         super(userService);
         this.conversionService = conversionService;
         this.atlasService = atlasService;
         this.analysisRepository = analysisRepository;
         this.analysisService = analysisService;
+        this.dataNodeService = dataNodeService;
         initProps();
     }
 
@@ -138,12 +144,14 @@ public abstract class BaseAdminController extends BaseController {
             @PathVariable String uuid) {
 
         JsonResult<UserDTO> result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-        userService
-                .findByUsername(principal.getName())
-                .ifPresent(loginedUser -> {
-                    final User user = userService.addUserFromCentral(loginedUser, UserIdUtils.uuidToId(uuid));
-                    result.setResult(conversionService.convert(user, UserDTO.class));
-                });
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            userService
+                    .findByUsername(principal.getName())
+                    .ifPresent(loginedUser -> {
+                        final User user = userService.addUserFromCentral(loginedUser, UserIdUtils.uuidToId(uuid));
+                        result.setResult(conversionService.convert(user, UserDTO.class));
+                    });
+        }
         return result;
     }
 

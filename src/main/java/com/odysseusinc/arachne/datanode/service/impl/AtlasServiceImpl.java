@@ -31,6 +31,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
+import com.odysseusinc.arachne.datanode.dto.converters.AtlasShortDTOToAtlasConverter;
+import com.odysseusinc.arachne.datanode.dto.converters.AtlasToAtlasShortDTOConverter;
 import com.odysseusinc.arachne.datanode.dto.serialize.PageModule;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
@@ -50,6 +52,10 @@ import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasLoginClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.TokenDecoder;
 import com.odysseusinc.arachne.datanode.service.client.decoders.ByteArrayDecoder;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
+import com.odysseusinc.arachne.datanode.service.events.atlas.AtlasDeletedEvent;
+import com.odysseusinc.arachne.datanode.service.events.atlas.AtlasUpdatedEvent;
+import com.odysseusinc.arachne.datanode.service.postpone.annotation.Postponed;
+import com.odysseusinc.arachne.datanode.service.postpone.annotation.PostponedArgument;
 import feign.Client;
 import feign.Feign;
 import feign.form.FormEncoder;
@@ -73,6 +79,7 @@ import org.ohdsi.hydra.Hydra;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -92,6 +99,7 @@ public class AtlasServiceImpl implements AtlasService {
     private final AtlasRepository atlasRepository;
     private final CentralSystemClient centralSystemClient;
     private final DataNodeService dataNodeService;
+    private final ApplicationEventPublisher eventPublisher;
     private HttpHeaders headers;
 
     private Map<Atlas, ? extends AtlasClient> atlasClientPool = new ConcurrentHashMap<>();
@@ -102,13 +110,15 @@ public class AtlasServiceImpl implements AtlasService {
                             AtlasRepository atlasRepository,
                             CentralSystemClient centralSystemClient,
                             ArachneHttpClientBuilder arachneHttpClientBuilder,
-                            DataNodeService dataNodeService) {
+                            DataNodeService dataNodeService,
+                            ApplicationEventPublisher eventPublisher) {
 
         this.conversionService = genericConversionService;
         this.atlasRepository = atlasRepository;
         this.centralSystemClient = centralSystemClient;
         this.arachneHttpClientBuilder = arachneHttpClientBuilder;
         this.dataNodeService = dataNodeService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -155,7 +165,7 @@ public class AtlasServiceImpl implements AtlasService {
         Atlas atlas = atlasRepository.findOne(atlasId);
         atlas.setVersion(version);
 
-        AtlasShortDTO updatedDTO = syncWithCentral(atlas);
+        AtlasShortDTO updatedDTO = updateOnCentral(atlas);
 
         atlas.setCentralId(updatedDTO.getCentralId());
 
@@ -201,7 +211,7 @@ public class AtlasServiceImpl implements AtlasService {
         Atlas updated = atlasRepository.saveAndFlush(existing);
 
         if (shouldSyncWithCentral) {
-            syncWithCentral(updated);
+            eventPublisher.publishEvent(new AtlasUpdatedEvent(this, updated));
         }
 
         atlasClientPool.replace(updated, buildAtlasClient(updated));
@@ -215,11 +225,18 @@ public class AtlasServiceImpl implements AtlasService {
         Atlas atlas = atlasRepository.findOne(atlasId);
         atlasRepository.delete(atlas.getId());
 
-        //TODO postpone delete request
-        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+        eventPublisher.publishEvent(new AtlasDeletedEvent(this, atlas));
+
+        atlasClientPool.remove(atlas);
+    }
+
+    @Override
+    @Postponed(action = "delete")
+    public void deleteFromCentral(@PostponedArgument(serializer = AtlasToAtlasShortDTOConverter.class, deserializer = AtlasShortDTOToAtlasConverter.class) Atlas atlas) {
+
+        if (Objects.nonNull(atlas) && Objects.nonNull(atlas.getId())) {
             centralSystemClient.deleteAtlas(atlas.getCentralId());
         }
-        atlasClientPool.remove(atlas);
     }
 
     @Override
@@ -278,7 +295,10 @@ public class AtlasServiceImpl implements AtlasService {
         return data;
     }
 
-    private AtlasShortDTO syncWithCentral(Atlas atlas) {
+    @Override
+    @Postponed(action = "update")
+    public AtlasShortDTO updateOnCentral(@PostponedArgument(serializer = AtlasToAtlasShortDTOConverter.class,
+            deserializer = AtlasShortDTOToAtlasConverter.class) Atlas atlas) {
 
         AtlasShortDTO atlasShortDTO = conversionService.convert(atlas, AtlasShortDTO.class);
         try {

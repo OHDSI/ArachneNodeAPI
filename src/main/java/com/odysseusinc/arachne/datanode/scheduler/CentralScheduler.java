@@ -27,6 +27,7 @@ import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.service.events.FunctionalModeChangedEvent;
+import com.odysseusinc.arachne.datanode.service.postpone.PostponeService;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,12 +45,17 @@ public class CentralScheduler implements ApplicationListener<FunctionalModeChang
     private final CentralSystemClient systemClient;
     private final DataNodeService dataNodeService;
     private final UserService userService;
+    private final PostponeService postponeService;
 
-    public CentralScheduler(CentralSystemClient systemClient, DataNodeService dataNodeService, UserService userService) {
+    public CentralScheduler(CentralSystemClient systemClient,
+                            DataNodeService dataNodeService,
+                            UserService userService,
+                            PostponeService postponeService) {
 
         this.systemClient = systemClient;
         this.dataNodeService = dataNodeService;
         this.userService = userService;
+        this.postponeService = postponeService;
     }
 
     @Scheduled(fixedRateString = "${central.scheduler.checkingInterval}")
@@ -69,11 +75,20 @@ public class CentralScheduler implements ApplicationListener<FunctionalModeChang
         }
     }
 
+    @Scheduled(fixedRateString = "${postponed.retry.interval}")
+    public void retryFailedPostponedRequests() {
+
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            postponeService.retryFailedRequests();
+        }
+    }
+
     @Override
     public void onApplicationEvent(FunctionalModeChangedEvent event) {
 
         if (Objects.equals(event.getMode(), FunctionalMode.NETWORK)) {
             userService.syncUsers();
+            postponeService.executePostponedRequests();
         }
     }
 }
