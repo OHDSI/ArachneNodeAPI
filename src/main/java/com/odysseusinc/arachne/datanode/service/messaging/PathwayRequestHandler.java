@@ -79,35 +79,35 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
             JsonNode design = atlasService.<AtlasClient2_7, JsonNode>execute(origin, atlasClient -> atlasClient.exportPathwayDesign(entity.getLocalId()));
             List<MultipartFile> files = new ArrayList<>();
             try {
-							String prettyPrint;
-							try {
-								ObjectMapper mapper = new ObjectMapper();
-								prettyPrint = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(design);
-							} catch (JsonProcessingException e) {
-								LOGGER.error("JSON Pretty print failed.");
-								throw new RuntimeJsonMappingException("JSON Pretty print failed.");
-							}
-							// Pathways design
-							MultipartFile designFile = new MockMultipartFile(DESIGN_FILENAME, DESIGN_FILENAME, MediaType.APPLICATION_JSON_VALUE,
-											prettyPrint.getBytes());
-							// Target cohorts
-							List<CohortDefinition> cohortDefinitions = new ArrayList<>();
-							JsonNode targetCohortsNode = design.get("targetCohorts");
-							if (targetCohortsNode instanceof ArrayNode) {
-								cohortDefinitions.addAll(addCohorts(origin, files, (ArrayNode) targetCohortsNode));
-							}
-							// Event cohorts
-							JsonNode eventCohortsNode = design.get("eventCohorts");
-							if (eventCohortsNode instanceof ArrayNode) {
-								cohortDefinitions.addAll(addCohorts(origin, files, (ArrayNode) eventCohortsNode));
-							}
-							files.add(designFile);
-							files.add(getRunner(cohortDefinitions));
-							return files.stream().filter(Objects::nonNull).collect(Collectors.toList());
-						} catch (IOException e) {
+				String prettyPrint;
+				try {
+					ObjectMapper mapper = new ObjectMapper();
+					prettyPrint = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(design);
+				} catch (JsonProcessingException e) {
+					LOGGER.error("JSON Pretty print failed.");
+					throw new RuntimeJsonMappingException("JSON Pretty print failed.");
+				}
+				// Pathways design
+				MultipartFile designFile = new MockMultipartFile(DESIGN_FILENAME, DESIGN_FILENAME, MediaType.APPLICATION_JSON_VALUE,
+								prettyPrint.getBytes());
+				// Target cohorts
+				List<CohortDefinition> cohortDefinitions = new ArrayList<>();
+				JsonNode targetCohortsNode = design.get("targetCohorts");
+				if (targetCohortsNode instanceof ArrayNode) {
+					cohortDefinitions.addAll(addCohorts(origin, files, (ArrayNode) targetCohortsNode));
+				}
+				// Event cohorts
+				JsonNode eventCohortsNode = design.get("eventCohorts");
+				if (eventCohortsNode instanceof ArrayNode) {
+					cohortDefinitions.addAll(addCohorts(origin, files, (ArrayNode) eventCohortsNode));
+				}
+				files.add(designFile);
+				files.add(getRunner(cohortDefinitions));
+				return files.stream().filter(Objects::nonNull).collect(Collectors.toList());
+			} catch (IOException e) {
             	LOGGER.error(PATHWAY_BUILD_ERROR, e);
             	throw new RuntimeIOException(PATHWAY_BUILD_ERROR, e);
-						}
+            }
         }).orElse(null);
     }
 
