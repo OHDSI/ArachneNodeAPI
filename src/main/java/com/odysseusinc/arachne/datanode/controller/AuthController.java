@@ -105,8 +105,6 @@ public class AuthController {
             authMethod,
             new UsernamePasswordCredentials(request.getUsername(), request.getPassword())
         );
-        String centralToken = (String)userInfo.getAdditionalInfo().getOrDefault("token", userInfo.getToken());
-        validateCentralTokenCreated(centralToken);
         User centralUser = conversionService.convert(userInfo, User.class);
         userService.findByUsername(userInfo.getUsername()).orElseGet(() -> userService.createIfFirst(centralUser));
         userService.updateUserInfo(centralUser);
@@ -120,9 +118,7 @@ public class AuthController {
 
         String token = request.getHeader(tokenHeader);
         UserInfo userInfo = authenticator.refreshToken(token);
-        String newCentralToken = (String)userInfo.getAdditionalInfo().getOrDefault("token", userInfo.getToken());
         userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
-        validateCentralTokenCreated(newCentralToken);
 
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
     }
@@ -213,12 +209,5 @@ public class AuthController {
     public ArachnePasswordInfoDTO getPasswordPolicies() throws URISyntaxException {
 
         return integrationService.getPasswordInfo();
-    }
-
-    private void validateCentralTokenCreated(String centralToken) {
-
-        if (centralToken == null) {
-            throw new AuthException("central auth error");
-        }
     }
 }

@@ -62,12 +62,12 @@ authenticator:
           copyExpirationDate: true
         infoUrl: https://localhost:8080/api/v1/auth/me
         fieldsToExtract:
-          id: $.result.id
-          email: $.result.email
-          username: $.result.username
-          firstName: $.result.firstname
-          middleName: $.result.middlename
-          lastName: $.result.lastname
+          id: result.id
+          email: result.email
+          username: result.username
+          firstName: result.firstname
+          middleName: result.middlename
+          lastName: result.lastname
 security.method: rest-central
 security.jwt.token.secretKey: ${datanode.jwt.secret}
 security.jwt.token.validityInSeconds: ${datanode.jwt.expiration}
