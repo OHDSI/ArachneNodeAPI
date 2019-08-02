@@ -12,3 +12,9 @@ docker:
   host: tcp://149.56.25.6:2375
 executionEngine:
   host: execution_engine
+authenticator:
+  methods:
+    rest-central:
+      config:
+        url: https://portalcommunity:8091/api/v1/auth/login
+        infoUrl: https://portalcommunity:8091/api/v1/auth/me

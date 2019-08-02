@@ -16,30 +16,31 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
- * Created: Jul 26, 2019
+ * Created: Aug 2, 2019
  *
  */
 
-package com.odysseusinc.arachne.datanode.service.postpone.annotation;
+package com.odysseusinc.arachne.datanode.controller;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import org.springframework.core.convert.converter.Converter;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.PARAMETER, ElementType.TYPE_PARAMETER})
-public @interface PostponedArgument {
-    Class<? extends Converter> serializer() default DEFAULT_CONVERTER.class;
-    Class<? extends Converter> deserializer() default DEFAULT_CONVERTER.class;
+@RestController
+public class DataNodeController {
 
-    final class DEFAULT_CONVERTER implements Converter{
+    private final DataNodeService dataNodeService;
 
-        @Override
-        public Object convert(Object o) {
+    public DataNodeController(DataNodeService dataNodeService) {
 
-            return o;
-        }
+        this.dataNodeService = dataNodeService;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/api/v1/datanode/mode")
+    public FunctionalMode getDataNodeMode() {
+
+        return dataNodeService.getDataNodeMode();
     }
 }

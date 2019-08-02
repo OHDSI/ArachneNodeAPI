@@ -28,10 +28,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.springframework.core.convert.converter.Converter;
 
-/**
- * @author vkoulakov
- * @since 7/25/19.
- */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Postponed {

@@ -44,30 +44,9 @@ central:
 authenticator:
   methods:
     rest-central:
-      service: org.ohdsi.authenticator.service.rest.RestAuthService
       config:
         url: https://localhost:8080/api/v1/auth/login
-        bodyFormat: JSON
-        params:
-          username: username
-          password: password
-        loginSuccessCriteria:
-          status: OK
-          bodyProperty: '$[?(@.errorCode == 0)]'
-        token:
-          source: BODY
-          key: $.result.token
-          targetHeader: Arachne-Auth-Token
-          targetFormat: '%s'
-          copyExpirationDate: true
         infoUrl: https://localhost:8080/api/v1/auth/me
-        fieldsToExtract:
-          id: result.id
-          email: result.email
-          username: result.username
-          firstName: result.firstname
-          middleName: result.middlename
-          lastName: result.lastname
 security.method: rest-central
 security.jwt.token.secretKey: ${datanode.jwt.secret}
 security.jwt.token.validityInSeconds: ${datanode.jwt.expiration}
