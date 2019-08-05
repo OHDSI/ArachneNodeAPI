@@ -8,5 +8,5 @@ CREATE TABLE IF NOT EXISTS postponed_requests (
 	created_at TIMESTAMP,
 	last_send TIMESTAMP,
 	retries INT,
-	tokem VARCHAR
+	token VARCHAR
 );
