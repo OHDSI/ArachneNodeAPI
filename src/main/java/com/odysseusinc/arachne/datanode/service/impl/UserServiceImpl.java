@@ -168,13 +168,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(AuthException::new);
     }
 
-    @Override
-    public void setToken(User user, String token) {
-
-        user.setToken(token);
-        userRepository.save(user);
-    }
-
     @Transactional
     @Override
     public User createIfFirst(User centralUser) throws AlreadyExistsException {

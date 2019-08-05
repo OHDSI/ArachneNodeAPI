@@ -45,8 +45,6 @@ public interface UserService extends UserDetailsService {
 
     void deleteUser(String login);
 
-    void setToken(User user, String token);
-
     User createIfFirst(User centralUserDto) throws AlreadyExistsException;
 
     User updateUserInfo(User centralUserDto);

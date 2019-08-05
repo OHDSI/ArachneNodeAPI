@@ -61,9 +61,6 @@ public class User implements Serializable {
     private String lastName;
 
     @Column
-    private String token;
-
-    @Column
     private Boolean enabled;
 
     @ManyToMany(targetEntity = Role.class, fetch = FetchType.EAGER)
@@ -130,16 +127,6 @@ public class User implements Serializable {
     public void setRoles(List<Role> roles) {
 
         this.roles = roles;
-    }
-
-    public String getToken() {
-
-        return token;
-    }
-
-    public void setToken(String token) {
-
-        this.token = token;
     }
 
     public Boolean getEnabled() {
