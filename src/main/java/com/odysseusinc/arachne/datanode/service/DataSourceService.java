@@ -41,7 +41,11 @@ import org.springframework.transaction.annotation.Transactional;
 public interface DataSourceService {
     DataSource create(User owner, DataSource dataSource) throws NotExistException;
 
-    void createOnCentral(User owner, DataSource dataSource);
+    @Postponed(action = "create")
+    void createOnCentral(@PostponedArgument(serializer = UserToUserDTOConverter.class,
+            deserializer = UserDTOToUserConverter.class) User owner,
+                         @PostponedArgument(serializer = DataSourceToCommonDataSourceDTOConverter.class,
+                                 deserializer = DataSourceDTOToDataSourceConverter.class) DataSource dataSource);
 
     List<DataSource> findAllNotDeleted();
 
@@ -70,6 +74,7 @@ public interface DataSourceService {
 
     void removeKeytab(DataSource dataSource);
 
-    @Postponed(action = "unpublish", defaultReturnValue = "#{ new com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult() }")
+    @Postponed(action = "unpublish",
+            defaultReturnValue = "new com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult(T(com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode).NO_ERROR.getCode())")
     JsonResult unpublishAndDeleteOnCentral(Long dataSourceId);
 }

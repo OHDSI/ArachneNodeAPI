@@ -54,7 +54,6 @@ import com.odysseusinc.arachne.datanode.service.client.decoders.ByteArrayDecoder
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.service.events.atlas.AtlasDeletedEvent;
 import com.odysseusinc.arachne.datanode.service.events.atlas.AtlasUpdatedEvent;
-import com.odysseusinc.arachne.datanode.service.postpone.annotation.Postponed;
 import com.odysseusinc.arachne.datanode.service.postpone.annotation.PostponedArgument;
 import feign.Client;
 import feign.Feign;
@@ -231,7 +230,6 @@ public class AtlasServiceImpl implements AtlasService {
     }
 
     @Override
-    @Postponed(action = "delete")
     public void deleteFromCentral(@PostponedArgument(serializer = AtlasToAtlasShortDTOConverter.class, deserializer = AtlasShortDTOToAtlasConverter.class) Atlas atlas) {
 
         if (Objects.nonNull(atlas) && Objects.nonNull(atlas.getId())) {
@@ -296,7 +294,6 @@ public class AtlasServiceImpl implements AtlasService {
     }
 
     @Override
-    @Postponed(action = "update")
     public AtlasShortDTO updateOnCentral(@PostponedArgument(serializer = AtlasToAtlasShortDTOConverter.class,
             deserializer = AtlasShortDTOToAtlasConverter.class) Atlas atlas) {
 

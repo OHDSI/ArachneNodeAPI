@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.scheduling.annotation.Async;
@@ -56,6 +57,8 @@ public class PostponeServiceImpl implements PostponeService, InitializingBean {
     private final PostponedRequestRepository requestRepository;
     private final PostponedRegistry registry;
     private AuthenticationService authenticationService;
+    @Value("${postponed.retry.maxAttempts}")
+    private int maxAttempts;
 
     public PostponeServiceImpl(ApplicationContext applicationContext,
                                PostponedRequestRepository requestRepository,
@@ -166,10 +169,15 @@ public class PostponeServiceImpl implements PostponeService, InitializingBean {
     private void failAttempt(PostponedRequest request, Throwable reason) {
 
         int retries = getRetries(request);
+        if (maxAttempts > 0 && retries > maxAttempts) {
+            request.setReason(MessageFormat.format("Max attempts ({0}) has been reached", maxAttempts));
+            request.setState(PostponedRequestState.CANCELED);
+        } else {
+            request.setRetries(retries + 1);
+            request.setReason(reason.getMessage());
+            request.setState(PostponedRequestState.SENT_ERROR);
+        }
         request.setLastSent(new Date());
-        request.setRetries(retries + 1);
-        request.setReason(reason.getMessage());
-        request.setState(PostponedRequestState.SENT_ERROR);
         requestRepository.save(request);
     }
 

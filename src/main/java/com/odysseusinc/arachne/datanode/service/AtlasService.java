@@ -69,5 +69,6 @@ public interface AtlasService {
 
     byte[] hydrateAnalysis(JsonNode analysis, String packageName, String skeletonResource) throws IOException;
 
+    @Postponed(action = "update")
     AtlasShortDTO updateOnCentral(Atlas atlas);
 }

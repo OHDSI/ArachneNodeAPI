@@ -194,6 +194,7 @@ submission:
 postponed:
   retry:
     interval: 3600000
+    maxAttempts: 10
 authenticator:
   methods:
     rest-central:

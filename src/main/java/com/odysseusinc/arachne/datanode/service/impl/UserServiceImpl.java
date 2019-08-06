@@ -41,7 +41,6 @@ import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.events.user.UserDeletedEvent;
-import com.odysseusinc.arachne.datanode.service.postpone.annotation.Postponed;
 import com.odysseusinc.arachne.datanode.service.postpone.annotation.PostponedArgument;
 import java.security.Principal;
 import java.util.Collections;
@@ -217,7 +216,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Postponed(action = "remove")
     public void unlinkUserOnCentral(@PostponedArgument(serializer = UserToUserDTOConverter.class,
             deserializer = UserDTOToUserConverter.class) User user) {
 

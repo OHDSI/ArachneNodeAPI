@@ -80,7 +80,7 @@ public class PostponeInterceptor {
         } else {
             Postponed postponed = method.getAnnotation(Postponed.class);
             if (Objects.isNull(postponed)) {
-                Method instanceMethod = ReflectionUtils.findMethod(bean.getClass(), method.getName(), method.getParameterTypes());
+                Method instanceMethod = ReflectionUtils.findMethod(type, method.getName(), method.getParameterTypes());
                 postponed = instanceMethod.getDeclaredAnnotation(Postponed.class);
             }
             PostponedRegistry.PostponedMethodInfo methodInfo = postponedRegistry.getPostponedMethodInfo(type, postponed.action());

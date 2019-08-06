@@ -120,11 +120,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     @Override
-    @Postponed(action = "create")
-    public void createOnCentral(@PostponedArgument(serializer = UserToUserDTOConverter.class,
-                                                    deserializer = UserDTOToUserConverter.class) User owner,
-                                @PostponedArgument(serializer = DataSourceToCommonDataSourceDTOConverter.class,
-                                                    deserializer = DataSourceDTOToDataSourceConverter.class) DataSource dataSource) {
+    public void createOnCentral(User owner, DataSource dataSource) {
 
         AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
         CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
@@ -274,7 +270,6 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     @Override
-    @Postponed(action = "update")
     @Transactional(rollbackFor = Exception.class)
     public void updateOnCentral(@PostponedArgument(serializer = UserToUserDTOConverter.class,
             deserializer = UserDTOToUserConverter.class) User user,
@@ -330,7 +325,6 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     @Override
-    @Postponed(action = "unpublish", defaultReturnValue = "#{ new com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult() }")
     public JsonResult unpublishAndDeleteOnCentral(Long dataSourceId) {
 
         if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
