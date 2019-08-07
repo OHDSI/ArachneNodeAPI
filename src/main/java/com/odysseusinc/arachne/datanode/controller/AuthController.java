@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.controller;
 
+import static com.odysseusinc.arachne.datanode.util.RestUtils.requireNetworkMode;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
@@ -36,15 +37,18 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.user.UserInfoDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
+import com.odysseusinc.arachne.datanode.exception.BadRequestException;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
+import com.odysseusinc.arachne.datanode.util.RestUtils;
 import io.swagger.annotations.ApiOperation;
 import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
-
 import org.ohdsi.authenticator.model.UserInfo;
 import org.ohdsi.authenticator.service.Authenticator;
 import org.pac4j.core.credentials.UsernamePasswordCredentials;
@@ -76,6 +80,9 @@ public class AuthController {
     @Autowired
     private ConversionService conversionService;
 
+    @Autowired
+    private DataNodeService dataNodeService;
+
     @Value("${datanode.jwt.header}")
     private String tokenHeader;
 
@@ -93,6 +100,9 @@ public class AuthController {
     @Deprecated
     public JsonResult<CommonAuthMethodDTO> authMethod() {
 
+        if (!FunctionalMode.NETWORK.equals(dataNodeService.getDataNodeMode())) {
+            throw new BadRequestException();
+        }
         return integrationService.getAuthMethod();
     }
 
@@ -170,6 +180,7 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/user-management/professional-types", method = GET)
     public JsonResult<List<CommonProfessionalTypeDTO>> getProfessionalTypes() {
 
+        requireNetworkMode(dataNodeService.getDataNodeMode());
         return integrationService.getProfessionalTypes();
     }
 
@@ -182,6 +193,7 @@ public class AuthController {
 
     ) {
 
+        requireNetworkMode(dataNodeService.getDataNodeMode());
         return integrationService.getCountries(query, limit, includeId);
     }
 
@@ -194,6 +206,7 @@ public class AuthController {
             @RequestParam(value = "includeId", required = false) String includeId
     ) {
 
+        requireNetworkMode(dataNodeService.getDataNodeMode());
         return integrationService.getStateProvinces(countryId, query, limit, includeId);
     }
 
@@ -201,6 +214,7 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/auth/registration", method = RequestMethod.POST)
     public JsonResult<CommonUserDTO> register(@RequestBody CommonUserRegistrationDTO dto) {
 
+        requireNetworkMode(dataNodeService.getDataNodeMode());
         return integrationService.getRegisterUser(dto);
     }
 
@@ -208,6 +222,7 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/auth/password-policies", method = GET)
     public ArachnePasswordInfoDTO getPasswordPolicies() throws URISyntaxException {
 
+        requireNetworkMode(dataNodeService.getDataNodeMode());
         return integrationService.getPasswordInfo();
     }
 }

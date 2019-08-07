@@ -16,35 +16,29 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
- * Created: Aug 2, 2019
+ * Created: Aug 6, 2019
  *
  */
 
-package com.odysseusinc.arachne.datanode.controller;
+package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.datanode.dto.datanode.DataNodeModeDTO;
-import com.odysseusinc.arachne.datanode.service.DataNodeService;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Component;
 
-@RestController
-public class DataNodeController {
+@Component
+public class FunctionalModeToDataNodeModeDTOConverter implements Converter<FunctionalMode, DataNodeModeDTO> {
 
-    private final DataNodeService dataNodeService;
+    public FunctionalModeToDataNodeModeDTOConverter(GenericConversionService conversionService) {
 
-    private final GenericConversionService conversionService;
-
-    public DataNodeController(DataNodeService dataNodeService, GenericConversionService conversionService) {
-
-        this.dataNodeService = dataNodeService;
-        this.conversionService = conversionService;
+        conversionService.addConverter(this);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/api/v1/datanode/mode")
-    public DataNodeModeDTO getDataNodeMode() {
+    @Override
+    public DataNodeModeDTO convert(FunctionalMode source) {
 
-        return conversionService.convert(dataNodeService.getDataNodeMode(), DataNodeModeDTO.class);
+        return new DataNodeModeDTO(source);
     }
 }

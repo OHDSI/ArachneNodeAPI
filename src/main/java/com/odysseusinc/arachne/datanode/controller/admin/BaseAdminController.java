@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.datanode.controller.BaseController;
 import com.odysseusinc.arachne.datanode.dto.submission.SubmissionDTO;
 import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
+import com.odysseusinc.arachne.datanode.exception.BadRequestException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
@@ -151,6 +152,8 @@ public abstract class BaseAdminController extends BaseController {
                         final User user = userService.addUserFromCentral(loginedUser, UserIdUtils.uuidToId(uuid));
                         result.setResult(conversionService.convert(user, UserDTO.class));
                     });
+        } else {
+            throw new BadRequestException();
         }
         return result;
     }

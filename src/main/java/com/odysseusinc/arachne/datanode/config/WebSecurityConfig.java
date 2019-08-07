@@ -122,6 +122,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .antMatchers("/api/v1/data-sources/**/check/result/**").permitAll()
                 .antMatchers("/api/v1/data-sources/**/check/update/**").permitAll()
+                .antMatchers("/api/v1/datanode/mode").permitAll()
 
                 .antMatchers("/api**").authenticated()
                 .antMatchers("/api/**").authenticated()
