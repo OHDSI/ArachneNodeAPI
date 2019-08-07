@@ -28,6 +28,42 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.springframework.core.convert.converter.Converter;
 
+/**
+ * <p>{@literal @}Postponed used to mark methods that communicates with Portal.
+ * When Portal isn't accessible then Data Node is running in stand-alone mode.
+ * Stand-alone mode means some operations couldn't execute immediately and
+ * should be postponed until Portal remains to accept requests.</p>
+ *
+ * <p>Postponed method have to indicate <b>action</b> that should be unique across class or interface.
+ * When method returns some value it's possible to set default value that would be returned when running in the
+ * stand-alone mode. defaultReturnValue can contains SpEl expression that provides flexible configuration of services.</p>
+ *
+ * <p>When postponed request failed it can retry.</p>
+ * <p>Retrying interval is controlled by the application parameter 'postponed.retry.interval' set in milliseconds.</p>
+ * <p>Maximum of retry attempts is set by the application parameter 'postponed.retry.maxAttempts`, when is set to 0 means unlimited attempts.</p>
+ *
+ * <pre>{@code
+ * interface Service {
+ *  @literal @Postponed(action="create", defaultReturnValue="new com.package.DataSource()")
+ *    DataSource create();
+ * }
+ * }
+ * </pre>
+ *
+ * <p></p>When method accepts arguments then it's critical to be able to serialize each argument with Jackson.
+ * It's because method's arguments stored to the database.</p>
+ * <p>In the case when method signature contains parameters could not be proceed by Jackson, e.g. entities, then
+ * corresponding parameter have to be marked with {@code @literal @PostponedArgument} to provide serializer and
+ * deserializer.</p>
+ * <p>Postponed argument serializer/deserializer is just the same as used in controllers to provide DTO objects.</p>
+ * <pre>{@code
+ *     @literal @Postponed(action = "update")
+ *      void updateOnCentral(@PostponedArgument(serializer = UserToUserDTOConverter.class,
+ *             deserializer = UserDTOToUserConverter.class) User user);
+ * }</pre>
+ *
+ * @see com.odysseusinc.arachne.datanode.service.postpone.annotation.PostponedArgument
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Postponed {
