@@ -102,7 +102,7 @@ public class UserServiceImpl implements UserService {
                         final List<User> users = userRepository.findAll();
                         List<User> updatedUsers = centralIntegrationService.relinkAllUsersToDataNodeOnCentral(dataNode, users);
                         List<User> mappedUsers = users.stream().map(user -> {
-                            updatedUsers.stream().filter(u -> u.getEmail().equals(user.getEmail())).findFirst()
+                            updatedUsers.stream().filter(u -> u.getUsername().equals(user.getUsername())).findFirst()
                                     .ifPresent(u -> user.setEnabled(u.getEnabled()));
                             return user;
                         }).collect(Collectors.toList());
@@ -164,10 +164,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        return userRepository.findOneByEmailAndEnabled(username, true).map(
+        return userRepository.findOneByUsernameAndEnabled(username, true).map(
                 user ->
                         new org.springframework.security.core.userdetails.User(
-                                user.getEmail(), "",
+                                user.getUsername(), "",
                                 user.getRoles().stream().map(
                                         role -> new SimpleGrantedAuthority(role.getName()))
                                         .collect(Collectors.toList())
@@ -270,7 +270,7 @@ public class UserServiceImpl implements UserService {
         if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
             final Set<String> adminsEmails = userRepository
                     .findAll(new Sort(Sort.Direction.ASC, "email")).stream()
-                    .map(User::getEmail)
+                    .map(User::getUsername)
                     .collect(Collectors.toSet());
             final List<CommonUserDTO> result =
                     centralIntegrationService.suggestUsersFromCentral(user, query, adminsEmails, limit);

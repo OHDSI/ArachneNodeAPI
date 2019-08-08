@@ -145,7 +145,7 @@ public class AuthController {
                 .findByUsername(principal.getName())
                 .ifPresent(user -> {
                     UserInfoDTO userInfoDTO = new UserInfoDTO();
-                    userInfoDTO.setUsername(user.getEmail());
+                    userInfoDTO.setUsername(user.getUsername());
                     final boolean isAdmin = user.getRoles().stream()
                             .anyMatch(r -> r.getName().equals("ROLE_ADMIN"));
                     userInfoDTO.setIsAdmin(isAdmin);

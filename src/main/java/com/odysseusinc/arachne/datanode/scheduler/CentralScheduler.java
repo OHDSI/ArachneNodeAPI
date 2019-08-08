@@ -74,11 +74,14 @@ public class CentralScheduler implements ApplicationListener<FunctionalModeChang
             systemClient.getBuildNumber();
             dataNodeService.setDataNodeMode(FunctionalMode.NETWORK);
         } catch (Exception e) {
+            FunctionalMode oldMode = dataNodeService.getDataNodeMode();
             if (log.isDebugEnabled()) {
                 log.debug("Central check failed: {}", e.getMessage());
             }
             dataNodeService.setDataNodeMode(FunctionalMode.STANDALONE);
-            warnUserRegistration();
+            if (!Objects.equals(oldMode, FunctionalMode.STANDALONE)) {
+                warnUserRegistration();
+            }
         }
     }
 
