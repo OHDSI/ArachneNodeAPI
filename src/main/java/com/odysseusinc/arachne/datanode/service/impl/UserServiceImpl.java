@@ -86,6 +86,14 @@ public class UserServiceImpl implements UserService {
     private ApplicationEventPublisher eventPublisher;
 
     @Override
+    public User create(User user) {
+
+        user.setEnabled(true);
+        user.getRoles().add(getAdminRole());
+        return userRepository.save(user);
+    }
+
+    @Override
     public void syncUsers() {
 
         try {
@@ -179,9 +187,7 @@ public class UserServiceImpl implements UserService {
             user.setUsername(centralUser.getUsername());
             user.setFirstName(centralUser.getFirstName());
             user.setLastName(centralUser.getLastName());
-            user.setEnabled(true);
-            user.getRoles().add(getAdminRole());
-            return userRepository.save(user);
+            return create(user);
         }
         else {
             throw new AlreadyExistsException("user not registered");

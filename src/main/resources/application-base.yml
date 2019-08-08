@@ -196,6 +196,8 @@ postponed:
     interval: 3600000
     maxAttempts: 10
 authenticator:
+  user:
+    registrationStrategy: CREATE_IF_FIRST
   methods:
     rest-central:
       service: org.ohdsi.authenticator.service.rest.RestAuthService

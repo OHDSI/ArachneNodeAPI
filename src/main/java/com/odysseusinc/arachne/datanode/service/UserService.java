@@ -65,4 +65,5 @@ public interface UserService extends UserDetailsService {
 
     void syncUsers();
 
+    User create(User user);
 }

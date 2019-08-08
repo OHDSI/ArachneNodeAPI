@@ -42,8 +42,8 @@ import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
+import com.odysseusinc.arachne.datanode.service.UserRegistrationStrategy;
 import com.odysseusinc.arachne.datanode.service.UserService;
-import com.odysseusinc.arachne.datanode.util.RestUtils;
 import io.swagger.annotations.ApiOperation;
 import java.net.URISyntaxException;
 import java.security.Principal;
@@ -83,6 +83,9 @@ public class AuthController {
     @Autowired
     private DataNodeService dataNodeService;
 
+    @Autowired
+    private UserRegistrationStrategy userRegisterStrategy;
+
     @Value("${datanode.jwt.header}")
     private String tokenHeader;
 
@@ -116,8 +119,7 @@ public class AuthController {
             new UsernamePasswordCredentials(request.getUsername(), request.getPassword())
         );
         User centralUser = conversionService.convert(userInfo, User.class);
-        userService.findByUsername(userInfo.getUsername()).orElseGet(() -> userService.createIfFirst(centralUser));
-        userService.updateUserInfo(centralUser);
+        userRegisterStrategy.registerUser(centralUser);
 
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getToken()));
     }
