@@ -73,8 +73,8 @@ public class PostponedRequest {
     @Column(name = "retries")
     private Integer retries;
 
-    @Column(name = "token")
-    private String token;
+    @Column(name = "username")
+    private String username;
 
     public Long getId() {
 
@@ -166,13 +166,13 @@ public class PostponedRequest {
         this.createdAt = createdAt;
     }
 
-    public String getToken() {
+    public String getUsername() {
 
-        return token;
+        return username;
     }
 
-    public void setToken(String token) {
+    public void setUsername(String username) {
 
-        this.token = token;
+        this.username = username;
     }
 }

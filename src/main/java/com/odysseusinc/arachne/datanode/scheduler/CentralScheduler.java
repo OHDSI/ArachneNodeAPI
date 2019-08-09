@@ -114,7 +114,6 @@ public class CentralScheduler implements ApplicationListener<FunctionalModeChang
     public void onApplicationEvent(FunctionalModeChangedEvent event) {
 
         if (Objects.equals(event.getMode(), FunctionalMode.NETWORK)) {
-            userService.syncUsers();
             postponeService.executePostponedRequests();
         }
     }

@@ -16,19 +16,21 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
- * Created: Jul 29, 2019
+ * Created: Aug 9, 2019
  *
  */
 
-package com.odysseusinc.arachne.datanode.service;
+package com.odysseusinc.arachne.datanode.exception;
 
-import javax.servlet.http.HttpServletRequest;
-import org.springframework.security.core.Authentication;
+public class DataNodeNotRegisteredException extends RuntimeException {
 
-public interface AuthenticationService {
-    Authentication authenticate(String authToken, HttpServletRequest httpRequest);
+    public DataNodeNotRegisteredException(String message) {
 
-    Authentication impersonate(String systemToken, String username);
+        super(message);
+    }
 
-    String getCurrentUserName();
+    public DataNodeNotRegisteredException(String message, Throwable cause) {
+
+        super(message, cause);
+    }
 }

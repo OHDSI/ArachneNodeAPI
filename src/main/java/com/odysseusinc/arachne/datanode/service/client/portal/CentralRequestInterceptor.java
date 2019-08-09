@@ -25,13 +25,15 @@ package com.odysseusinc.arachne.datanode.service.client.portal;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import feign.RequestTemplate;
 import java.util.Objects;
-import org.ohdsi.authenticator.service.Authenticator;
 import org.ohdsi.authenticator.service.TokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.access.intercept.RunAsUserToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -42,6 +44,9 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
 
     @Value("${arachne.token.header}")
     private String authHeader;
+
+    @Value("${datanode.arachneCentral.nodeAuthHeader}")
+    private String nodeAuthHeader;
 
     private ApplicationContext applicationContext;
     private UserService userService;
@@ -54,14 +59,24 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
     }
 
 
-    private String getToken() {
+    private void setupAuth(RequestTemplate template) {
 
-        final Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
-        if (credentials instanceof String) {
-            String centralToken = tokenService.resolveAdditionalInfo(credentials.toString(), "token", String.class);
-            return Objects.nonNull(centralToken) ? centralToken : credentials.toString();
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof UsernamePasswordAuthenticationToken) {
+            final Object credentials = authentication.getCredentials();
+            if (credentials instanceof String) {
+                String userToken = tokenService.resolveAdditionalInfo(credentials.toString(), "token", String.class);
+                String token = Objects.nonNull(userToken) ? userToken : credentials.toString();;
+                template.header(authHeader, token);
+            }
+        } else if (authentication instanceof RunAsUserToken) {
+            final Object systemToken = authentication.getCredentials();
+            final Object username = authentication.getPrincipal();
+            if (systemToken instanceof String && username instanceof String) {
+                template.header(nodeAuthHeader, systemToken.toString());
+                template.header("Arachne-Auth-Impersonate", username.toString()); //TODO encrypt username
+            }
         }
-        return null;
     }
 
     @Override
@@ -69,10 +84,7 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
 
         final String token;
         init();
-        token = getToken();
-        if (!StringUtils.isEmpty(token)) {
-            template.header(authHeader, token);
-        }
+        setupAuth(template);
     }
 
     private void init(){

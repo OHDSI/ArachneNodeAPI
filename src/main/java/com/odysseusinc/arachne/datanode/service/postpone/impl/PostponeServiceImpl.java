@@ -24,10 +24,12 @@ package com.odysseusinc.arachne.datanode.service.postpone.impl;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.odysseusinc.arachne.datanode.exception.DataNodeNotRegisteredException;
 import com.odysseusinc.arachne.datanode.model.datanode.PostponedRequest;
 import com.odysseusinc.arachne.datanode.model.datanode.PostponedRequestState;
 import com.odysseusinc.arachne.datanode.repository.PostponedRequestRepository;
 import com.odysseusinc.arachne.datanode.service.AuthenticationService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.postpone.PostponeService;
 import com.odysseusinc.arachne.datanode.service.postpone.support.PostponedRegistry;
 import java.io.IOException;
@@ -57,17 +59,20 @@ public class PostponeServiceImpl implements PostponeService, InitializingBean {
     private final PostponedRequestRepository requestRepository;
     private final PostponedRegistry registry;
     private AuthenticationService authenticationService;
+    private final DataNodeService dataNodeService;
     @Value("${postponed.retry.maxAttempts}")
     private int maxAttempts;
 
     public PostponeServiceImpl(ApplicationContext applicationContext,
                                PostponedRequestRepository requestRepository,
-                               PostponedRegistry registry) {
+                               PostponedRegistry registry,
+                               DataNodeService dataNodeService) {
 
         this.applicationContext = applicationContext;
 
         this.requestRepository = requestRepository;
         this.registry = registry;
+        this.dataNodeService = dataNodeService;
     }
 
     @Override
@@ -77,12 +82,7 @@ public class PostponeServiceImpl implements PostponeService, InitializingBean {
         request.setAction(action);
         request.setObjectClass(type.getName());
         request.setCreatedAt(new Date());
-        if (SecurityContextHolder.getContext().getAuthentication() != null) {
-            Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
-            if (credentials instanceof String) {
-                request.setToken(credentials.toString());
-            }
-        }
+        request.setUsername(authenticationService.getCurrentUserName());
         try(StringWriter writer = new StringWriter()) {
             ObjectMapper mapper = resolveObjectMapper();
             mapper.writeValue(writer, args);
@@ -123,8 +123,9 @@ public class PostponeServiceImpl implements PostponeService, InitializingBean {
 
         requests.forEach(r -> {
             try {
-                if (Objects.nonNull(r.getToken())) {
-                    authenticate(r.getToken());
+                if (Objects.nonNull(r.getUsername())) {
+                    String systemToken = dataNodeService.findCurrentDataNode().orElseThrow(() -> new DataNodeNotRegisteredException("DataNode is not registered")).getToken();
+                    authenticationService.impersonate(systemToken, r.getUsername());
                 }
                 Class<?> serviceClass = Class.forName(r.getObjectClass());
                 PostponedRegistry.PostponedMethodInfo methodInfo = registry.getPostponedMethodInfo(serviceClass, r.getAction());
@@ -151,15 +152,6 @@ public class PostponeServiceImpl implements PostponeService, InitializingBean {
                 failAttempt(r, e);
             }
         });
-    }
-
-    private void authenticate(String token) {
-
-        Authentication authentication = authenticationService.authenticate(token, null);
-        if (Objects.nonNull(authentication) && Objects.isNull(SecurityContextHolder.getContext().getAuthentication())) {
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
     }
 
     private int getRetries(PostponedRequest request) {
