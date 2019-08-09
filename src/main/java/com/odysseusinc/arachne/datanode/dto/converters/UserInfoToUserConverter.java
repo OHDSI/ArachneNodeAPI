@@ -21,7 +21,6 @@
 
 package com.odysseusinc.arachne.datanode.dto.converters;
 
-import com.odysseusinc.arachne.commons.utils.UserIdUtils;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import org.ohdsi.authenticator.model.UserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +41,6 @@ public class UserInfoToUserConverter implements Converter<UserInfo, User>{
     public User convert(UserInfo source) {
 
         User user = new User();
-        user.setId(UserIdUtils.uuidToId((String) source.getAdditionalInfo().get("id")));
         user.setUsername((String) source.getAdditionalInfo().getOrDefault("username", source.getUsername()));
         user.setEmail((String) source.getAdditionalInfo().get("email"));
         user.setFirstName((String) source.getAdditionalInfo().get("firstName"));

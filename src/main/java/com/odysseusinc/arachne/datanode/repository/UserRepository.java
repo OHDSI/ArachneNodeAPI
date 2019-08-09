@@ -30,9 +30,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<User> findOneByEmail(String email);
-
     Optional<User> findOneByUsernameAndEnabled(String username, boolean enabled);
 
     List<User> findAll(Sort sort);
+
+    Optional<User> findOneByUsername(String username);
 }

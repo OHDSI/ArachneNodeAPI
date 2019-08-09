@@ -128,7 +128,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findByUsername(String login) {
 
-        return userRepository.findOneByEmail(login);
+        return userRepository.findOneByUsername(login);
     }
 
     @Override
@@ -146,7 +146,7 @@ public class UserServiceImpl implements UserService {
     protected void toggleUser(String login, Boolean enabled) {
 
         dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
-            User user = userRepository.findOneByEmail(login).orElseThrow(IllegalArgumentException::new);
+            User user = userRepository.findOneByUsername(login).orElseThrow(IllegalArgumentException::new);
             user.setEnabled(enabled);
             userRepository.save(user);
         });
@@ -155,7 +155,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(String login) {
 
-        userRepository.findOneByEmail(login).ifPresent(u -> {
+        userRepository.findOneByUsername(login).ifPresent(u -> {
             userRepository.delete(u);
             LOG.debug("Deleted User: {}", u);
         });
@@ -239,7 +239,7 @@ public class UserServiceImpl implements UserService {
         CommonUserDTO userDTO = jsonResult.getResult();
         User savedUser = null;
         if (userDTO != null) {
-            final Optional<User> localUser = userRepository.findOneByEmail(userDTO.getEmail());
+            final Optional<User> localUser = userRepository.findOneByUsername(userDTO.getUsername());
             if (!localUser.isPresent()) {
                 final User user = conversionService.convert(userDTO, User.class);
                 user.getRoles().add(getAdminRole());
