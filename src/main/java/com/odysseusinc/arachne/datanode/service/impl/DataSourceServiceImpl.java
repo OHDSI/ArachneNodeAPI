@@ -51,11 +51,13 @@ import com.odysseusinc.arachne.datanode.service.events.datasource.DataSourceCrea
 import com.odysseusinc.arachne.datanode.service.events.datasource.DataSourceUpdatedEvent;
 import com.odysseusinc.arachne.datanode.service.postpone.annotation.Postponed;
 import com.odysseusinc.arachne.datanode.service.postpone.annotation.PostponedArgument;
+import com.odysseusinc.arachne.datanode.util.DataNodeUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -122,22 +124,24 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     public void createOnCentral(User owner, DataSource dataSource) {
 
-        AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
-        CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
-        commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
-        commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
+        if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+            AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
+            CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
+            commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
+            commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
 
-        commonDataSourceDTO.setDbmsType(dataSource.getType());
+            commonDataSourceDTO.setDbmsType(dataSource.getType());
 
-        CommonDataSourceDTO centralDTO = integrationService.sendDataSourceCreationRequest(
-                owner,
-                dataSource.getDataNode(),
-                commonDataSourceDTO
-        );
-        dataSource.setCentralId(centralDTO.getId());
+            CommonDataSourceDTO centralDTO = integrationService.sendDataSourceCreationRequest(
+                    owner,
+                    dataSource.getDataNode(),
+                    commonDataSourceDTO
+            );
+            dataSource.setCentralId(centralDTO.getId());
 
-        checkNotNull(centralDTO.getId(), "central id of datasource is null");
-        dataSourceRepository.save(dataSource);
+            checkNotNull(centralDTO.getId(), "central id of datasource is null");
+            dataSourceRepository.save(dataSource);
+        }
     }
 
     @Override
@@ -271,10 +275,8 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateOnCentral(@PostponedArgument(serializer = UserToUserDTOConverter.class,
-            deserializer = UserDTOToUserConverter.class) User user,
-                                @PostponedArgument(serializer = DataSourceToCommonDataSourceDTOConverter.class,
-            deserializer = DataSourceDTOToDataSourceConverter.class) DataSource dataSource) {
+    public void updateOnCentral(User user,
+                                DataSource dataSource) {
 
         if (Objects.nonNull(dataSource.getCentralId())) {
             AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
@@ -283,11 +285,13 @@ public class DataSourceServiceImpl implements DataSourceService {
             CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
             commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
             commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
-            integrationService.sendDataSourceUpdateRequest(
-                    user,
-                    dataSource.getCentralId(),
-                    commonDataSourceDTO
-            );
+            if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+                integrationService.sendDataSourceUpdateRequest(
+                        user,
+                        dataSource.getCentralId(),
+                        commonDataSourceDTO
+                );
+            }
         }
     }
 
@@ -327,13 +331,17 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     public JsonResult unpublishAndDeleteOnCentral(Long dataSourceId) {
 
-        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
-            DataSource dataSource = getById(dataSourceId);
-            if (Objects.nonNull(dataSource.getCentralId())) {
-                return centralClient.unpublishAndSoftDeleteDataSource(dataSource.getCentralId());
-            }
+        DataSource dataSource = getById(dataSourceId);
+        if (Objects.nonNull(dataSource.getCentralId())) {
+            DataNodeUtils.requireNetworkMode(dataNodeService);
+            return centralClient.unpublishAndSoftDeleteDataSource(dataSource.getCentralId());
         }
         return new JsonResult(NO_ERROR);
     }
 
+    @Override
+    public List<DataSource> findStandaloneSources() {
+
+        return dataSourceRepository.findAllByCentralIdIsNull().collect(Collectors.toList());
+    }
 }

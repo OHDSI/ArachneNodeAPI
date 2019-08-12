@@ -100,7 +100,7 @@ public interface CentralSystemClient {
 
     @RequestLine("POST " + LINK_TO_NODE)
     @Headers("Content-Type: application/json")
-    void linkUser(@Param("datanodeId") Long centralId, CommonLinkUserToDataNodeDTO userLink);
+    JsonResult<CommonUserDTO> linkUser(@Param("datanodeId") Long centralId, CommonLinkUserToDataNodeDTO userLink);
 
     @RequestLine("DELETE " + LINK_TO_NODE)
     @Headers("Content-Type: application/json")

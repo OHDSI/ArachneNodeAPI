@@ -59,6 +59,7 @@ import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.achilles.AchillesJob;
 import com.odysseusinc.arachne.datanode.model.achilles.AchillesJobSource;
 import com.odysseusinc.arachne.datanode.model.achilles.AchillesJobStatus;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.repository.AchillesJobRepository;
 import com.odysseusinc.arachne.datanode.service.AchillesService;
@@ -235,11 +236,13 @@ public class AchillesServiceImpl implements AchillesService {
         try {
             workDir = Files.createTempDirectory("achilles_");
             Path results = runAchilles(dataSource, job, workDir);
-            retryTemplate.execute((RetryCallback<Void, Exception>) retryContext -> {
+            if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+                retryTemplate.execute((RetryCallback<Void, Exception>) retryContext -> {
 
-                sendResultToCentral(dataSource, results);
-                return null;
-            });
+                    sendResultToCentral(dataSource, results);
+                    return null;
+                });
+            }
 
             updateJob(job, SUCCESSFUL);
         } catch (Throwable e) {
@@ -333,11 +336,13 @@ public class AchillesServiceImpl implements AchillesService {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Achilles data has collected at {}", tempDir);
                 }
-                retryTemplate.execute((RetryCallback<Void, Exception>) retryContext -> {
+                if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+                    retryTemplate.execute((RetryCallback<Void, Exception>) retryContext -> {
 
-                    sendResultToCentral(dataSource, tempDir);
-                    return null;
-                });
+                        sendResultToCentral(dataSource, tempDir);
+                        return null;
+                    });
+                }
                 updateJob(job, SUCCESSFUL);
             } finally {
                 executorService.shutdown();

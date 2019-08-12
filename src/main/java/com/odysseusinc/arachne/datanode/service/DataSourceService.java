@@ -41,7 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 public interface DataSourceService {
     DataSource create(User owner, DataSource dataSource) throws NotExistException;
 
-    @Postponed(action = "create")
+//    @Postponed(action = "create")
     void createOnCentral(@PostponedArgument(serializer = UserToUserDTOConverter.class,
             deserializer = UserDTOToUserConverter.class) User owner,
                          @PostponedArgument(serializer = DataSourceToCommonDataSourceDTOConverter.class,
@@ -61,7 +61,7 @@ public interface DataSourceService {
 
     DataSource update(User user, DataSource dataSource);
 
-    @Postponed(action = "update")
+//    @Postponed(action = "update")
     @Transactional(rollbackFor = Exception.class)
     void updateOnCentral(@PostponedArgument(serializer = UserToUserDTOConverter.class,
             deserializer = UserDTOToUserConverter.class) User user,
@@ -74,7 +74,9 @@ public interface DataSourceService {
 
     void removeKeytab(DataSource dataSource);
 
-    @Postponed(action = "unpublish",
-            defaultReturnValue = "new com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult(T(com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode).NO_ERROR.getCode())")
+//    @Postponed(action = "unpublish",
+//            defaultReturnValue = "new com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult(T(com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode).NO_ERROR.getCode())")
     JsonResult unpublishAndDeleteOnCentral(Long dataSourceId);
+
+    List<DataSource> findStandaloneSources();
 }

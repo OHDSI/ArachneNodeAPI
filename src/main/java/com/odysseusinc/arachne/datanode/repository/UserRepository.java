@@ -35,4 +35,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAll(Sort sort);
 
     Optional<User> findOneByUsername(String username);
+
+    List<User> findByTokenIsNull();
 }

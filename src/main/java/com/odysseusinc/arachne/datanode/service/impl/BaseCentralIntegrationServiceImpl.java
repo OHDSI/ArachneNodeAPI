@@ -218,7 +218,8 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
 
         final CommonLinkUserToDataNodeDTO commonLinkUserToDataNode
                 = conversionService.convert(user, CommonLinkUserToDataNodeDTO.class);
-        centralSystemClient.linkUser(dataNode.getCentralId(), commonLinkUserToDataNode);
+        JsonResult<CommonUserDTO> result = centralSystemClient.linkUser(dataNode.getCentralId(), commonLinkUserToDataNode);
+        user.setToken(result.getResult().getCentralToken());
     }
 
     @Override

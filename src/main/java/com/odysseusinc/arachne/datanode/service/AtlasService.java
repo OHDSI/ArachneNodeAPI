@@ -56,7 +56,7 @@ public interface AtlasService {
 
     void delete(Long atlasId);
 
-    @Postponed(action = "delete")
+//    @Postponed(action = "delete")
     void deleteFromCentral(@PostponedArgument(serializer = AtlasToAtlasShortDTOConverter.class, deserializer = AtlasShortDTOToAtlasConverter.class) Atlas atlas);
 
     <C extends AtlasClient, R extends BaseAtlasEntity> List<R> execute(List<Atlas> atlasList, Function<C, ? extends List<R>> sendAtlasRequest);
@@ -69,6 +69,6 @@ public interface AtlasService {
 
     byte[] hydrateAnalysis(JsonNode analysis, String packageName, String skeletonResource) throws IOException;
 
-    @Postponed(action = "update")
+//    @Postponed(action = "update")
     AtlasShortDTO updateOnCentral(Atlas atlas);
 }

@@ -41,5 +41,6 @@ public interface DataNodeService {
 
     FunctionalMode getDataNodeMode();
 
-    void setDataNodeMode(FunctionalMode mode);
+    // To be implemented in 1.16
+//    void setDataNodeMode(FunctionalMode mode);
 }

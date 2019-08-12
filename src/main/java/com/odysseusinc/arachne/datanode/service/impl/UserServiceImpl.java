@@ -90,6 +90,11 @@ public class UserServiceImpl implements UserService {
 
         user.setEnabled(true);
         user.getRoles().add(getAdminRole());
+        if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+            dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
+                centralIntegrationService.linkUserToDataNodeOnCentral(dataNode, user);
+            });
+        }
         return userRepository.save(user);
     }
 
@@ -101,11 +106,13 @@ public class UserServiceImpl implements UserService {
                         LOG.info(RELINKING_ALL_USERS_LOG);
                         final List<User> users = userRepository.findAll();
                         List<User> updatedUsers = centralIntegrationService.relinkAllUsersToDataNodeOnCentral(dataNode, users);
-                        List<User> mappedUsers = users.stream().map(user -> {
-                            updatedUsers.stream().filter(u -> u.getUsername().equals(user.getUsername())).findFirst()
-                                    .ifPresent(u -> user.setEnabled(u.getEnabled()));
-                            return user;
-                        }).collect(Collectors.toList());
+                        List<User> mappedUsers = users.stream().peek(user -> updatedUsers.stream()
+                                .filter(u -> u.getUsername().equals(user.getUsername())).findFirst()
+                                .ifPresent(u -> {
+                                    user.setEnabled(u.getEnabled());
+                                    user.setToken(u.getToken());
+                                }))
+                                .collect(Collectors.toList());
                         userRepository.save(mappedUsers);
                     }
             );
@@ -222,12 +229,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void unlinkUserOnCentral(@PostponedArgument(serializer = UserToUserDTOConverter.class,
-            deserializer = UserDTOToUserConverter.class) User user) {
+    public void unlinkUserOnCentral(User user) {
 
-        dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
-                centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
-        );
+        if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+            dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
+                    centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
+            );
+        }
     }
 
     @Override
@@ -294,5 +302,11 @@ public class UserServiceImpl implements UserService {
             sort = new Sort(direction, sortBy);
         }
         return userRepository.findAll(sort);
+    }
+
+    @Override
+    public List<User> findStandaloneUsers() {
+
+        return userRepository.findByTokenIsNull();
     }
 }

@@ -230,7 +230,7 @@ public class AtlasServiceImpl implements AtlasService {
     }
 
     @Override
-    public void deleteFromCentral(@PostponedArgument(serializer = AtlasToAtlasShortDTOConverter.class, deserializer = AtlasShortDTOToAtlasConverter.class) Atlas atlas) {
+    public void deleteFromCentral(Atlas atlas) {
 
         if (Objects.nonNull(atlas) && Objects.nonNull(atlas.getId())) {
             centralSystemClient.deleteAtlas(atlas.getCentralId());
@@ -294,8 +294,7 @@ public class AtlasServiceImpl implements AtlasService {
     }
 
     @Override
-    public AtlasShortDTO updateOnCentral(@PostponedArgument(serializer = AtlasToAtlasShortDTOConverter.class,
-            deserializer = AtlasShortDTOToAtlasConverter.class) Atlas atlas) {
+    public AtlasShortDTO updateOnCentral(Atlas atlas) {
 
         AtlasShortDTO atlasShortDTO = conversionService.convert(atlas, AtlasShortDTO.class);
         try {

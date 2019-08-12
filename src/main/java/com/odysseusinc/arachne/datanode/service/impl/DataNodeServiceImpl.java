@@ -37,6 +37,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +47,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class DataNodeServiceImpl implements DataNodeService {
 
     private static final String ALREADY_EXISTS_EXCEPTION = "DataNode entry already exist, try to update it";
-    private static final String NOT_EXISTS_EXCEPTION = "Current DataNode entry is not exists, try to create it";
 
     private static final Logger log = LoggerFactory.getLogger(DataNodeService.class);
 
@@ -55,16 +55,18 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     private final ApplicationEventPublisher eventPublisher;
 
-    private FunctionalMode mode = FunctionalMode.UNKNOWN;
+    private final FunctionalMode mode;
 
     @Autowired
     public DataNodeServiceImpl(BaseCentralIntegrationService centralIntegrationService,
                                DataNodeRepository dataNodeRepository,
-                               ApplicationEventPublisher eventPublisher) {
+                               ApplicationEventPublisher eventPublisher,
+                               @Value("${datanode.runMode}") String runMode) {
 
         this.centralIntegrationService = centralIntegrationService;
         this.dataNodeRepository = dataNodeRepository;
         this.eventPublisher = eventPublisher;
+        this.mode = FunctionalMode.valueOf(runMode);
     }
 
     @Override
@@ -108,6 +110,8 @@ public class DataNodeServiceImpl implements DataNodeService {
         return mode;
     }
 
+/*
+    To be implemented in 1.16
     @Override
     public void setDataNodeMode(FunctionalMode mode) {
 
@@ -118,4 +122,5 @@ public class DataNodeServiceImpl implements DataNodeService {
             eventPublisher.publishEvent(new FunctionalModeChangedEvent(this, oldMode, mode));
         }
     }
+*/
 }

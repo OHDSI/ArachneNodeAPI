@@ -27,14 +27,13 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
-import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDetailedDTO;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
+import com.odysseusinc.arachne.datanode.util.DataNodeUtils;
 import io.swagger.annotations.ApiOperation;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -52,11 +51,15 @@ public class AtlasController {
 
     private final AtlasService atlasService;
     private final ConversionService conversionService;
+    private final DataNodeService dataNodeService;
 
-    public AtlasController(AtlasService atlasService, ConversionService conversionService) {
+    public AtlasController(AtlasService atlasService,
+                           ConversionService conversionService,
+                           DataNodeService dataNodeService) {
 
         this.atlasService = atlasService;
         this.conversionService = conversionService;
+        this.dataNodeService = dataNodeService;
     }
 
     @ApiOperation("List all Atlases")
@@ -97,6 +100,7 @@ public class AtlasController {
             @RequestBody AtlasDetailedDTO atlasDetailedDTO
     ) {
 
+        DataNodeUtils.requireNetworkMode(dataNodeService);
         Atlas atlas = conversionService.convert(atlasDetailedDTO, Atlas.class);
         atlas = atlasService.update(id, atlas);
         return conversionService.convert(atlas, AtlasDetailedDTO.class);
@@ -108,6 +112,7 @@ public class AtlasController {
             @PathVariable("id") Long id
     ) {
 
+        DataNodeUtils.requireNetworkMode(dataNodeService);
         atlasService.delete(id);
     }
 }
