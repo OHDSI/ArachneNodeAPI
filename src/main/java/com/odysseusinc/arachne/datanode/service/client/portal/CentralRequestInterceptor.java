@@ -25,6 +25,8 @@ package com.odysseusinc.arachne.datanode.service.client.portal;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import feign.RequestTemplate;
 import java.util.Objects;
+import org.jasypt.util.text.StrongTextEncryptor;
+import org.jasypt.util.text.TextEncryptor;
 import org.ohdsi.authenticator.service.TokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +38,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 @Component
 public class CentralRequestInterceptor implements feign.RequestInterceptor {
@@ -47,6 +48,9 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
 
     @Value("${datanode.arachneCentral.nodeAuthHeader}")
     private String nodeAuthHeader;
+
+    @Value("${datanode.arachneCentral.impersonateHeader}")
+    private String impersonateHeader;
 
     private ApplicationContext applicationContext;
     private UserService userService;
@@ -73,10 +77,18 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
             final Object systemToken = authentication.getCredentials();
             final Object username = authentication.getPrincipal();
             if (systemToken instanceof String && username instanceof String) {
+                TextEncryptor encryptor = getEncryptor(systemToken.toString());
                 template.header(nodeAuthHeader, systemToken.toString());
-                template.header("Arachne-Auth-Impersonate", username.toString()); //TODO encrypt username
+                template.header(impersonateHeader, encryptor.encrypt(username.toString()));
             }
         }
+    }
+
+    private TextEncryptor getEncryptor(String systemToken) {
+
+        StrongTextEncryptor encryptor = new StrongTextEncryptor();
+        encryptor.setPassword(systemToken);
+        return encryptor;
     }
 
     @Override
