@@ -31,8 +31,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
-import com.odysseusinc.arachne.datanode.dto.converters.AtlasShortDTOToAtlasConverter;
-import com.odysseusinc.arachne.datanode.dto.converters.AtlasToAtlasShortDTOConverter;
 import com.odysseusinc.arachne.datanode.dto.serialize.PageModule;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
@@ -54,7 +52,6 @@ import com.odysseusinc.arachne.datanode.service.client.decoders.ByteArrayDecoder
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.service.events.atlas.AtlasDeletedEvent;
 import com.odysseusinc.arachne.datanode.service.events.atlas.AtlasUpdatedEvent;
-import com.odysseusinc.arachne.datanode.service.postpone.annotation.PostponedArgument;
 import feign.Client;
 import feign.Feign;
 import feign.form.FormEncoder;

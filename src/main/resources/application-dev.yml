@@ -50,6 +50,3 @@ authenticator:
 security.method: rest-central
 security.jwt.token.secretKey: ${datanode.jwt.secret}
 security.jwt.token.validityInSeconds: ${datanode.jwt.expiration}
-postponed:
-  retry:
-    interval: 60000

@@ -26,9 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
 
 public interface AuthenticationService {
+
     Authentication authenticate(String authToken, HttpServletRequest httpRequest);
 
-    Authentication impersonate(String systemToken, String username);
-
-    String getCurrentUserName();
 }

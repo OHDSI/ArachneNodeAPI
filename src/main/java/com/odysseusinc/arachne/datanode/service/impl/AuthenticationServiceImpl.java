@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.ohdsi.authenticator.service.Authenticator;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
-import org.springframework.security.access.intercept.RunAsUserToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -65,30 +64,6 @@ public class AuthenticationServiceImpl implements AuthenticationService, Initial
                 }
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 return authentication;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Authentication impersonate(String systemToken, String username) {
-
-        if (Objects.nonNull(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-            RunAsUserToken authentication = new RunAsUserToken(systemToken, username, systemToken,
-                    userDetails.getAuthorities(), UsernamePasswordAuthenticationToken.class);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            return authentication;
-        }
-        return null;
-    }
-
-    @Override
-    public String getCurrentUserName() {
-        if (SecurityContextHolder.getContext().getAuthentication() != null) {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication instanceof UsernamePasswordAuthenticationToken) {
-                return authentication.getName();
             }
         }
         return null;

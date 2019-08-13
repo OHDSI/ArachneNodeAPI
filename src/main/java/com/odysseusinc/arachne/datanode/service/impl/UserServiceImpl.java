@@ -41,7 +41,6 @@ import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.events.user.UserDeletedEvent;
-import com.odysseusinc.arachne.datanode.service.postpone.annotation.PostponedArgument;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.List;

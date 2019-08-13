@@ -48,24 +48,18 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     private static final String ALREADY_EXISTS_EXCEPTION = "DataNode entry already exist, try to update it";
 
-    private static final Logger log = LoggerFactory.getLogger(DataNodeService.class);
-
     private final DataNodeRepository dataNodeRepository;
     private final BaseCentralIntegrationService centralIntegrationService;
-
-    private final ApplicationEventPublisher eventPublisher;
 
     private final FunctionalMode mode;
 
     @Autowired
     public DataNodeServiceImpl(BaseCentralIntegrationService centralIntegrationService,
                                DataNodeRepository dataNodeRepository,
-                               ApplicationEventPublisher eventPublisher,
                                @Value("${datanode.runMode}") String runMode) {
 
         this.centralIntegrationService = centralIntegrationService;
         this.dataNodeRepository = dataNodeRepository;
-        this.eventPublisher = eventPublisher;
         this.mode = FunctionalMode.valueOf(runMode);
     }
 
@@ -110,17 +104,4 @@ public class DataNodeServiceImpl implements DataNodeService {
         return mode;
     }
 
-/*
-    To be implemented in 1.16
-    @Override
-    public void setDataNodeMode(FunctionalMode mode) {
-
-        FunctionalMode oldMode = this.mode;
-        if (!Objects.equals(oldMode, mode)) {
-            this.mode = mode;
-            log.info("DataNode mode changed from \"{}\" to \"{}\"", oldMode, mode);
-            eventPublisher.publishEvent(new FunctionalModeChangedEvent(this, oldMode, mode));
-        }
-    }
-*/
 }

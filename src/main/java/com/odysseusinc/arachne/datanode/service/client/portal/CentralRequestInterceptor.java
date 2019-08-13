@@ -22,22 +22,20 @@
 
 package com.odysseusinc.arachne.datanode.service.client.portal;
 
+import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
+import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import feign.RequestTemplate;
 import java.util.Objects;
-import org.jasypt.util.text.StrongTextEncryptor;
-import org.jasypt.util.text.TextEncryptor;
-import org.ohdsi.authenticator.service.TokenService;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.security.access.intercept.RunAsUserToken;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 public class CentralRequestInterceptor implements feign.RequestInterceptor {
@@ -46,15 +44,8 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
     @Value("${arachne.token.header}")
     private String authHeader;
 
-    @Value("${datanode.arachneCentral.nodeAuthHeader}")
-    private String nodeAuthHeader;
-
-    @Value("${datanode.arachneCentral.impersonateHeader}")
-    private String impersonateHeader;
-
     private ApplicationContext applicationContext;
     private UserService userService;
-    private TokenService tokenService;
 
     @Autowired
     public CentralRequestInterceptor(ApplicationContext applicationContext) {
@@ -63,49 +54,36 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
     }
 
 
-    private void setupAuth(RequestTemplate template) {
+    private String getToken() throws PermissionDeniedException {
 
-        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication instanceof UsernamePasswordAuthenticationToken) {
-            final Object credentials = authentication.getCredentials();
-            if (credentials instanceof String) {
-                String userToken = tokenService.resolveAdditionalInfo(credentials.toString(), "token", String.class);
-                String token = Objects.nonNull(userToken) ? userToken : credentials.toString();;
-                template.header(authHeader, token);
-            }
-        } else if (authentication instanceof RunAsUserToken) {
-            final Object systemToken = authentication.getCredentials();
-            final Object username = authentication.getPrincipal();
-            if (systemToken instanceof String && username instanceof String) {
-                TextEncryptor encryptor = getEncryptor(systemToken.toString());
-                template.header(nodeAuthHeader, systemToken.toString());
-                template.header(impersonateHeader, encryptor.encrypt(username.toString()));
-            }
+        final Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof org.springframework.security.core.userdetails.User) {
+            String userName = ((org.springframework.security.core.userdetails.User) principal).getUsername();
+            final Optional<User> userOptional = userService.findByUsername(userName);
+            return userOptional.map(User::getToken).orElse(null);
         }
-    }
-
-    private TextEncryptor getEncryptor(String systemToken) {
-
-        StrongTextEncryptor encryptor = new StrongTextEncryptor();
-        encryptor.setPassword(systemToken);
-        return encryptor;
+        return null;
     }
 
     @Override
     public void apply(RequestTemplate template) {
 
         final String token;
-        init();
-        setupAuth(template);
+        try {
+            init();
+            token = getToken();
+            if (!StringUtils.isEmpty(token)) {
+                template.header(authHeader, token);
+            }
+        } catch (PermissionDeniedException e) {
+            log.error(e.getMessage());
+        }
     }
 
     private void init(){
 
-        if (Objects.isNull(this.userService)) {
+        if (Objects.isNull(this.userService)){
             this.userService = applicationContext.getBean(UserService.class);
-        }
-        if (Objects.isNull(this.tokenService)) {
-            this.tokenService = applicationContext.getBean(TokenService.class);
         }
     }
 }

@@ -26,7 +26,6 @@ import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.user.User;
-import com.odysseusinc.arachne.datanode.service.postpone.annotation.Postponed;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
@@ -54,7 +53,6 @@ public interface UserService extends UserDetailsService {
 
     void remove(Long id) throws NotExistException;
 
-//    @Postponed(action = "remove")
     void unlinkUserOnCentral(User user);
 
     User addUserFromCentral(User user, Long centralId);

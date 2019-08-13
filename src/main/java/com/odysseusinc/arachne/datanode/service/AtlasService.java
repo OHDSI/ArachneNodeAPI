@@ -25,13 +25,9 @@ package com.odysseusinc.arachne.datanode.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
-import com.odysseusinc.arachne.datanode.dto.converters.AtlasShortDTOToAtlasConverter;
-import com.odysseusinc.arachne.datanode.dto.converters.AtlasToAtlasShortDTOConverter;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasInfoClient;
-import com.odysseusinc.arachne.datanode.service.postpone.annotation.Postponed;
-import com.odysseusinc.arachne.datanode.service.postpone.annotation.PostponedArgument;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
@@ -56,8 +52,7 @@ public interface AtlasService {
 
     void delete(Long atlasId);
 
-//    @Postponed(action = "delete")
-    void deleteFromCentral(@PostponedArgument(serializer = AtlasToAtlasShortDTOConverter.class, deserializer = AtlasShortDTOToAtlasConverter.class) Atlas atlas);
+    void deleteFromCentral(Atlas atlas);
 
     <C extends AtlasClient, R extends BaseAtlasEntity> List<R> execute(List<Atlas> atlasList, Function<C, ? extends List<R>> sendAtlasRequest);
 
@@ -69,6 +64,5 @@ public interface AtlasService {
 
     byte[] hydrateAnalysis(JsonNode analysis, String packageName, String skeletonResource) throws IOException;
 
-//    @Postponed(action = "update")
     AtlasShortDTO updateOnCentral(Atlas atlas);
 }
