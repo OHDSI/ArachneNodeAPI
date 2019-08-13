@@ -45,7 +45,7 @@ public class CentralScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(CentralScheduler.class);
     private static final int LINE_WIDTH = 80;
-    private static final String MODE_ERROR_MESSAGE = "Cannot switch mode from Standalone to Network - there are some {0} who are not linked to Central.";
+    private static final String MODE_ERROR_MESSAGE = "Cannot switch mode from Standalone to Network - there are some {0} not linked to the Central.";
 
     private final DataNodeService dataNodeService;
     private final UserService userService;
