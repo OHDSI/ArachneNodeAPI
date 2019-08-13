@@ -34,9 +34,9 @@ There are two value supported:
 and some functions become unavailable
 
 ### Features disabled in Stand-alone mode
-- All operations related with Atlas
+- All operations related to Atlas
 - Data Source publishing
-- Removal of Data Sources has been published before
+- Removal of Data Sources of Data Sources which have been published before
 - Import and Re-import of Achilles results
 - Adding new users from Central
 
