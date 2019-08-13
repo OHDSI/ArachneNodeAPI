@@ -48,6 +48,9 @@ import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -208,9 +211,13 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
-    public JsonResult<CommonUserDTO> getUserFromCentral(User user, Long centralUserId) {
+    public JsonResult<CommonUserDTO> getUserFromCentral(User user, String username) {
 
-        return centralClient.getUser(centralUserId);
+        try {
+            return centralClient.getUser(URLEncoder.encode(username, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

@@ -68,7 +68,7 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     List<CommonUserDTO> suggestUsersFromCentral(User user, String query, Set<String> emails, int limit);
 
-    JsonResult<CommonUserDTO> getUserFromCentral(User user, Long centralUserId);
+    JsonResult<CommonUserDTO> getUserFromCentral(User user, String username);
 
     void linkUserToDataNodeOnCentral(DataNode dataNode, User user);
 

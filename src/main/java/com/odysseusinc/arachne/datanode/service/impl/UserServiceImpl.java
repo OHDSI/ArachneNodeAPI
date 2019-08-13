@@ -238,11 +238,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User addUserFromCentral(User loggedUser, Long centralUserId) {
+    public User addUserFromCentral(User loggedUser, String username) {
 
-        LOG.info(ADDING_USER_FROM_CENTRAL_LOG, centralUserId);
+        LOG.info(ADDING_USER_FROM_CENTRAL_LOG, username);
         JsonResult<CommonUserDTO> jsonResult =
-                centralIntegrationService.getUserFromCentral(loggedUser, centralUserId);
+                centralIntegrationService.getUserFromCentral(loggedUser, username);
         CommonUserDTO userDTO = jsonResult.getResult();
         User savedUser = null;
         if (userDTO != null) {

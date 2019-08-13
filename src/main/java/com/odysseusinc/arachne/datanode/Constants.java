@@ -69,7 +69,7 @@ public interface Constants {
             String LOGOUT = "/api/v1/auth/logout";
             String REGISTRATION = "/api/v1/auth/registration";
             String SUGGEST = "/api/v1/user-management/users/suggest";
-            String GET_USER = "/api/v1/user-management/users/{id}";
+            String GET_USER = "/api/v1/user-management/users/byusername/{id}";
             String LINK_TO_NODE = "/api/v1/user-management/datanodes/{datanodeId}/users";
             String PASSWORD_POLICIES = "/api/v1/auth/password-policies";
         }

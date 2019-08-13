@@ -45,6 +45,7 @@ public class UserInfoToUserConverter implements Converter<UserInfo, User>{
         user.setEmail((String) source.getAdditionalInfo().get("email"));
         user.setFirstName((String) source.getAdditionalInfo().get("firstName"));
         user.setLastName((String) source.getAdditionalInfo().get("lastName"));
+        user.setToken((String) source.getAdditionalInfo().get("token"));
         return user;
     }
 }

@@ -55,7 +55,7 @@ public interface UserService extends UserDetailsService {
 
     void unlinkUserOnCentral(User user);
 
-    User addUserFromCentral(User user, Long centralId);
+    User addUserFromCentral(User user, String username);
 
     User getUser(Principal principal) throws PermissionDeniedException;
 

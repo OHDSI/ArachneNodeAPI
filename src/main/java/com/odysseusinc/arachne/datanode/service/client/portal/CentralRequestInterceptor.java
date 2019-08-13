@@ -22,14 +22,10 @@
 
 package com.odysseusinc.arachne.datanode.service.client.portal;
 
-import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
-import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import feign.RequestTemplate;
 import java.util.Objects;
-import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.ohdsi.authenticator.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -39,13 +35,13 @@ import org.springframework.util.StringUtils;
 
 @Component
 public class CentralRequestInterceptor implements feign.RequestInterceptor {
-    Logger log = LoggerFactory.getLogger(CentralRequestInterceptor.class);
 
     @Value("${arachne.token.header}")
     private String authHeader;
 
     private ApplicationContext applicationContext;
     private UserService userService;
+    private TokenService tokenService;
 
     @Autowired
     public CentralRequestInterceptor(ApplicationContext applicationContext) {
@@ -54,13 +50,12 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
     }
 
 
-    private String getToken() throws PermissionDeniedException {
+    private String getToken() {
 
-        final Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof org.springframework.security.core.userdetails.User) {
-            String userName = ((org.springframework.security.core.userdetails.User) principal).getUsername();
-            final Optional<User> userOptional = userService.findByUsername(userName);
-            return userOptional.map(User::getToken).orElse(null);
+        final Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
+        if (credentials instanceof String) {
+            String centralToken = tokenService.resolveAdditionalInfo(credentials.toString(), "token", String.class);
+            return Objects.nonNull(centralToken) ? centralToken : credentials.toString();
         }
         return null;
     }
@@ -69,21 +64,20 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
     public void apply(RequestTemplate template) {
 
         final String token;
-        try {
-            init();
-            token = getToken();
-            if (!StringUtils.isEmpty(token)) {
-                template.header(authHeader, token);
-            }
-        } catch (PermissionDeniedException e) {
-            log.error(e.getMessage());
+        init();
+        token = getToken();
+        if (!StringUtils.isEmpty(token)) {
+            template.header(authHeader, token);
         }
     }
 
     private void init(){
 
-        if (Objects.isNull(this.userService)){
+        if (Objects.isNull(this.userService)) {
             this.userService = applicationContext.getBean(UserService.class);
+        }
+        if (Objects.isNull(this.tokenService)) {
+            this.tokenService = applicationContext.getBean(TokenService.class);
         }
     }
 }

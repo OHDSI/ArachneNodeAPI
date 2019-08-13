@@ -40,6 +40,7 @@ import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
+import com.odysseusinc.arachne.datanode.service.events.user.UserDeletedEvent;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
 import java.util.HashMap;
@@ -131,25 +132,25 @@ public abstract class BaseAdminController extends BaseController {
     }
 
     @ApiOperation("Remove admin")
-    @RequestMapping(value = "/api/v1/admin/admins/{uuid}", method = RequestMethod.DELETE)
-    public JsonResult removeAdmin(@PathVariable String uuid) {
+    @RequestMapping(value = "/api/v1/admin/admins/{username:.+}", method = RequestMethod.DELETE)
+    public JsonResult removeAdmin(@PathVariable String username) {
 
-        userService.remove(UserIdUtils.uuidToId(uuid));
+        userService.findByUsername(username).ifPresent(user -> userService.remove(user.getId()));
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
     }
 
     @ApiOperation("Add admin from central")
-    @RequestMapping(value = "/api/v1/admin/admins/{uuid}", method = RequestMethod.POST)
+    @RequestMapping(value = "/api/v1/admin/admins/{username:.+}", method = RequestMethod.POST)
     public JsonResult addAdminFromCentral(
             Principal principal,
-            @PathVariable String uuid) {
+            @PathVariable String username) {
 
         JsonResult<UserDTO> result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
         if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
             userService
                     .findByUsername(principal.getName())
                     .ifPresent(loginedUser -> {
-                        final User user = userService.addUserFromCentral(loginedUser, UserIdUtils.uuidToId(uuid));
+                        final User user = userService.addUserFromCentral(loginedUser, username);
                         result.setResult(conversionService.convert(user, UserDTO.class));
                     });
         } else {

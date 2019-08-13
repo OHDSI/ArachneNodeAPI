@@ -108,7 +108,7 @@ public interface CentralClient {
                                      @Param("excludeEmails") String emails);
 
     @RequestLine("GET " + GET_USER)
-    JsonResult<CommonUserDTO> getUser(@Param("id") Long centralUserId);
+    JsonResult<CommonUserDTO> getUser(@Param("id") String username);
 
     @RequestLine("POST " + Constants.CentralApi.DataSource.CREATION)
     @Headers("Content-Type: " + MediaType.APPLICATION_JSON_UTF8_VALUE)
