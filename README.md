@@ -31,7 +31,7 @@ The configuration parameter `datanode.runMode` is used to set Data Node running 
 There are two value supported:
 - **NETWORK** which is default, sets running in network mode and requires communication with *Central*
 - **STANDALONE** sets running in standalone mode when communication with *Central* is not supported
-and some functions became unavailable
+and some functions become unavailable
 
 ### Features disabled in Stand-alone mode
 - All operations related with Atlas
