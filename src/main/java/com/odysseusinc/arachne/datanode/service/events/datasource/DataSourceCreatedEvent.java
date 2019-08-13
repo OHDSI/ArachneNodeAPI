@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018 Odysseus Data Services, inc.
+ * Copyright 2019 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,26 +15,27 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: October 31, 2016
+ * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
+ * Created: Jul 29, 2019
  *
  */
 
-package com.odysseusinc.arachne.datanode.repository;
+package com.odysseusinc.arachne.datanode.service.events.datasource;
 
+import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
-import java.util.List;
-import java.util.Optional;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public class DataSourceCreatedEvent extends BaseDataSourceEvent {
 
-    Optional<User> findOneByEmail(String email);
+    /**
+     * Create a new ApplicationEvent.
+     *  @param source the object on which the event initially occurred (never {@code null})
+     * @param owner
+     * @param dataSource
+     */
+    public DataSourceCreatedEvent(Object source, User owner, DataSource dataSource) {
 
-    Optional<User> findOneByEmailAndEnabled(String email, boolean enabled);
+        super(source, owner, dataSource);
+    }
 
-    List<User> findAll(Sort sort);
-
-    List<User> findByTokenIsNull();
 }

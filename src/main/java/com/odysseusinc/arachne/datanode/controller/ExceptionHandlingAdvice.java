@@ -31,6 +31,7 @@ import static java.util.Arrays.asList;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
+import com.odysseusinc.arachne.datanode.exception.BadRequestException;
 import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
@@ -179,6 +180,12 @@ public class ExceptionHandlingAdvice extends BaseController {
         JsonResult result = new JsonResult(SYSTEM_ERROR);
         result.setErrorMessage("External system is not available");
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity badRequestHandler() {
+
+        return ResponseEntity.badRequest().build();
     }
 
     private String generateErrorToken() {

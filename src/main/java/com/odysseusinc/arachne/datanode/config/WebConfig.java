@@ -22,7 +22,13 @@
 
 package com.odysseusinc.arachne.datanode.config;
 
+import com.odysseusinc.arachne.datanode.service.postpone.support.PostponeInterceptor;
+import com.odysseusinc.arachne.datanode.service.postpone.support.PostponeRequestsBeanPostprocessor;
+import com.odysseusinc.arachne.datanode.service.postpone.support.PostponedRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.CommonAnnotationBeanPostProcessor;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +37,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
 @Configuration
 public class WebConfig extends WebMvcConfigurerAdapter {
+
+    @Value("${spring.aop.proxy-target-class:false}")
+    private boolean proxyTargetClass;
+
+    @Autowired
+    private PostponeInterceptor postponeInterceptor;
+
+    @Autowired
+    private PostponedRegistry postponedRegistry;
 
     @Bean
     public BeanPostProcessor commonAnnotationBeanPostProcessor() {
@@ -47,5 +62,11 @@ public class WebConfig extends WebMvcConfigurerAdapter {
         registry.addResourceHandler("/webjars/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
 
+    }
+
+    @Bean
+    public PostponeRequestsBeanPostprocessor postponeRequestsBeanPostprocessor(ApplicationContext applicationContext) {
+
+        return new PostponeRequestsBeanPostprocessor(proxyTargetClass, applicationContext, postponeInterceptor, postponedRegistry);
     }
 }

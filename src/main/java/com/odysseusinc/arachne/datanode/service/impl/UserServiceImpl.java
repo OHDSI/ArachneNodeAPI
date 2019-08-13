@@ -32,6 +32,7 @@ import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.Role;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.RoleRepository;
@@ -42,6 +43,7 @@ import com.odysseusinc.arachne.datanode.service.UserService;
 import java.security.Principal;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -81,7 +83,20 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private CommonUserDTOToUserConverter commonUserDTOToUserConverter;
 
-    @PostConstruct
+    @Override
+    public User create(User user) {
+
+        user.setEnabled(true);
+        user.getRoles().add(getAdminRole());
+        if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+            dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
+                centralIntegrationService.linkUserToDataNodeOnCentral(dataNode, user);
+            });
+        }
+        return userRepository.save(user);
+    }
+
+    @Override
     public void syncUsers() {
 
         try {
@@ -220,6 +235,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void unlinkUserOnCentral(User user) {
+
+        if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+            dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
+                    centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
+            );
+        }
+    }
+
+    @Override
     public User addUserFromCentral(User loggedUser, Long centralUserId) {
 
         LOG.info(ADDING_USER_FROM_CENTRAL_LOG, centralUserId);
@@ -288,5 +313,11 @@ public class UserServiceImpl implements UserService {
             sort = new Sort(direction, sortBy);
         }
         return userRepository.findAll(sort);
+    }
+
+    @Override
+    public List<User> findStandaloneUsers() {
+
+        return userRepository.findByTokenIsNull();
     }
 }

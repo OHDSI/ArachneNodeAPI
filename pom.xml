@@ -291,6 +291,11 @@
             <artifactId>jasypt-hibernate4</artifactId>
             <version>1.9.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.ohdsi</groupId>
+            <artifactId>authenticator</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
 
     </dependencies>
 

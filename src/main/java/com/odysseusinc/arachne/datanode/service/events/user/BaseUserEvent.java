@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018 Odysseus Data Services, inc.
+ * Copyright 2019 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,26 +15,34 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: October 31, 2016
+ * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
+ * Created: Jul 29, 2019
  *
  */
 
-package com.odysseusinc.arachne.datanode.repository;
+package com.odysseusinc.arachne.datanode.service.events.user;
 
 import com.odysseusinc.arachne.datanode.model.user.User;
-import java.util.List;
-import java.util.Optional;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.context.ApplicationEvent;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public abstract class BaseUserEvent extends ApplicationEvent {
 
-    Optional<User> findOneByEmail(String email);
+    private User user;
 
-    Optional<User> findOneByEmailAndEnabled(String email, boolean enabled);
+    /**
+     * Create a new ApplicationEvent.
+     *
+     * @param source the object on which the event initially occurred (never {@code null})
+     * @param user
+     */
+    public BaseUserEvent(Object source, User user) {
 
-    List<User> findAll(Sort sort);
+        super(source);
+        this.user = user;
+    }
 
-    List<User> findByTokenIsNull();
+    public User getUser() {
+
+        return user;
+    }
 }

@@ -103,6 +103,7 @@ datanode:
     port: 443
     authHeader: Arachne-Auth-Token
     nodeAuthHeader: Arachne-System-Token
+    impersonateHeader: Arachne-Auth-Impersonate
   httpClient:
     connectTimeout: 60
     writeTimeout: 60
@@ -187,3 +188,34 @@ submission:
   result:
     files:
       exclusions:
+postponed:
+  retry:
+    interval: 3600000
+    maxAttempts: 10
+authenticator:
+  user:
+    registrationStrategy: CREATE_IF_FIRST
+  methods:
+    rest-central:
+      service: org.ohdsi.authenticator.service.rest.RestAuthService
+      config:
+        bodyFormat: JSON
+        params:
+          username: username
+          password: password
+        loginSuccessCriteria:
+          status: OK
+          bodyProperty: '$[?(@.errorCode == 0)]'
+        token:
+          source: BODY
+          key: $.result.token
+          targetHeader: Arachne-Auth-Token
+          targetFormat: '%s'
+          copyExpirationDate: true
+        fieldsToExtract:
+          id: result.id
+          email: result.email
+          username: result.username
+          firstName: result.firstname
+          middleName: result.middlename
+          lastName: result.lastname

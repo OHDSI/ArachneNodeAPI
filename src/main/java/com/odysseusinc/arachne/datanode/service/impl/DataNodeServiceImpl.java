@@ -25,14 +25,21 @@ package com.odysseusinc.arachne.datanode.service.impl;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.DataNodeRepository;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
+import com.odysseusinc.arachne.datanode.service.events.FunctionalModeChangedEvent;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,18 +47,23 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class DataNodeServiceImpl implements DataNodeService {
 
+    private static final Logger log = LoggerFactory.getLogger(DataNodeService.class);
+
     private static final String ALREADY_EXISTS_EXCEPTION = "DataNode entry already exist, try to update it";
-    private static final String NOT_EXISTS_EXCEPTION = "Current DataNode entry is not exists, try to create it";
 
     private final DataNodeRepository dataNodeRepository;
     private final BaseCentralIntegrationService centralIntegrationService;
+    private ApplicationEventPublisher eventPublisher;
+    private FunctionalMode mode = FunctionalMode.UNKNOWN;
 
     @Autowired
     public DataNodeServiceImpl(BaseCentralIntegrationService centralIntegrationService,
-                               DataNodeRepository dataNodeRepository) {
+                               DataNodeRepository dataNodeRepository,
+                               ApplicationEventPublisher eventPublisher) {
 
         this.centralIntegrationService = centralIntegrationService;
         this.dataNodeRepository = dataNodeRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -87,5 +99,22 @@ public class DataNodeServiceImpl implements DataNodeService {
     public void updateHealthStatus(Long id, CommonHealthStatus healthStatus, String healthStatusDescription) {
 
         dataNodeRepository.updateHealthStatus(id, healthStatus, healthStatusDescription);
+    }
+
+    @Override
+    public FunctionalMode getDataNodeMode() {
+
+        return mode;
+    }
+
+    @Override
+    public void setDataNodeMode(FunctionalMode mode) {
+
+        FunctionalMode oldMode = this.mode;
+        if (!Objects.equals(oldMode, mode)) {
+            this.mode = mode;
+            log.info("DataNode mode changed from \"{}\" to \"{}\"", oldMode, mode);
+            eventPublisher.publishEvent(new FunctionalModeChangedEvent(this, oldMode, mode));
+        }
     }
 }

@@ -35,4 +35,6 @@ analysis:
   scheduler:
     resendFailuresInterval: 60000
     invalidateExecutingInterval: 120000
-
+postponed:
+  retry:
+    interval: 60000

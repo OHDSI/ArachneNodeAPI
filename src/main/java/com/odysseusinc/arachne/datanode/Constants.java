@@ -48,6 +48,7 @@ public interface Constants {
         interface DataNode {
             String CREATION = "/api/v1/data-nodes";
             String UPDATE = "/api/v1/data-nodes/{uuid}";
+            String BUILD_NUMBER = "/api/v1/build-number";
         }
 
         interface DataSource {
