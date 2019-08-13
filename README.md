@@ -25,6 +25,24 @@ Arachne Data Node is a component that facilitates connection and communication b
 -Dsecurity.method=db
 ```
 
+## Stand-alone mode
+
+The configuration parameter `datanode.runMode` is used to set Data Node running mode.
+There are two value supported:
+- **NETWORK** which is default, sets running in network mode and requires communication with *Central*
+- **STANDALONE** sets running in standalone mode when communication with *Central* is not supported
+and some functions became unavailable
+
+### Features disabled in Stand-alone mode
+- All operations related with Atlas
+- Data Source publishing
+- Removal of Data Sources has been published before
+- Import and Re-import of Achilles results
+- Adding new users from Central
+
+**Note:** it's prohibited to switch from *Standalone* to *Network* mode when there are some
+offline entities, such as users, has been created in standalone mode. 
+
 ## User registration strategies
 
 There are two user registration strategies:
