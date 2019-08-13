@@ -336,13 +336,11 @@ public class AchillesServiceImpl implements AchillesService {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Achilles data has collected at {}", tempDir);
                 }
-                if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
-                    retryTemplate.execute((RetryCallback<Void, Exception>) retryContext -> {
+                retryTemplate.execute((RetryCallback<Void, Exception>) retryContext -> {
 
-                        sendResultToCentral(dataSource, tempDir);
-                        return null;
-                    });
-                }
+                    sendResultToCentral(dataSource, tempDir);
+                    return null;
+                });
                 updateJob(job, SUCCESSFUL);
             } finally {
                 executorService.shutdown();
