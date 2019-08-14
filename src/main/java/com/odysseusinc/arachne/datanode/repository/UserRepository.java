@@ -30,9 +30,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<User> findOneByEmail(String email);
-
-    Optional<User> findOneByEmailAndEnabled(String email, boolean enabled);
+    Optional<User> findOneByUsernameAndEnabled(String username, boolean enabled);
 
     List<User> findAll(Sort sort);
+
+    Optional<User> findOneByUsername(String username);
+
+    List<User> findBySync(boolean isSync);
 }

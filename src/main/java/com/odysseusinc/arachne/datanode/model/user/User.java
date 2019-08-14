@@ -22,6 +22,9 @@
 
 package com.odysseusinc.arachne.datanode.model.user;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.SequenceGenerator;
 import org.hibernate.validator.constraints.Email;
 
 import javax.persistence.Column;
@@ -42,6 +45,8 @@ import java.util.List;
 public class User implements Serializable {
 
     @Id
+    @SequenceGenerator(name = "user_id_seq_generator", sequenceName = "user_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_seq_generator")
     private Long id;
 
     @Email
@@ -60,8 +65,8 @@ public class User implements Serializable {
     @Column(name = "last_name", length = 50)
     private String lastName;
 
-    @Column
-    private String token;
+    @Column(name = "is_sync")
+    private boolean sync;
 
     @Column
     private Boolean enabled;
@@ -132,14 +137,14 @@ public class User implements Serializable {
         this.roles = roles;
     }
 
-    public String getToken() {
+    public boolean getSync() {
 
-        return token;
+        return sync;
     }
 
-    public void setToken(String token) {
+    public void setSync(boolean sync) {
 
-        this.token = token;
+        this.sync = sync;
     }
 
     public Boolean getEnabled() {

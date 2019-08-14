@@ -13,7 +13,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.5.20.RELEASE</version>
+        <version>1.5.21.RELEASE</version>
         <relativePath/>
     </parent>
 
@@ -25,7 +25,7 @@
         <start-class>com.odysseusinc.arachne.datanode.WebApplicationStarter</start-class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
-        <jjwt.version>0.6.0</jjwt.version>
+        <jjwt.version>0.10.5</jjwt.version>
         <postgresql.version>42.2.1</postgresql.version>
         <flywayVersion>4.2.0</flywayVersion>
         <javaDockerVersion>3.0.14</javaDockerVersion>
@@ -159,8 +159,20 @@
         <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt</artifactId>
+            <artifactId>jjwt-api</artifactId>
             <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>net.lingala.zip4j</groupId>
@@ -228,13 +240,13 @@
             <artifactId>hydra</artifactId>
             <version>0.0.4-SNAPSHOT</version>
         </dependency>
-<!--
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20170516</version>
-        </dependency>
--->
+        <!--
+                <dependency>
+                    <groupId>org.json</groupId>
+                    <artifactId>json</artifactId>
+                    <version>20170516</version>
+                </dependency>
+        -->
         <dependency>
             <groupId>org.ohdsi</groupId>
             <artifactId>standardized-analysis-specs</artifactId>
@@ -290,6 +302,12 @@
             <groupId>org.jasypt</groupId>
             <artifactId>jasypt-hibernate4</artifactId>
             <version>1.9.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.ohdsi</groupId>
+            <artifactId>authenticator</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
     </dependencies>
@@ -434,7 +452,9 @@
                     <execution>
                         <id>deploy</id>
                         <phase>deploy</phase>
-                        <goals><goal>push</goal></goals>
+                        <goals>
+                            <goal>push</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

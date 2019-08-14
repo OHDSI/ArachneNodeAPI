@@ -24,6 +24,7 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.commons.utils.UserIdUtils;
 import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
+import com.odysseusinc.arachne.datanode.model.user.Role;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -47,9 +48,9 @@ public class UserToUserDTOConverter implements Converter<User, UserDTO>, Initial
         dto.setFirstname(user.getFirstName());
         dto.setLastname(user.getLastName());
         dto.setEmail(user.getEmail());
-        dto.setUsername(user.getEmail());
+        dto.setUsername(user.getUsername());
         if (user.getRoles() != null) {
-            dto.setRoles(user.getRoles().stream().map(role -> role.getName()).collect(Collectors.toList()));
+            dto.setRoles(user.getRoles().stream().map(Role::getName).collect(Collectors.toList()));
         }
         dto.setEnabled(Objects.nonNull(user.getEnabled()) ? user.getEnabled() : false);
         return dto;
