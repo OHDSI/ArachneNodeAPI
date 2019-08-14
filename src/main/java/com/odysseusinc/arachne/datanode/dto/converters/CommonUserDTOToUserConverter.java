@@ -46,7 +46,6 @@ public class CommonUserDTOToUserConverter implements Converter<CommonUserDTO, Us
         dto.setLastName(user.getLastname());
         dto.setUsername(user.getUsername());
         dto.setEnabled(user.getEnabled());
-        dto.setToken(user.getCentralToken());
         return dto;
     }
 }

@@ -40,7 +40,6 @@ public class UserToCommonLinkUserToDataNodeDTOConverter implements Converter<Use
         final CommonLinkUserToDataNodeDTO commonLinkUserToDataNode = new CommonLinkUserToDataNodeDTO();
         commonLinkUserToDataNode.setUserName(user.getUsername());
         commonLinkUserToDataNode.setEnabled(user.getEnabled());
-        commonLinkUserToDataNode.setToken(user.getToken());
         final Set<CommonDataNodeUserRole> roles = user.getRoles()
                 .stream()
                 .map(role -> {

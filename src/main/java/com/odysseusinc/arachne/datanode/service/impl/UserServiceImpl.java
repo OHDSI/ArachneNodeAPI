@@ -26,8 +26,6 @@ import static com.odysseusinc.arachne.datanode.security.RolesConstants.ROLE_ADMI
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
-import com.odysseusinc.arachne.datanode.dto.converters.UserDTOToUserConverter;
-import com.odysseusinc.arachne.datanode.dto.converters.UserToUserDTOConverter;
 import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
@@ -95,29 +93,6 @@ public class UserServiceImpl implements UserService {
             });
         }
         return userRepository.save(user);
-    }
-
-    @Override
-    public void syncUsers() {
-
-        try {
-            dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
-                        LOG.info(RELINKING_ALL_USERS_LOG);
-                        final List<User> users = userRepository.findAll();
-                        List<User> updatedUsers = centralIntegrationService.relinkAllUsersToDataNodeOnCentral(dataNode, users);
-                        List<User> mappedUsers = users.stream().peek(user -> updatedUsers.stream()
-                                .filter(u -> u.getUsername().equals(user.getUsername())).findFirst()
-                                .ifPresent(u -> {
-                                    user.setEnabled(u.getEnabled());
-                                    user.setToken(u.getToken());
-                                }))
-                                .collect(Collectors.toList());
-                        userRepository.save(mappedUsers);
-                    }
-            );
-        } catch (Exception ex) {
-            LOG.error(RELINKING_ALL_USERS_ERROR_LOG, ex.getMessage());
-        }
     }
 
     @Override
@@ -250,11 +225,13 @@ public class UserServiceImpl implements UserService {
             if (!localUser.isPresent()) {
                 final User user = conversionService.convert(userDTO, User.class);
                 user.getRoles().add(getAdminRole());
-                dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
+                dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
                         centralIntegrationService.linkUserToDataNodeOnCentral(
                                 dataNode,
                                 user
-                        )
+                        );
+                        user.setSync(true);
+                    }
                 );
                 savedUser = userRepository.save(user);
             }
@@ -306,6 +283,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> findStandaloneUsers() {
 
-        return userRepository.findByTokenIsNull();
+        return userRepository.findBySync(false);
     }
 }

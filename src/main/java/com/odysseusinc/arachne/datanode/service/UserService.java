@@ -59,8 +59,6 @@ public interface UserService extends UserDetailsService {
 
     User getUser(Principal principal) throws PermissionDeniedException;
 
-    void syncUsers();
-
     User create(User user);
 
     List<User> findStandaloneUsers();

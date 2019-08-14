@@ -65,8 +65,8 @@ public class User implements Serializable {
     @Column(name = "last_name", length = 50)
     private String lastName;
 
-    @Column
-    private String token;
+    @Column(name = "is_sync")
+    private boolean sync;
 
     @Column
     private Boolean enabled;
@@ -137,14 +137,14 @@ public class User implements Serializable {
         this.roles = roles;
     }
 
-    public String getToken() {
+    public boolean getSync() {
 
-        return token;
+        return sync;
     }
 
-    public void setToken(String token) {
+    public void setSync(boolean sync) {
 
-        this.token = token;
+        this.sync = sync;
     }
 
     public Boolean getEnabled() {

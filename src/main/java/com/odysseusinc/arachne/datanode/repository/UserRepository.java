@@ -36,5 +36,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findOneByUsername(String username);
 
-    List<User> findByTokenIsNull();
+    List<User> findBySync(boolean isSync);
 }
