@@ -90,6 +90,7 @@ public class UserServiceImpl implements UserService {
         if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
             dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
                 centralIntegrationService.linkUserToDataNodeOnCentral(dataNode, user);
+                user.setSync(true);
             });
         }
         return userRepository.save(user);
