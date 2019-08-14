@@ -25,13 +25,13 @@ package com.odysseusinc.arachne.datanode.service.client.portal;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import feign.RequestTemplate;
 import java.util.Objects;
+import org.apache.commons.lang3.StringUtils;
 import org.ohdsi.authenticator.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 @Component
 public class CentralRequestInterceptor implements feign.RequestInterceptor {
@@ -53,7 +53,7 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
     private String getToken() {
 
         final Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
-        if (credentials instanceof String) {
+        if (credentials instanceof String && StringUtils.isNotBlank((String)credentials)) {
             String centralToken = tokenService.resolveAdditionalInfo(credentials.toString(), "token", String.class);
             return Objects.nonNull(centralToken) ? centralToken : credentials.toString();
         }
