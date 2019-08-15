@@ -24,6 +24,7 @@ package com.odysseusinc.arachne.datanode.service.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
+import static com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode.NETWORK;
 import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
 
 import com.google.common.base.Preconditions;
@@ -122,7 +123,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     public void createOnCentral(User owner, DataSource dataSource) {
 
-        if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+        if (Objects.equals(NETWORK, dataNodeService.getDataNodeMode())) {
             AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
             CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
             commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
@@ -192,7 +193,8 @@ public class DataSourceServiceImpl implements DataSourceService {
         final DataSource exists = getById(dataSource.getId());
 
         final String name = dataSource.getName();
-        if (Objects.nonNull(name)) {
+        // Prevents name update in Standalone mode when datasource is synchronized
+        if (Objects.nonNull(name) && (Objects.equals(NETWORK, dataNodeService.getDataNodeMode()) || exists.getCentralId() == null)) {
             exists.setName(name);
         }
         final DBMSType type = dataSource.getType();
@@ -283,12 +285,16 @@ public class DataSourceServiceImpl implements DataSourceService {
             CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
             commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
             commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
-            if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
-                integrationService.sendDataSourceUpdateRequest(
+            if (Objects.equals(NETWORK, dataNodeService.getDataNodeMode())) {
+                CommonDataSourceDTO updated = integrationService.sendDataSourceUpdateRequest(
                         user,
                         dataSource.getCentralId(),
                         commonDataSourceDTO
                 );
+                if (!Objects.equals(dataSource.getName(), updated.getName())) {
+                    dataSource.setName(updated.getName());
+                    dataSourceRepository.save(dataSource);
+                }
             }
         }
     }
