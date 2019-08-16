@@ -29,6 +29,7 @@ import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.impl.AuthenticationServiceImpl;
 import org.ohdsi.authenticator.service.Authenticator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -69,11 +70,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public AuthenticationTokenFilter authenticationTokenFilterBean() throws Exception {
+    public AuthenticationTokenFilter authenticationTokenFilterBean() {
 
-        AuthenticationTokenFilter authenticationTokenFilter = new AuthenticationTokenFilter();
-        authenticationTokenFilter.setAuthenticationManager(authenticationManagerBean());
-        return authenticationTokenFilter;
+        return new AuthenticationTokenFilter();
+    }
+
+    @Bean
+    public FilterRegistrationBean authenticationTokenFilterRegistration(AuthenticationTokenFilter filter) {
+
+        FilterRegistrationBean registrationBean = new FilterRegistrationBean();
+        registrationBean.setFilter(filter);
+        registrationBean.setEnabled(false);
+        return registrationBean;
     }
 
     @Bean
