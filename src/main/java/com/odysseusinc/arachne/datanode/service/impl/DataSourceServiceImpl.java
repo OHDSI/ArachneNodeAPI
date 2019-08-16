@@ -200,7 +200,7 @@ public class DataSourceServiceImpl implements DataSourceService {
         if (Objects.equals(STANDALONE, dataNodeService.getDataNodeMode()) && exists.getCentralId() != null && !Objects.equals(name, exists.getName())) {
             throw new ValidationException("Cannot change Data source name which is published to Central in Standalone mode");
         }
-        if (Objects.nonNull(name) && (Objects.equals(NETWORK, dataNodeService.getDataNodeMode()) || exists.getCentralId() == null)) {
+        if (Objects.nonNull(name)) {
             exists.setName(name);
         }
         final DBMSType type = dataSource.getType();
