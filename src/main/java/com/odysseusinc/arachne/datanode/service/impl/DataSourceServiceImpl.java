@@ -292,15 +292,11 @@ public class DataSourceServiceImpl implements DataSourceService {
             commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
             commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
             if (Objects.equals(NETWORK, dataNodeService.getDataNodeMode())) {
-                CommonDataSourceDTO updated = integrationService.sendDataSourceUpdateRequest(
+                integrationService.sendDataSourceUpdateRequest(
                         user,
                         dataSource.getCentralId(),
                         commonDataSourceDTO
                 );
-                if (!Objects.equals(dataSource.getName(), updated.getName())) {
-                    dataSource.setName(updated.getName());
-                    dataSourceRepository.save(dataSource);
-                }
             }
         }
     }
