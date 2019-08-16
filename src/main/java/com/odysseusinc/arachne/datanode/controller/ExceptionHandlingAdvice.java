@@ -35,6 +35,7 @@ import com.odysseusinc.arachne.datanode.exception.BadRequestException;
 import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
+import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
 import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.nohandlerfoundexception.NoHandlerFoundExceptionUtils;
@@ -186,6 +187,12 @@ public class ExceptionHandlingAdvice extends BaseController {
     public ResponseEntity badRequestHandler() {
 
         return ResponseEntity.badRequest().build();
+    }
+
+    @ExceptionHandler(ServiceNotAvailableException.class)
+    public ResponseEntity serviceNotAvailableHanlder() {
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
     }
 
     private String generateErrorToken() {
