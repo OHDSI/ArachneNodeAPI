@@ -23,8 +23,10 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkPositionIndexes;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
 import static com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode.NETWORK;
+import static com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode.STANDALONE;
 import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
 
 import com.google.common.base.Preconditions;
@@ -38,6 +40,7 @@ import com.odysseusinc.arachne.datanode.dto.converters.DataSourceToCommonDataSou
 import com.odysseusinc.arachne.datanode.dto.converters.UserDTOToUserConverter;
 import com.odysseusinc.arachne.datanode.dto.converters.UserToUserDTOConverter;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
+import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.datasource.AutoDetectedFields;
@@ -194,6 +197,9 @@ public class DataSourceServiceImpl implements DataSourceService {
 
         final String name = dataSource.getName();
         // Prevents name update in Standalone mode when datasource is synchronized
+        if (Objects.equals(STANDALONE, dataNodeService.getDataNodeMode()) && exists.getCentralId() != null && !Objects.equals(name, exists.getName())) {
+            throw new ValidationException("Cannot change Data source name which is published to Central in Standalone mode");
+        }
         if (Objects.nonNull(name) && (Objects.equals(NETWORK, dataNodeService.getDataNodeMode()) || exists.getCentralId() == null)) {
             exists.setName(name);
         }
