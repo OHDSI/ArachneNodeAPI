@@ -60,7 +60,11 @@ public class AuthenticationTokenFilter extends UsernamePasswordAuthenticationFil
 
             authenticationService.authenticate(authToken, httpRequest);
         } catch (AuthenticationException | AuthException | org.ohdsi.authenticator.exception.AuthenticationException ex) {
-            log.error("Authentication failed", ex);
+            if (log.isDebugEnabled()) {
+                log.debug("Authentication failed", ex);
+            } else {
+                log.error("Authentication failed: {}", ex.getMessage());
+            }
         }
         chain.doFilter(request, response);
     }
