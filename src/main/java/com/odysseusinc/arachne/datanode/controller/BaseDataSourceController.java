@@ -36,8 +36,10 @@ import com.odysseusinc.arachne.datanode.dto.datasource.CreateDataSourceDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceBusinessDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
+import com.odysseusinc.arachne.datanode.exception.BadRequestException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
+import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
 import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
@@ -47,6 +49,9 @@ import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import com.odysseusinc.arachne.datanode.util.DataNodeUtils;
+import com.odysseusinc.arachne.datanode.util.LogUtils;
+import feign.FeignException;
+import feign.RetryableException;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
 import java.util.Collections;
@@ -56,6 +61,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.modelmapper.ModelMapper;
+import org.ohdsi.authenticator.exception.AuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -73,7 +79,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 public abstract class BaseDataSourceController<DS extends DataSource, BusinessDTO extends DataSourceBusinessDTO, CommonDTO extends CommonDataSourceDTO> extends BaseController {
 
-    private static final String COMMUNICATION_FAILED = "Failed to communicate with Central, remains in {} mode";
+    private static final String COMMUNICATION_FAILED = "Failed to communicate with Central, error: {}";
+    private static final String AUTH_ERROR_MESSAGE = "Couldn't autheticate on Central, {}";
+    private static final String UNEXPECTED_ERROR = "Unexpected error during request to Central, {}";
     protected final DataSourceService dataSourceService;
     protected final BaseCentralIntegrationService<DS, CommonDTO> integrationService;
     protected final ModelMapper modelMapper;
@@ -174,12 +182,15 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                     e.setModelType(dto.getModelType());
                 }
             });
+        } catch (RetryableException e) {
+            LogUtils.logError(LOGGER, COMMUNICATION_FAILED, e);
+            throw new ServiceNotAvailableException("Central is not available");
+        } catch (AuthenticationException | FeignException.Unauthorized e) {
+            LogUtils.logError(LOGGER, AUTH_ERROR_MESSAGE, e);
+            throw new AuthException(e.getMessage());
         } catch (Exception e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.warn(COMMUNICATION_FAILED, e);
-            } else {
-                LOGGER.warn(COMMUNICATION_FAILED);
-            }
+            LogUtils.logError(LOGGER, UNEXPECTED_ERROR, e);
+            throw new BadRequestException();
         }
         return dtos;
     }
