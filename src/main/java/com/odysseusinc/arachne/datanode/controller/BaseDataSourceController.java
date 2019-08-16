@@ -50,6 +50,7 @@ import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import com.odysseusinc.arachne.datanode.util.DataNodeUtils;
 import com.odysseusinc.arachne.datanode.util.LogUtils;
+import feign.FeignException;
 import feign.RetryableException;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
@@ -184,7 +185,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         } catch (RetryableException e) {
             LogUtils.logError(LOGGER, COMMUNICATION_FAILED, e);
             throw new ServiceNotAvailableException("Central is not available");
-        } catch (AuthenticationException e) {
+        } catch (AuthenticationException | FeignException.Unauthorized e) {
             LogUtils.logError(LOGGER, AUTH_ERROR_MESSAGE, e);
             throw new AuthException(e.getMessage());
         } catch (Exception e) {

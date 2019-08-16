@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
@@ -117,7 +118,9 @@ public class ExceptionHandlingAdvice extends BaseController {
     @ExceptionHandler(AuthException.class)
     public ResponseEntity<JsonResult> exceptionHandler(AuthException ex) {
 
-        return getErrorResponse(UNAUTHORIZED, ex);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .body(new JsonResult(UNAUTHORIZED));
     }
 
     private ResponseEntity<JsonResult> getErrorResponse(JsonResult.ErrorCode errorCode, Exception ex) {
