@@ -118,9 +118,11 @@ public class ExceptionHandlingAdvice extends BaseController {
     @ExceptionHandler(AuthException.class)
     public ResponseEntity<JsonResult> exceptionHandler(AuthException ex) {
 
+        JsonResult result = new JsonResult(UNAUTHORIZED);
+        result.setErrorMessage(ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .body(new JsonResult(UNAUTHORIZED));
+                .body(result);
     }
 
     private ResponseEntity<JsonResult> getErrorResponse(JsonResult.ErrorCode errorCode, Exception ex) {
