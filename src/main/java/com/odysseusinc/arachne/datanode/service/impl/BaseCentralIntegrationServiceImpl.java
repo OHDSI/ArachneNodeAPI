@@ -23,6 +23,8 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.SYSTEM_ERROR;
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import com.google.common.base.Functions;
@@ -50,7 +52,6 @@ import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClien
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -149,7 +150,11 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             DTO commonCreateDataSourceDTO) {
 
         JsonResult<DTO> jsonResult = centralClient.updateDataSource(centralDataSourceId, commonCreateDataSourceDTO);
-        if (jsonResult == null || !NO_ERROR.getCode().equals(jsonResult.getErrorCode())) {
+        int errorCode = Objects.nonNull(jsonResult) ? jsonResult.getErrorCode() : SYSTEM_ERROR.getCode();
+        if (jsonResult == null || !NO_ERROR.getCode().equals(errorCode)) {
+            if (VALIDATION_ERROR.getCode().equals(errorCode)) {
+                throw new IntegrationValidationException(jsonResult);
+            }
             throw new IllegalStateException("Unable to update data source on central." + (jsonResult == null
                     ? "" : jsonResult.getErrorMessage()));
         }
