@@ -30,15 +30,11 @@ import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.DataNodeRepository;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
-import com.odysseusinc.arachne.datanode.service.events.FunctionalModeChangedEvent;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,7 +50,7 @@ public class DataNodeServiceImpl implements DataNodeService {
     private final FunctionalMode mode;
 
     @Autowired
-    public DataNodeServiceImpl(BaseCentralIntegrationService centralIntegrationService,
+    public DataNodeServiceImpl(@Lazy BaseCentralIntegrationService centralIntegrationService,
                                DataNodeRepository dataNodeRepository,
                                @Value("${datanode.runMode}") String runMode) {
 
