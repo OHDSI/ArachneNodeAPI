@@ -59,6 +59,7 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
     private static final Logger logger = LoggerFactory.getLogger(IncidenceRatesRequestHandler.class);
     public static final String IR_BUILD_ERROR = "Failed to build IR data";
     public static final String ID_PROPERTY_SUFFIX = "Ids";
+    private static final String ANALYSIS_DESCRIPTION_FILENAME = "analysisDescription.json";
     private final GenericConversionService conversionService;
     private final CentralSystemClient centralClient;
     private final CommonEntityService commonEntityService;
@@ -159,6 +160,7 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
 
         String result = ((String) info.getOrDefault("expression", "{}"))
                 .replaceAll("\\\\", "");
-        return new MockMultipartFile("analysisDescription.json", result.getBytes());
+        return new MockMultipartFile(ANALYSIS_DESCRIPTION_FILENAME, ANALYSIS_DESCRIPTION_FILENAME,
+                MediaType.APPLICATION_JSON_VALUE, result.getBytes());
     }
 }
