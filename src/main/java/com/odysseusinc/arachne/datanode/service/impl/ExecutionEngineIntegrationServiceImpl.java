@@ -79,7 +79,7 @@ public class ExecutionEngineIntegrationServiceImpl implements ExecutionEngineInt
             }
         } catch (ResourceAccessException exception) {
             throw new ValidationException("Cannot establish connection to the execution engine");
-        } catch (ZipException | IOException zipException) {
+        } catch (IOException zipException) {
             throw new ArachneSystemRuntimeException(zipException.getMessage());
         } finally {
             FileUtils.deleteQuietly(analysisTempDir);
