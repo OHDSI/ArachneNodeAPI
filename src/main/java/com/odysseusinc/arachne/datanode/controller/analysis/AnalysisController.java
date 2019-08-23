@@ -107,7 +107,7 @@ public class AnalysisController {
             analysisService.sendToEngine(analysis);
 
             return ResponseEntity.ok().build();
-        } catch (IOException | ZipException e) {
+        } catch (IOException e) {
 	        logger.error(ERROR_MESSAGE, e);
 	        throw new IllegalOperationException(ERROR_MESSAGE);
         }
