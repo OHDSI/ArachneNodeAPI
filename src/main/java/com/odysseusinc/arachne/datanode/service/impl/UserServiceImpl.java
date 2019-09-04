@@ -26,12 +26,11 @@ import static com.odysseusinc.arachne.datanode.security.RolesConstants.ROLE_ADMI
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
-import com.odysseusinc.arachne.datanode.dto.converters.CommonUserDTOToUserConverter;
 import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
-import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.Role;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.RoleRepository;
@@ -39,16 +38,18 @@ import com.odysseusinc.arachne.datanode.repository.UserRepository;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
+import com.odysseusinc.arachne.datanode.service.events.user.UserDeletedEvent;
 import java.security.Principal;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -79,27 +80,20 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private DataNodeService dataNodeService;
     @Autowired
-    private CommonUserDTOToUserConverter commonUserDTOToUserConverter;
+    private ApplicationEventPublisher eventPublisher;
 
-    @PostConstruct
-    public void syncUsers() {
+    @Override
+    public User create(User user) {
 
-        try {
+        user.setEnabled(true);
+        user.getRoles().add(getAdminRole());
+        if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
             dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
-                        LOG.info(RELINKING_ALL_USERS_LOG);
-                        final List<User> users = userRepository.findAll();
-                        List<User> updatedUsers = centralIntegrationService.relinkAllUsersToDataNodeOnCentral(dataNode, users);
-                        List<User> mappedUsers = users.stream().map(user -> {
-                            updatedUsers.stream().filter(u -> u.getEmail().equals(user.getEmail())).findFirst()
-                                    .ifPresent(u -> user.setEnabled(u.getEnabled()));
-                            return user;
-                        }).collect(Collectors.toList());
-                        userRepository.save(mappedUsers);
-                    }
-            );
-        } catch (Exception ex) {
-            LOG.error(RELINKING_ALL_USERS_ERROR_LOG, ex.getMessage());
+                centralIntegrationService.linkUserToDataNodeOnCentral(dataNode, user);
+                user.setSync(true);
+            });
         }
+        return userRepository.save(user);
     }
 
     @Override
@@ -116,7 +110,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findByUsername(String login) {
 
-        return userRepository.findOneByEmail(login);
+        return userRepository.findOneByUsername(login);
     }
 
     @Override
@@ -134,7 +128,7 @@ public class UserServiceImpl implements UserService {
     protected void toggleUser(String login, Boolean enabled) {
 
         dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
-            User user = userRepository.findOneByEmail(login).orElseThrow(IllegalArgumentException::new);
+            User user = userRepository.findOneByUsername(login).orElseThrow(IllegalArgumentException::new);
             user.setEnabled(enabled);
             userRepository.save(user);
         });
@@ -143,7 +137,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(String login) {
 
-        userRepository.findOneByEmail(login).ifPresent(u -> {
+        userRepository.findOneByUsername(login).ifPresent(u -> {
             userRepository.delete(u);
             LOG.debug("Deleted User: {}", u);
         });
@@ -152,22 +146,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        return userRepository.findOneByEmailAndEnabled(username, true).map(
+        return userRepository.findOneByUsernameAndEnabled(username, true).map(
                 user ->
                         new org.springframework.security.core.userdetails.User(
-                                user.getEmail(), "",
+                                user.getUsername(), "",
                                 user.getRoles().stream().map(
                                         role -> new SimpleGrantedAuthority(role.getName()))
                                         .collect(Collectors.toList())
                         ))
                 .orElseThrow(AuthException::new);
-    }
-
-    @Override
-    public void setToken(User user, String token) {
-
-        user.setToken(token);
-        userRepository.save(user);
     }
 
     @Transactional
@@ -182,9 +169,7 @@ public class UserServiceImpl implements UserService {
             user.setUsername(centralUser.getUsername());
             user.setFirstName(centralUser.getFirstName());
             user.setLastName(centralUser.getLastName());
-            user.setEnabled(true);
-            user.getRoles().add(getAdminRole());
-            return userRepository.save(user);
+            return create(user);
         }
         else {
             throw new AlreadyExistsException("user not registered");
@@ -214,29 +199,40 @@ public class UserServiceImpl implements UserService {
         LOG.info(REMOVING_USER_LOG, id);
         final User user = get(id);
         userRepository.delete(id);
-        dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
-                centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
-        );
+
+        eventPublisher.publishEvent(new UserDeletedEvent(this, user));
     }
 
     @Override
-    public User addUserFromCentral(User loggedUser, Long centralUserId) {
+    public void unlinkUserOnCentral(User user) {
 
-        LOG.info(ADDING_USER_FROM_CENTRAL_LOG, centralUserId);
+        if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+            dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
+                    centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
+            );
+        }
+    }
+
+    @Override
+    public User addUserFromCentral(User loggedUser, String username) {
+
+        LOG.info(ADDING_USER_FROM_CENTRAL_LOG, username);
         JsonResult<CommonUserDTO> jsonResult =
-                centralIntegrationService.getUserFromCentral(loggedUser, centralUserId);
+                centralIntegrationService.getUserFromCentral(loggedUser, username);
         CommonUserDTO userDTO = jsonResult.getResult();
         User savedUser = null;
         if (userDTO != null) {
-            final Optional<User> localUser = userRepository.findOneByEmail(userDTO.getEmail());
+            final Optional<User> localUser = userRepository.findOneByUsername(userDTO.getUsername());
             if (!localUser.isPresent()) {
                 final User user = conversionService.convert(userDTO, User.class);
                 user.getRoles().add(getAdminRole());
-                dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
+                dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
                         centralIntegrationService.linkUserToDataNodeOnCentral(
                                 dataNode,
                                 user
-                        )
+                        );
+                        user.setSync(true);
+                    }
                 );
                 savedUser = userRepository.save(user);
             }
@@ -253,28 +249,23 @@ public class UserServiceImpl implements UserService {
         return findByUsername(principal.getName()).orElseThrow(PermissionDeniedException::new);
     }
 
-    private User findOrAddFromCentral(User currentUser, Long id) {
-
-        User user = userRepository.findOne(id);
-        if (user == null) {
-            user = addUserFromCentral(currentUser, id);
-        }
-        return user;
-    }
-
     @Override
     public List<User> suggestNotAdmin(User user, final String query, Integer limit) {
 
-        final Set<String> adminsEmails = userRepository
-                .findAll(new Sort(Sort.Direction.ASC, "email")).stream()
-                .map(User::getEmail)
-                .collect(Collectors.toSet());
-        final List<CommonUserDTO> result =
-                centralIntegrationService.suggestUsersFromCentral(user, query, adminsEmails, limit);
-        return result
-                .stream()
-                .map(dto -> conversionService.convert(dto, User.class))
-                .collect(Collectors.toList());
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            final Set<String> adminsEmails = userRepository
+                    .findAll(new Sort(Sort.Direction.ASC, "email")).stream()
+                    .map(User::getUsername)
+                    .collect(Collectors.toSet());
+            final List<CommonUserDTO> result =
+                    centralIntegrationService.suggestUsersFromCentral(user, query, adminsEmails, limit);
+            return result
+                    .stream()
+                    .map(dto -> conversionService.convert(dto, User.class))
+                    .collect(Collectors.toList());
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     @Override
@@ -288,5 +279,11 @@ public class UserServiceImpl implements UserService {
             sort = new Sort(direction, sortBy);
         }
         return userRepository.findAll(sort);
+    }
+
+    @Override
+    public List<User> findStandaloneUsers() {
+
+        return userRepository.findBySync(false);
     }
 }

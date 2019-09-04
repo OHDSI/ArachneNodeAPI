@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.controller;
 
+import static com.odysseusinc.arachne.datanode.util.RestUtils.requireNetworkMode;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
@@ -36,31 +37,32 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.user.UserInfoDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
+import com.odysseusinc.arachne.datanode.exception.BadRequestException;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.User;
-import com.odysseusinc.arachne.datanode.security.TokenUtils;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
+import com.odysseusinc.arachne.datanode.service.UserRegistrationStrategy;
 import com.odysseusinc.arachne.datanode.service.UserService;
-import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import io.swagger.annotations.ApiOperation;
 import java.net.URISyntaxException;
 import java.security.Principal;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+import org.ohdsi.authenticator.model.UserInfo;
+import org.ohdsi.authenticator.service.Authenticator;
+import org.pac4j.core.credentials.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-//import static com.odysseusinc.arachne.datanode.Constants.Api.Auth.LOGIN_ENTRY_POINT;
 
 @RestController
 public class AuthController {
@@ -70,74 +72,67 @@ public class AuthController {
     private CentralIntegrationService integrationService;
 
     @Autowired
-    private TokenUtils tokenUtils;
-
-    @Autowired
     private UserService userService;
 
     @Autowired
-    private CentralClient centralClient;
+    private Authenticator authenticator;
+
+    @Autowired
+    private ConversionService conversionService;
+
+    @Autowired
+    private DataNodeService dataNodeService;
+
+    @Autowired
+    private UserRegistrationStrategy userRegisterStrategy;
 
     @Value("${datanode.jwt.header}")
     private String tokenHeader;
 
+    @Value("${security.method}")
+    private String authMethod;
+
+    /**
+     * @deprecated not required as authenticator was implemented that provides authentication source
+     *          in a very flexible way.
+     *
+     * @return
+     */
     @ApiOperation("Get auth method")
     @RequestMapping(value = "/api/v1/auth/method", method = GET)
+    @Deprecated
     public JsonResult<CommonAuthMethodDTO> authMethod() {
 
+        if (!FunctionalMode.NETWORK.equals(dataNodeService.getDataNodeMode())) {
+            throw new BadRequestException();
+        }
         return integrationService.getAuthMethod();
     }
 
     @ApiOperation(value = "Sign in user. Returns JWT token.")
     @RequestMapping(value = "${api.loginEnteryPoint}", method = RequestMethod.POST)
     public JsonResult<CommonAuthenticationResponse> login(
-            @RequestBody CommonAuthenticationRequest authenticationRequest)
-            throws AuthenticationException {
+            @RequestBody CommonAuthenticationRequest request) {
 
-        JsonResult<CommonAuthenticationResponse> jsonResult;
-        final String token;
-        String username = authenticationRequest.getUsername();
-        String centralToken = integrationService.loginToCentral(username, authenticationRequest.getPassword());
-        if (centralToken == null) {
-            throw new AuthException("central auth error");
-        }
-        User centralUser = integrationService.getUserInfoFromCentral(centralToken);
-        User user = userService.findByUsername(username).orElseGet(() -> userService.createIfFirst(centralUser));
-        userService.updateUserInfo(centralUser);
-        userService.setToken(user, centralToken);
-        String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
-        Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
-        token = tokenUtils.generateToken(user, createdDateFromToken);
+        UserInfo userInfo = authenticator.authenticate(
+            authMethod,
+            new UsernamePasswordCredentials(request.getUsername(), request.getPassword())
+        );
+        User centralUser = conversionService.convert(userInfo, User.class);
+        userRegisterStrategy.registerUser(centralUser);
 
-        jsonResult = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-        CommonAuthenticationResponse authenticationResponse = new CommonAuthenticationResponse(token);
-        jsonResult.setResult(authenticationResponse);
-        // Return the token
-        return jsonResult;
+        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getToken()));
     }
 
     @ApiOperation("Refresh session token.")
     @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
     public JsonResult<String> refresh(HttpServletRequest request) {
 
-        JsonResult<String> result;
-        String token = request.getHeader(this.tokenHeader);
-        User user = userService.findByUsername(tokenUtils.getUsernameFromToken(token))
-                .orElseThrow(() -> new AuthException("user not registered"));
-        Map<String, String> header = new HashMap<>();
-        header.put(this.tokenHeader, token);
-        String centralToken = centralClient.refreshToken(header).getResult();
-        if (centralToken == null) {
-            throw new AuthException("central auth error");
-        }
-        userService.setToken(user, centralToken);
-        String notSignedToken = centralToken.substring(0, centralToken.lastIndexOf(".") + 1);
-        Date createdDateFromToken = tokenUtils.getCreatedDateFromToken(notSignedToken, false);
-        token = tokenUtils.generateToken(user, createdDateFromToken);
+        String token = request.getHeader(tokenHeader);
+        UserInfo userInfo = authenticator.refreshToken(token);
+        userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
 
-        result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-        result.setResult(token);
-        return result;
+        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
     }
 
     @ApiOperation("Get current principal")
@@ -150,7 +145,7 @@ public class AuthController {
                 .findByUsername(principal.getName())
                 .ifPresent(user -> {
                     UserInfoDTO userInfoDTO = new UserInfoDTO();
-                    userInfoDTO.setUsername(user.getEmail());
+                    userInfoDTO.setUsername(user.getUsername());
                     final boolean isAdmin = user.getRoles().stream()
                             .anyMatch(r -> r.getName().equals("ROLE_ADMIN"));
                     userInfoDTO.setIsAdmin(isAdmin);
@@ -170,7 +165,7 @@ public class AuthController {
         try {
             String token = request.getHeader(tokenHeader);
             if (token != null) {
-                tokenUtils.addInvalidateToken(token);
+                authenticator.invalidateToken(token);
             }
             result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
             result.setResult(true);
@@ -187,6 +182,7 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/user-management/professional-types", method = GET)
     public JsonResult<List<CommonProfessionalTypeDTO>> getProfessionalTypes() {
 
+        requireNetworkMode(dataNodeService.getDataNodeMode());
         return integrationService.getProfessionalTypes();
     }
 
@@ -199,6 +195,7 @@ public class AuthController {
 
     ) {
 
+        requireNetworkMode(dataNodeService.getDataNodeMode());
         return integrationService.getCountries(query, limit, includeId);
     }
 
@@ -211,21 +208,23 @@ public class AuthController {
             @RequestParam(value = "includeId", required = false) String includeId
     ) {
 
+        requireNetworkMode(dataNodeService.getDataNodeMode());
         return integrationService.getStateProvinces(countryId, query, limit, includeId);
     }
 
     @ApiOperation("Register new user via form.")
     @RequestMapping(value = "/api/v1/auth/registration", method = RequestMethod.POST)
-    public JsonResult<CommonUserDTO> register(@RequestBody CommonUserRegistrationDTO dto) throws Exception {
+    public JsonResult<CommonUserDTO> register(@RequestBody CommonUserRegistrationDTO dto) {
 
+        requireNetworkMode(dataNodeService.getDataNodeMode());
         return integrationService.getRegisterUser(dto);
-
     }
 
     @ApiOperation("Password restrictions")
     @RequestMapping(value = "/api/v1/auth/password-policies", method = GET)
     public ArachnePasswordInfoDTO getPasswordPolicies() throws URISyntaxException {
 
+        requireNetworkMode(dataNodeService.getDataNodeMode());
         return integrationService.getPasswordInfo();
     }
 }

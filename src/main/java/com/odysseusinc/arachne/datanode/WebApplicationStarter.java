@@ -34,9 +34,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Configuration
-@ComponentScan(basePackages = {"com.odysseusinc.arachne.*"})
+@ComponentScan(basePackages = {"com.odysseusinc.arachne.*", "org.ohdsi.authenticator.*"})
 @EnableAutoConfiguration
 @EnableAsync
 @EnableScheduling
@@ -47,6 +48,7 @@ public class WebApplicationStarter {
 
     public static void main(String... argc) {
 
+        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
         SpringApplication.run(WebApplicationStarter.class, argc);
     }
 

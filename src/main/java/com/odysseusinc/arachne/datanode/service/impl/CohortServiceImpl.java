@@ -30,11 +30,12 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonListEntityRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonListEntityResponseDTO;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
-import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CohortService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +45,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
@@ -51,7 +53,6 @@ import org.ohdsi.sql.SqlRender;
 import org.ohdsi.sql.SqlTranslate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -67,17 +68,20 @@ public class CohortServiceImpl implements CohortService {
     private final CentralSystemClient centralClient;
     private final ConfigurableListableBeanFactory beanFactory;
     private final AtlasRepository atlasRepository;
+    private final DataNodeService dataNodeService;
     private Map<CommonAnalysisType,
             AtlasRequestHandler<? extends CommonEntityDTO, ? extends CommonEntityDTO>> handlerMap =
             new HashMap<>();
 
     public CohortServiceImpl(CentralSystemClient centralClient,
                              ConfigurableListableBeanFactory beanFactory,
-                             AtlasRepository atlasRepository) {
+                             AtlasRepository atlasRepository,
+                             DataNodeService dataNodeService) {
 
         this.centralClient = centralClient;
         this.beanFactory = beanFactory;
         this.atlasRepository = atlasRepository;
+        this.dataNodeService = dataNodeService;
     }
 
     @PostConstruct
@@ -103,6 +107,11 @@ public class CohortServiceImpl implements CohortService {
 
         LOGGER.debug(CHECKING_COHORT_LISTS_REQUESTS_LOG);
         try {
+
+            if (!checkFunctionalMode()) {
+                return;
+            }
+
             final CommonListEntityRequest requests = centralClient.getEntityListRequests();
             if (CollectionUtils.isEmpty(requests.getRequestMap())) {
                 return;
@@ -153,6 +162,9 @@ public class CohortServiceImpl implements CohortService {
 
         LOGGER.debug(CHECKING_COHORT_REQUESTS_LOG);
         try {
+            if (!checkFunctionalMode()) {
+                return;
+            }
             centralClient.getEntityRequests().forEach(request -> {
                 if (handlerMap.containsKey(request.getEntityType())) {
                     AtlasRequestHandler handler = handlerMap.get(
@@ -164,8 +176,11 @@ public class CohortServiceImpl implements CohortService {
                 }
             });
         } catch (Exception ex) {
-            LOGGER.error(PROCESS_REQUEST_FAILURE_LOG, ex);
-            LOGGER.error(PROCESS_REQUEST_FAILURE_LOG, ex.getMessage());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.error(PROCESS_REQUEST_FAILURE_LOG, ex);
+            } else {
+                LOGGER.error(PROCESS_REQUEST_FAILURE_LOG, ex.getMessage());
+            }
         }
     }
 
@@ -238,6 +253,16 @@ public class CohortServiceImpl implements CohortService {
             }
             return parameterValues.toArray(new String[parameterValues.size()]);
         }
+    }
+
+    private boolean checkFunctionalMode() {
+
+        FunctionalMode mode = dataNodeService.getDataNodeMode();
+        boolean result = Objects.equals(mode, FunctionalMode.NETWORK);
+        if (!result && LOGGER.isDebugEnabled()) {
+            LOGGER.debug("DataNode is in \"{}\" mode, aborting request", mode);
+        }
+        return result;
     }
 
     public static class TranslateOptions {

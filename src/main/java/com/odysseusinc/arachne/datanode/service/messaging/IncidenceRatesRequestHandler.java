@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -58,6 +59,7 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
     private static final Logger logger = LoggerFactory.getLogger(IncidenceRatesRequestHandler.class);
     public static final String IR_BUILD_ERROR = "Failed to build IR data";
     public static final String ID_PROPERTY_SUFFIX = "Ids";
+    private static final String ANALYSIS_DESCRIPTION_FILENAME = "analysisDescription.json";
     private final GenericConversionService conversionService;
     private final CentralSystemClient centralClient;
     private final CommonEntityService commonEntityService;
@@ -138,7 +140,7 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
                 .map(s -> "'" + s + "'")
                 .collect(Collectors.joining(",")));
         String result = incidenceRatesTemplate.apply(params);
-        return new MockMultipartFile("main.r", result.getBytes());
+        return new MockMultipartFile("file", "main.r", MediaType.TEXT_PLAIN_VALUE, result.getBytes());
     }
 
     @Override
@@ -158,6 +160,7 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
 
         String result = ((String) info.getOrDefault("expression", "{}"))
                 .replaceAll("\\\\", "");
-        return new MockMultipartFile("analysisDescription.json", result.getBytes());
+        return new MockMultipartFile(ANALYSIS_DESCRIPTION_FILENAME, ANALYSIS_DESCRIPTION_FILENAME,
+                MediaType.APPLICATION_JSON_VALUE, result.getBytes());
     }
 }

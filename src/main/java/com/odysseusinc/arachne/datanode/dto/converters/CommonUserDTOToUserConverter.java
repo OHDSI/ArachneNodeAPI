@@ -23,9 +23,7 @@
 package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
-import com.odysseusinc.arachne.commons.utils.UserIdUtils;
 import com.odysseusinc.arachne.datanode.model.user.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
@@ -33,27 +31,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class CommonUserDTOToUserConverter implements Converter<CommonUserDTO, User>{
 
-    @Autowired
-    private GenericConversionService conversionService;
-
     public CommonUserDTOToUserConverter(GenericConversionService conversionService) {
 
         conversionService.addConverter(this);
     }
 
-/*
-    @Override
-    public void afterPropertiesSet() throws Exception {
-
-        conversionService.addConverter(this);
-    }
-
-*/
     @Override
     public User convert(CommonUserDTO user) {
 
         User dto = new User();
-        dto.setId(UserIdUtils.uuidToId(user.getId()));
         dto.setEmail(user.getEmail());
         dto.setUsername(user.getUsername());
         dto.setFirstName(user.getFirstname());
