@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.service.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.odysseusinc.arachne.commons.utils.CommonFilenameUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
@@ -62,7 +63,8 @@ public abstract class BaseRequestHandler {
          if (Objects.nonNull(cohort)) {
              String content = sqlRenderService.renderSql(cohort, parameters, values);
              if (Objects.nonNull(content)) {
-                 return new MockMultipartFile(name, name, MediaType.TEXT_PLAIN_VALUE, content.getBytes());
+                 final String realName = CommonFilenameUtils.sanitizeFilename(name);
+                 return new MockMultipartFile(realName, realName, MediaType.TEXT_PLAIN_VALUE, content.getBytes());
              }
          }
          return null;
