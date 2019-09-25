@@ -239,7 +239,7 @@ public class DataSourceServiceImpl implements DataSourceService {
         if (Objects.nonNull(atlasTargetCohortTable)) {
             exists.setCohortTargetTable(atlasTargetCohortTable);
         }
-        if (DBMSType.IMPALA.equals(type)) {
+        if (DBMSType.IMPALA.equals(type) || DBMSType.BIGQUERY.equals(type)) {
             final Boolean useKerberos = dataSource.getUseKerberos();
             if (Objects.nonNull(useKerberos)) {
                 exists.setUseKerberos(useKerberos);
