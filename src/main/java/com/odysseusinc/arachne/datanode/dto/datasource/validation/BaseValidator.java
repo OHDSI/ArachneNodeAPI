@@ -16,36 +16,22 @@
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
  * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
- * Created: Sep 25, 2019
+ * Created: Sep 27, 2019
  *
  */
 
 package com.odysseusinc.arachne.datanode.dto.datasource.validation;
 
-import com.odysseusinc.arachne.commons.types.DBMSType;
-import com.odysseusinc.arachne.datanode.dto.datasource.CreateDataSourceDTO;
-import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
 
-@Component
-public class CreateDataSourceCredentialsValidator extends BaseValidator implements ConstraintValidator<ValidCredentials, CreateDataSourceDTO> {
+public abstract class BaseValidator {
 
-    @Override
-    public void initialize(ValidCredentials validCredentials) {
+    protected void buildFieldConstraint(ConstraintValidatorContext context, String fieldName) {
 
-    }
-
-    @Override
-    public boolean isValid(CreateDataSourceDTO createDataSourceDTO, ConstraintValidatorContext context) {
-
-        if (StringUtils.isBlank(createDataSourceDTO.getDbUsername()) &&
-                !DBMSType.BIGQUERY.getValue().equals(createDataSourceDTO.getDbmsType())) {
-
-            buildFieldConstraint(context, "dbUsername");
-            return false;
-        }
-        return true;
+        context.disableDefaultConstraintViolation();
+        String tmpl = context.getDefaultConstraintMessageTemplate();
+        context.buildConstraintViolationWithTemplate(tmpl)
+                .addPropertyNode(fieldName)
+                .addConstraintViolation();
     }
 }

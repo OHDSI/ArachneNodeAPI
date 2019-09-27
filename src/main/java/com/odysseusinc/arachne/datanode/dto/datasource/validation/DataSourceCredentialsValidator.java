@@ -30,7 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataSourceCredentialsValidator implements ConstraintValidator<ValidCredentials, DataSource> {
+public class DataSourceCredentialsValidator extends BaseValidator implements ConstraintValidator<ValidCredentials, DataSource> {
 
     @Override
     public void initialize(ValidCredentials validCredentials) {
@@ -41,11 +41,7 @@ public class DataSourceCredentialsValidator implements ConstraintValidator<Valid
 
         if (StringUtils.isBlank(datasource.getUsername()) &&
                 !DBMSType.BIGQUERY.equals(datasource.getType())) {
-            context.disableDefaultConstraintViolation();
-            String tmpl = context.getDefaultConstraintMessageTemplate();
-            context.buildConstraintViolationWithTemplate(tmpl)
-                    .addPropertyNode("username")
-                    .addConstraintViolation();
+            buildFieldConstraint(context, "username");
             return false;
         }
         return true;
