@@ -260,15 +260,17 @@ public class DataSourceServiceImpl implements DataSourceService {
             if (isNotDummyPassword(krbPassword)) {
                 exists.setKrbPassword(krbPassword);
             }
-            final byte[] keytab = dataSource.getKeyfile();
-            if (Objects.nonNull(keytab)) {
-                exists.setKeyfile(keytab);
-            }
         } else {
             exists.setKrbRealm(null);
             exists.setKrbFQDN(null);
             exists.setKrbUser(null);
             exists.setKrbPassword(null);
+        }
+
+        final byte[] keytab = dataSource.getKeyfile();
+        if (Objects.nonNull(keytab) && DBMSType.BIGQUERY.equals(type) || DBMSType.IMPALA.equals(type)) {
+            exists.setKeyfile(keytab);
+        } else {
             exists.setKeyfile(null);
         }
 
