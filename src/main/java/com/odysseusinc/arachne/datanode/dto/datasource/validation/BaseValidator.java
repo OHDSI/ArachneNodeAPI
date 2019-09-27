@@ -22,9 +22,20 @@
 
 package com.odysseusinc.arachne.datanode.dto.datasource.validation;
 
+import com.odysseusinc.arachne.commons.types.DBMSType;
 import javax.validation.ConstraintValidatorContext;
+import org.apache.commons.lang3.StringUtils;
 
 public abstract class BaseValidator {
+
+    protected boolean isValid(ConstraintValidatorContext context, String username, DBMSType dbmsType, String fieldName) {
+
+        if (StringUtils.isBlank(username) && !DBMSType.BIGQUERY.equals(dbmsType)) {
+            buildFieldConstraint(context, fieldName);
+            return false;
+        }
+        return true;
+    }
 
     protected void buildFieldConstraint(ConstraintValidatorContext context, String fieldName) {
 

@@ -22,11 +22,9 @@
 
 package com.odysseusinc.arachne.datanode.dto.datasource.validation;
 
-import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -39,11 +37,6 @@ public class DataSourceCredentialsValidator extends BaseValidator implements Con
     @Override
     public boolean isValid(DataSource datasource, ConstraintValidatorContext context) {
 
-        if (StringUtils.isBlank(datasource.getUsername()) &&
-                !DBMSType.BIGQUERY.equals(datasource.getType())) {
-            buildFieldConstraint(context, "username");
-            return false;
-        }
-        return true;
+        return isValid(context, datasource.getUsername(), datasource.getType(), "username");
     }
 }
