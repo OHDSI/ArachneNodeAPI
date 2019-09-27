@@ -33,7 +33,7 @@ import javax.validation.Payload;
 @Documented
 @Target( {ElementType.TYPE})
 @Retention( RetentionPolicy.RUNTIME )
-@Constraint(validatedBy = CreateDataSourceCredentialsValidator.class)
+@Constraint(validatedBy = { CreateDataSourceCredentialsValidator.class, DataSourceCredentialsValidator.class })
 public @interface ValidCredentials {
 
     String message() default "{org.hibernate.validator.constraints.NotBlank.message}";
