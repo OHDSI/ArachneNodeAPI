@@ -28,8 +28,9 @@ tryCatch({
   cdmDatabaseSchema <- Sys.getenv("DBMS_SCHEMA")
   resultsDatabaseSchema <- Sys.getenv("RESULT_SCHEMA")
   cohortsDatabaseSchema <- Sys.getenv("TARGET_SCHEMA")
+  driversPath <- (function(path) if (path == "") NULL else path)( Sys.getenv("JDBC_DRIVER_PATH") )
   cohorts <- list({{{cohortDefinitions}}})
-  run_ir_analysis(workDir, {{analysisId}}, cohorts, dbms, connStr, user, pw, cdmDatabaseSchema, resultsDatabaseSchema, cohortsDatabaseSchema, cohortTable = "cohort", outcomeTable = "cohort")
+  run_ir_analysis(workDir, {{analysisId}}, cohorts, dbms, connStr, user, pw, driversPath, cdmDatabaseSchema, resultsDatabaseSchema, cohortsDatabaseSchema, cohortTable = "cohort", outcomeTable = "cohort")
 }, finally = {
   remove.packages('{{packageName}}', lib = libs_local)
   unlink(libs_local, recursive = TRUE, force = TRUE)
