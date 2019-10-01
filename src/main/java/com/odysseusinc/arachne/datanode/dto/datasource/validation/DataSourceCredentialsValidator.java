@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.dto.datasource.validation;
 
+import com.odysseusinc.arachne.datanode.dto.datasource.validation.context.CredentialsValidationContextBuilder;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -30,6 +31,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class DataSourceCredentialsValidator extends BaseValidator implements ConstraintValidator<ValidCredentials, DataSource> {
 
+    private static final String USERNAME_FIELDNAME = "username";
+    private static final String KEYFILE_FIELDNAME = "keyfile";
+    private static final String KRB_USER_FIELD = "krbUser";
+
     @Override
     public void initialize(ValidCredentials validCredentials) {
     }
@@ -37,6 +42,12 @@ public class DataSourceCredentialsValidator extends BaseValidator implements Con
     @Override
     public boolean isValid(DataSource datasource, ConstraintValidatorContext context) {
 
-        return isValid(context, datasource.getUsername(), datasource.getType(), "username");
+        return isValid(context, CredentialsValidationContextBuilder.newContextOfType(datasource.getType())
+                .withUsername(USERNAME_FIELDNAME, datasource.getUsername())
+                .withKeyfile(KEYFILE_FIELDNAME, datasource.getKeyfile())
+                .usingKerberos(datasource.getUseKerberos())
+                .withKerberosAuthMechanism(datasource.getKrbAuthMechanism())
+                .withKerberosUser(KRB_USER_FIELD, datasource.getKrbUser())
+                .build());
     }
 }
