@@ -23,26 +23,30 @@
 package com.odysseusinc.arachne.datanode.dto.datasource.validation;
 
 import com.odysseusinc.arachne.commons.types.DBMSType;
+import com.odysseusinc.arachne.datanode.dto.datasource.validation.context.CredentialsValidationContext;
+import com.odysseusinc.arachne.datanode.dto.datasource.validation.strategy.BigQueryCredentialsValidationStrategy;
+import com.odysseusinc.arachne.datanode.dto.datasource.validation.strategy.CredentialsValidationStrategy;
+import com.odysseusinc.arachne.datanode.dto.datasource.validation.strategy.DefaultCredentialsValidationStrategy;
+import com.odysseusinc.arachne.datanode.dto.datasource.validation.strategy.ImpalaCredentialsValidationStrategy;
+import java.util.HashMap;
+import java.util.Map;
 import javax.validation.ConstraintValidatorContext;
-import org.apache.commons.lang3.StringUtils;
 
 public abstract class BaseValidator {
 
-    protected boolean isValid(ConstraintValidatorContext context, String username, DBMSType dbmsType, String fieldName) {
+    private static Map<DBMSType, CredentialsValidationStrategy> STRATEGY_MAP = new HashMap<>();
 
-        if (StringUtils.isBlank(username) && !DBMSType.BIGQUERY.equals(dbmsType)) {
-            buildFieldConstraint(context, fieldName);
-            return false;
-        }
-        return true;
+    private static CredentialsValidationStrategy DEFAULT_STRATEGY = new DefaultCredentialsValidationStrategy();
+
+    static {
+        STRATEGY_MAP.put(DBMSType.BIGQUERY, new BigQueryCredentialsValidationStrategy());
+        STRATEGY_MAP.put(DBMSType.IMPALA, new ImpalaCredentialsValidationStrategy());
     }
 
-    protected void buildFieldConstraint(ConstraintValidatorContext context, String fieldName) {
+    protected boolean isValid(ConstraintValidatorContext context, CredentialsValidationContext validationContext) {
 
-        context.disableDefaultConstraintViolation();
-        String tmpl = context.getDefaultConstraintMessageTemplate();
-        context.buildConstraintViolationWithTemplate(tmpl)
-                .addPropertyNode(fieldName)
-                .addConstraintViolation();
+        CredentialsValidationStrategy strategy = STRATEGY_MAP.getOrDefault(validationContext.getType(), DEFAULT_STRATEGY);
+        return strategy.isValid(context, validationContext);
     }
+
 }
