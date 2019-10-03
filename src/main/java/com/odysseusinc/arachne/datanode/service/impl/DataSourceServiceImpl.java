@@ -268,8 +268,10 @@ public class DataSourceServiceImpl implements DataSourceService {
         }
 
         final byte[] keytab = dataSource.getKeyfile();
-        if (Objects.nonNull(keytab) && DBMSType.BIGQUERY.equals(type) || DBMSType.IMPALA.equals(type)) {
-            exists.setKeyfile(keytab);
+        if (DBMSType.BIGQUERY.equals(type) || DBMSType.IMPALA.equals(type)) {
+            if (Objects.nonNull(keytab)) {
+                exists.setKeyfile(keytab);
+            }
         } else {
             exists.setKeyfile(null);
         }
