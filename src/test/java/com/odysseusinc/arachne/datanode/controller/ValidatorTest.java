@@ -63,16 +63,10 @@ public class ValidatorTest {
     @Test
     public void shouldValidateCreateDatasourceDTO() {
 
-        //Should fail without keyfile
-        CreateDataSourceDTO bqDataSourceDTO = prepareDataSourceDTO(DBMSType.BIGQUERY);
-        Set<ConstraintViolation<CreateDataSourceDTO>> violations = validator.validate(bqDataSourceDTO);
-        assertThat(violations, fails());
-        assertThat(violations, hasSize(1));
-        assertThat(violations, violates(violation(on("keyfile"))));
-
         //Should pass with keyfile
+        CreateDataSourceDTO bqDataSourceDTO = prepareDataSourceDTO(DBMSType.BIGQUERY);
         bqDataSourceDTO.setKeyfile(mockKeyFile);
-        violations = validator.validate(bqDataSourceDTO);
+        Set<ConstraintViolation<CreateDataSourceDTO>> violations = validator.validate(bqDataSourceDTO);
         assertThat(violations, succeeds());
 
         //Should fail without username
@@ -99,21 +93,14 @@ public class ValidatorTest {
         violations = validator.validate(impalaDataSourceDTO);
         assertThat(violations, succeeds());
 
-        //Should fail without keyfile using kerberos keytab auth
-        impalaDataSourceDTO.setDbUsername(null);
-        impalaDataSourceDTO.setUseKerberos(true);
-        impalaDataSourceDTO.setKrbAuthMechanism(KerberosAuthMechanism.KEYTAB);
-        violations = validator.validate(impalaDataSourceDTO);
-        assertThat(violations, fails());
-        assertThat(violations, hasSize(1));
-        assertThat(violations, violates(violation(on("keyfile"))));
-
         //Should pass with keyfile
         impalaDataSourceDTO.setKeyfile(mockKeyFile);
         violations = validator.validate(impalaDataSourceDTO);
         assertThat(violations, succeeds());
 
         //Should fail without kerberos user during kerberos password auth
+        impalaDataSourceDTO.setUseKerberos(true);
+        impalaDataSourceDTO.setKrbUser(null);
         impalaDataSourceDTO.setKeyfile(null);
         impalaDataSourceDTO.setKrbAuthMechanism(KerberosAuthMechanism.PASSWORD);
         violations = validator.validate(impalaDataSourceDTO);
