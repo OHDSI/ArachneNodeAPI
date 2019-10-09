@@ -23,15 +23,14 @@
 package com.odysseusinc.arachne.datanode.service;
 
 
-
 import static com.odysseusinc.arachne.commons.types.DBMSType.MS_SQL_SERVER;
 import static com.odysseusinc.arachne.commons.types.DBMSType.ORACLE;
 import static com.odysseusinc.arachne.commons.types.DBMSType.POSTGRESQL;
 import static com.odysseusinc.arachne.commons.types.DBMSType.REDSHIFT;
 
-import com.odysseusinc.arachne.commons.utils.ConverterUtils;
+import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
+import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.service.impl.CohortServiceImpl;
-import com.odysseusinc.arachne.nohandlerfoundexception.NoHandlerFoundExceptionUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
@@ -39,33 +38,35 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.ohdsi.sql.SqlTranslate;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@ActiveProfiles("test")
-@TestExecutionListeners({DependencyInjectionTestExecutionListener.class})
+@RunWith(MockitoJUnitRunner.class)
 public class CohortServiceTest {
 
-    private final String REDSHIFT_SQL_RESULT;
+    private static final String TEMP_SCHEMA = "tempSchema";
+    private static final String SESSION_ID = SqlTranslate.generateSessionId();
+
+    private static String REDSHIFT_SQL_RESULT;
 
     private static CohortServiceImpl.TranslateOptions options
             = new CohortServiceImpl.TranslateOptions("public", "public", "public", "public","cohort", 1);
 
-    @Autowired
-    private CohortService cohortService;
+    @Mock
+    private CentralSystemClient centralClient;
+    @Mock
+    private ConfigurableListableBeanFactory beanFactory;
+    @Mock
+    private AtlasRepository atlasRepository;
+    @Mock
+    private DataNodeService dataNodeService;
 
-    @MockBean
-    private ConverterUtils converterUtils;
-    @MockBean
-    private NoHandlerFoundExceptionUtils noHandlerFoundExceptionUtils;
+    @InjectMocks
+    private CohortServiceImpl cohortService ;
 
     public CohortServiceTest() throws IOException {
 
@@ -73,31 +74,31 @@ public class CohortServiceTest {
     }
 
     @Test
-    public void createPostgresSQLTest() throws IOException {
+    public void createPostgresSQLTest() {
 
-        final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, POSTGRESQL, options);
+        final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, POSTGRESQL, SESSION_ID, TEMP_SCHEMA, options);
         Assert.assertEquals(POSTGRES_SQL_RESULT, sql);
     }
 
     @Test
-    public void createRedshiftSQLTest() throws IOException {
+    public void createRedshiftSQLTest(){
 
-        final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, REDSHIFT, options);
+        final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, REDSHIFT, SESSION_ID, TEMP_SCHEMA,options);
         Assert.assertEquals(REDSHIFT_SQL_RESULT, sql);
     }
 
     @Ignore("unexpected temp schema names")
     @Test
-    public void createOracleSQLTest() throws IOException {
+    public void createOracleSQLTest() {
 
-        final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, ORACLE, options);
+        final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, ORACLE, SESSION_ID, TEMP_SCHEMA,options);
         Assert.assertEquals(ORACLE_SQL_RESULT, sql);
     }
 
     @Test
-    public void createMSSQLTest() throws IOException {
+    public void createMSSQLTest(){
 
-        final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, MS_SQL_SERVER, options);
+        final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, MS_SQL_SERVER, SESSION_ID, TEMP_SCHEMA,options);
         Assert.assertEquals(MS_SQL_SQL_RESULT, sql);
     }
 
