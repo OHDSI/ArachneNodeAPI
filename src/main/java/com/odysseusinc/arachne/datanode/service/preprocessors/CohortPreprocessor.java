@@ -19,6 +19,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.exception.RuntimeIOException;
+import org.ohdsi.sql.SqlTranslate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -74,9 +75,10 @@ public class CohortPreprocessor implements Preprocessor<Analysis> {
             }
             final ImmutableMap<String, ClassPathResource> satellites = mapBuilder.build();
             try {
+                final String sessionId = SqlTranslate.generateSessionId();
                 final String sourceStatement = FileUtils.readFileToString(file, Charset.defaultCharset());
                 final String nativeStatement
-                        = cohortService.translateSQL(sourceStatement, null, target, options);
+                        = cohortService.translateSQL(sourceStatement, null, target, sessionId, resultDbSchema, options);
                 final String originalPath = file.getAbsolutePath();
                 final String destinationPath = addSuffixToSqlFile(originalPath, fileSuffix);
                 final File destinationFile = new File(destinationPath);
@@ -92,7 +94,7 @@ public class CohortPreprocessor implements Preprocessor<Analysis> {
                         final String satelliteSourceStatement
                                 = IOUtils.toString(resource.getInputStream(), Charset.defaultCharset());
                         final String satelliteNativeStatement
-                                = cohortService.translateSQL(satelliteSourceStatement, null, target, options);
+                                = cohortService.translateSQL(satelliteSourceStatement, null, target, sessionId, resultDbSchema,  options);
                         FileUtils.writeByteArrayToFile(new File(satelliteFileName), satelliteNativeStatement.getBytes());
                     } catch (IOException e) {
                         throw new RuntimeIOException(e.getMessage(), e);
