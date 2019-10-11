@@ -24,7 +24,7 @@ package com.odysseusinc.arachne.datanode.service.client.portal;
 
 import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
-import com.odysseusinc.arachne.datanode.service.client.encoders.MultipartEncoder;
+import com.odysseusinc.arachne.execution_engine_common.client.FeignSpringFormEncoder;
 import feign.Feign;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
@@ -59,7 +59,7 @@ public class CentralClientConfig {
 
         return Feign.builder()
                 .client(arachneHttpClientBuilder.build())
-                .encoder(new MultipartEncoder(new JacksonEncoder()))
+                .encoder(new FeignSpringFormEncoder())
                 .decoder(new JacksonDecoder())
                 .requestInterceptor(centralSystemRequestInterceptor)
                 .logger(new Slf4jLogger(AtlasClient.class))

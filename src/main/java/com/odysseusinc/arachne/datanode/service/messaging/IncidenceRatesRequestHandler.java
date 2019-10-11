@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.service.messaging;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
@@ -48,6 +49,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -58,6 +60,8 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
     private static final Logger logger = LoggerFactory.getLogger(IncidenceRatesRequestHandler.class);
     public static final String IR_BUILD_ERROR = "Failed to build IR data";
     public static final String ID_PROPERTY_SUFFIX = "Ids";
+    private static final String PACKAGE_NAME = "IncidenceRate%d";
+    private static final String SKELETON_RESOURCE = "/ir/hydra/IncidenceRate_v0.0.1.zip";
     private final GenericConversionService conversionService;
     private final CentralSystemClient centralClient;
     private final CommonEntityService commonEntityService;
@@ -92,20 +96,27 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
     public List<MultipartFile> getAtlasObject(String guid) {
 
         return commonEntityService.findByGuid(guid).map(entity -> {
-            Map<String, Object> analysis = atlasService.execute(entity.getOrigin(), atlasClient -> atlasClient.getIncidenceRate(entity.getLocalId()));
+            Integer localId = entity.getLocalId();
+            String packageName = String.format(PACKAGE_NAME, localId);
+            Map<String, Object> analysis = atlasService.execute(entity.getOrigin(), atlasClient -> atlasClient.getIncidenceRate(localId));
             String analysisName = (String) analysis.getOrDefault("name", "ir_analysis");
             List<MultipartFile> files = new ArrayList<>();
             try {
-                String expressionValue = (String) analysis.getOrDefault("expression", "");
                 ObjectMapper mapper = new ObjectMapper();
+                String expressionValue = (String) analysis.getOrDefault("expression", "");
                 Map<String, Object> expression = mapper.readValue(expressionValue, Map.class);
-                files.add(getAnalysisDescription(analysis));
                 List<MultipartFile> cohortFiles = new LinkedList<>();
                 cohortFiles.addAll(getCohortFiles(entity.getOrigin(), analysisName, expression, "target"));
                 cohortFiles.addAll(getCohortFiles(entity.getOrigin(), analysisName, expression, "outcome"));
                 files.addAll(cohortFiles);
                 List<String> cohortFileNames = cohortFiles.stream().map(MultipartFile::getName).collect(Collectors.toList());
-                files.add(getRunner(analysis, cohortFileNames));
+
+                JsonNode json = mapper.valueToTree(expression);
+                byte[] content = atlasService.hydrateAnalysis(json, packageName, SKELETON_RESOURCE);
+                String filename = packageName + ".zip";
+                MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, content);
+                files.add(file);
+                files.add(getRunner(analysis, cohortFileNames, packageName, filename, String.format("analysis_%d", localId)));
             } catch (IOException e) {
                 logger.error(IR_BUILD_ERROR, e);
                 throw new RuntimeIOException(IR_BUILD_ERROR, e);
@@ -130,15 +141,18 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
         return files;
     }
 
-    private MultipartFile getRunner(Map<String, Object> analysis, List<String> cohortFileNames) throws IOException {
+    private MultipartFile getRunner(Map<String, Object> analysis, List<String> cohortFileNames, String packageName, String packageFile, String analysisDir) throws IOException {
 
         Map<String, Object> params = new HashMap<>();
         params.put("analysisId", analysis.get("id"));
         params.put("cohortDefinitions", cohortFileNames.stream()
                 .map(s -> "'" + s + "'")
                 .collect(Collectors.joining(",")));
+        params.put("packageName", packageName);
+        params.put("analysisDir", analysisDir);
+        params.put("packageFile", packageFile);
         String result = incidenceRatesTemplate.apply(params);
-        return new MockMultipartFile("main.r", result.getBytes());
+        return new MockMultipartFile("file", "main.r", MediaType.TEXT_PLAIN_VALUE, result.getBytes());
     }
 
     @Override
@@ -153,11 +167,4 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
         centralClient.sendCommonEntityResponse(id, response.toArray(new MultipartFile[response.size()]));
     }
 
-    @Override
-    protected MultipartFile getAnalysisDescription(Map<String, Object> info) throws IOException {
-
-        String result = ((String) info.getOrDefault("expression", "{}"))
-                .replaceAll("\\\\", "");
-        return new MockMultipartFile("analysisDescription.json", result.getBytes());
-    }
 }

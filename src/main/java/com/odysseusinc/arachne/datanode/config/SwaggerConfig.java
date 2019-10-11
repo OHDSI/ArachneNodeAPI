@@ -23,7 +23,6 @@
 package com.odysseusinc.arachne.datanode.config;
 
 import com.odysseusinc.arachne.commons.config.DocketWrapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -34,43 +33,29 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @Configuration
 @EnableSwagger2
-@ConditionalOnProperty(prefix = "swagger", name = "enabled")
+@ConditionalOnProperty(prefix = "swagger", name = "enable")
 public class SwaggerConfig {
 
-    @Value("${swagger.title}")
-    private String swaggerTitle;
+    @Value("${project.version}")
+    private String projectVersion;
 
-    @Value("${swagger.description}")
-    private String swaggerDescription;
-
-    @Value("${swagger.version}")
-    private String swaggerVersion;
-
-    @Value("${swagger.basePackage}")
-    private String[] swaggerBasePackages;
-
-    @Value("${datanode.jwt.header}")
-    private String authHeader;
-
-    @Autowired
-    private DocketWrapper docketWrapper;
+    @Value("${arachne.token.header}")
+    private String arachneTokenHeader;
 
     @Bean
-    public Docket api() {
-
+    public Docket docket(DocketWrapper docketWrapper) {
         return docketWrapper.getDocket();
     }
 
     @Bean
     public DocketWrapper docketWrapper() {
-
-        return new DocketWrapper(swaggerTitle,
-                swaggerDescription,
-                swaggerVersion,
+        return DocketWrapper.createDocketWrapper("Arachne Data Node",
+                "Arachne Data Node API",
+                projectVersion,
                 "",
-                authHeader,
+                arachneTokenHeader,
                 RestController.class,
-                swaggerBasePackages
+                "com.odysseusinc.arachne.datanode.controller"
         );
     }
 }

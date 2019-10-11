@@ -4,12 +4,9 @@ server:
 datanode:
   arachneCentral:
     host: https://testcommunity.arachnenetwork.com
+  baseURL: http://odysseusovh03.odysseusinc.com
 swagger:
   enable: true
-  title: Arachne Data Node
-  description: Arachne Data Node API
-  version: 1.0.1
-  basePackage: com.odysseusinc.arachne.datanode.controller
 atlas:
   host: https://testatlas.arachnenetwork.com
   port: 443
@@ -21,3 +18,14 @@ proxy:
   auth:
     username: user
     password: Password1234
+executionEngine:
+  host: odysseusovh02.odysseusinc.com
+analysis:
+  scheduler:
+    invalidateExecutingInterval: 3600000
+authenticator:
+  methods:
+    rest-central:
+      config:
+        url: https://testcommunity.arachnenetwork.com:8070/api/v1/auth/login
+        infoUrl: https://testcommunity.arachnenetwork.com:8070/api/v1/auth/me

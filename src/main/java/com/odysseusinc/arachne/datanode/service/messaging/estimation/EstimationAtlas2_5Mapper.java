@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -70,19 +71,19 @@ public class EstimationAtlas2_5Mapper extends BaseRequestHandler implements Enti
 				String name = analysis.getName().trim();
 
 				String estimationJson = buildEstimationDesign(analysis);
-				result.add(new MockMultipartFile(getEstimationFilename(name), estimationJson.getBytes()));
+				result.add(new MockMultipartFile("file", getEstimationFilename(name), MediaType.TEXT_PLAIN_VALUE, estimationJson.getBytes()));
 
 				String targetCohortSql = getCohortSql(entity.getOrigin(), analysis.getTreatmentId());
-				result.add(new MockMultipartFile(getTargetCohortFilename(name), targetCohortSql.getBytes()));
+				result.add(new MockMultipartFile("file", getTargetCohortFilename(name), MediaType.TEXT_PLAIN_VALUE, targetCohortSql.getBytes()));
 
 				String comparatorCohortSql = getCohortSql(entity.getOrigin(), analysis.getComparatorId());
-				result.add(new MockMultipartFile(getComparatorCohortFilename(name), comparatorCohortSql.getBytes()));
+				result.add(new MockMultipartFile("file", getComparatorCohortFilename(name), MediaType.TEXT_PLAIN_VALUE, comparatorCohortSql.getBytes()));
 
 				String outcomeCohortSql = getCohortSql(entity.getOrigin(), analysis.getOutcomeId());
-				result.add(new MockMultipartFile(getOutcomeCohortFilename(name), outcomeCohortSql.getBytes()));
+				result.add(new MockMultipartFile("file", getOutcomeCohortFilename(name), MediaType.TEXT_PLAIN_VALUE, outcomeCohortSql.getBytes()));
 
 				String runnerR = buildRunner(name);
-				result.add(new MockMultipartFile("main.r", runnerR.getBytes()));
+				result.add(new MockMultipartFile("file", "main.r", MediaType.TEXT_PLAIN_VALUE, runnerR.getBytes()));
 
 			} catch (IOException | NoSuchMethodException | ScriptException e) {
 				LOGGER.error("Failed to construct estimation", e);

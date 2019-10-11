@@ -16,6 +16,7 @@ import java.util.Map;
 import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -68,7 +69,7 @@ public class PredictionAtlas2_5Mapper extends BaseRequestHandler implements Enti
 		params.put("initialFileName", initialName);
 		params.put("outcomeFileName", outcomeName);
 		String result = patientLevelPredictionRunnerTemplate.apply(params);
-		return new MockMultipartFile("main.r", result.getBytes());
+		return new MockMultipartFile("file", "main.r", MediaType.TEXT_PLAIN_VALUE, result.getBytes());
 	}
 
 }

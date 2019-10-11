@@ -36,6 +36,8 @@ import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.repository.AchillesJobRepository;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
 import com.odysseusinc.arachne.datanode.service.AchillesService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
+import com.odysseusinc.arachne.datanode.util.DataNodeUtils;
 import io.swagger.annotations.ApiOperation;
 import java.sql.Timestamp;
 import java.util.Optional;
@@ -59,17 +61,20 @@ public class AchillesController {
     private final DataSourceRepository dataSourceRepository;
     private final AchillesJobRepository achillesJobRepository;
     private final GenericConversionService conversionService;
+    private final DataNodeService dataNodeService;
 
     @Autowired
     public AchillesController(AchillesService achillesService,
                               DataSourceRepository dataSourceRepository,
                               AchillesJobRepository achillesJobRepository,
-                              GenericConversionService conversionService) {
+                              GenericConversionService conversionService,
+                              DataNodeService dataNodeService) {
 
         this.achillesService = achillesService;
         this.dataSourceRepository = dataSourceRepository;
         this.achillesJobRepository = achillesJobRepository;
         this.conversionService = conversionService;
+        this.dataNodeService = dataNodeService;
     }
 
     @ApiOperation("Start Achilles for datasource")
@@ -85,6 +90,7 @@ public class AchillesController {
     @RequestMapping(value = "{datasourceId}/pull", method = POST)
     public JsonResult pull(@PathVariable("datasourceId") Long datasourceId) throws NotExistException {
 
+        DataNodeUtils.requireNetworkMode(dataNodeService);
         DataSource dataSource = checkDataSource(datasourceId);
         AchillesJob job = achillesService.createAchillesImportJob(dataSource);
         if (job != null) {

@@ -31,6 +31,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.ohdsi.sql.SqlTranslate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -65,7 +66,7 @@ public class SqlUtils {
                 0
         );
         final String nativeStatement
-                = cohortService.translateSQL(sql, null, target, options);
+                = cohortService.translateSQL(sql, null, target, SqlTranslate.generateSessionId(), resultSchema, options);
         return nativeStatement;
     }
 
