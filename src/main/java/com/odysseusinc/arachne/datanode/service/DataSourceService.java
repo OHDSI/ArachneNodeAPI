@@ -23,15 +23,19 @@
 package com.odysseusinc.arachne.datanode.service;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
+import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datasource.AutoDetectedFields;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface DataSourceService {
     DataSource create(User owner, DataSource dataSource) throws NotExistException;
+
+    void createOnCentral(User owner, DataSource dataSource);
 
     List<DataSource> findAllNotDeleted();
 
@@ -47,9 +51,16 @@ public interface DataSourceService {
 
     DataSource update(User user, DataSource dataSource);
 
+    @Transactional(rollbackFor = Exception.class)
+    void updateOnCentral(User user, DataSource dataSource);
+
     void updateHealthStatus(Long centralId, CommonHealthStatus status, String description);
 
     AutoDetectedFields autoDetectFields(DataSource dataSource);
 
     void removeKeytab(DataSource dataSource);
+
+    JsonResult unpublishAndDeleteOnCentral(Long dataSourceId);
+
+    List<DataSource> findStandaloneSources();
 }

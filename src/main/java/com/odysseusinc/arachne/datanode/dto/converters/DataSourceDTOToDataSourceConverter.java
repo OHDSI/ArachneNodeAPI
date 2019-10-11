@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018 Odysseus Data Services, inc.
+ * Copyright 2019 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,8 +15,8 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: April 20, 2017
+ * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
+ * Created: Jul 29, 2019
  *
  */
 
@@ -24,39 +24,31 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
+import org.hibernate.Hibernate;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
-public class DataSourceDTOToDataSourceConverter implements Converter<CommonDataSourceDTO, DataSource>, InitializingBean {
+public class DataSourceDTOToDataSourceConverter implements Converter<CommonDataSourceDTO, DataSource> {
 
-    private GenericConversionService conversionService;
+    private DataSourceRepository repository;
 
-    @Autowired
-    public DataSourceDTOToDataSourceConverter(GenericConversionService conversionService) {
+    public DataSourceDTOToDataSourceConverter(DataSourceRepository repository,
+                                              GenericConversionService conversionService) {
 
-        this.conversionService = conversionService;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-
+        this.repository = repository;
         conversionService.addConverter(this);
     }
 
     @Override
-    public DataSource convert(CommonDataSourceDTO commonDataSourceDTO) {
+    @Transactional
+    public DataSource convert(CommonDataSourceDTO source) {
 
-        if (commonDataSourceDTO == null) {
-            return null;
-        }
-        DataSource dataSource = new DataSource();
-        dataSource.setName(commonDataSourceDTO.getName());
+        DataSource dataSource = repository.getOne(source.getId());
+        Hibernate.initialize(dataSource);
         return dataSource;
-
     }
-
 }

@@ -23,12 +23,13 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.SYSTEM_ERROR;
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import com.google.common.base.Functions;
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCountryDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeCreationResponseDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
@@ -39,20 +40,20 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.commons.types.SuggestionTarget;
-import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
-import com.odysseusinc.arachne.datanode.dto.user.UserDTO;
-import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
-import java.util.HashMap;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -70,6 +71,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     protected CentralClient centralClient;
     protected CentralSystemClient centralSystemClient;
     protected final ApplicationContext applicationContext;
+    protected DataNodeService dataNodeService;
 
     @Value("${arachne.token.header}")
     private String authHeader;
@@ -88,12 +90,17 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
 
         centralClient = applicationContext.getBean(CentralClient.class);
         centralSystemClient = applicationContext.getBean(CentralSystemClient.class);
+        dataNodeService = applicationContext.getBean(DataNodeService.class);
     }
 
     @Override
     public JsonResult<CommonAuthMethodDTO> getAuthMethod() {
 
-        return centralClient.getAuthMethod();
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            return centralClient.getAuthMethod();
+        } else {
+            return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+        }
     }
 
     @Override
@@ -143,7 +150,11 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             DTO commonCreateDataSourceDTO) {
 
         JsonResult<DTO> jsonResult = centralClient.updateDataSource(centralDataSourceId, commonCreateDataSourceDTO);
-        if (jsonResult == null || !NO_ERROR.getCode().equals(jsonResult.getErrorCode())) {
+        int errorCode = Objects.nonNull(jsonResult) ? jsonResult.getErrorCode() : SYSTEM_ERROR.getCode();
+        if (jsonResult == null || !NO_ERROR.getCode().equals(errorCode)) {
+            if (VALIDATION_ERROR.getCode().equals(errorCode)) {
+                throw new IntegrationValidationException(jsonResult);
+            }
             throw new IllegalStateException("Unable to update data source on central." + (jsonResult == null
                     ? "" : jsonResult.getErrorMessage()));
         }
@@ -154,46 +165,6 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     public ArachnePasswordInfoDTO getPasswordInfo() {
 
         return centralClient.getPasswordInfo();
-    }
-
-    @Override
-    public void registerUserOnCentral(CentralRegisterUserDTO registerUserDTO) {
-
-        try {
-            centralClient.registerUser(registerUserDTO);
-        } catch (Exception ex) {
-            throw new AuthException("unable to register user on central " + ex.getMessage());
-        }
-    }
-
-    @Override
-    public String loginToCentral(String username, String password) {
-
-        JsonResult result = centralClient.login(new CommonAuthenticationRequest(username, password));
-
-        if (result == null) {
-            throw new AuthException("Empty response body");
-        }
-        if (result.getErrorCode() != 0) {
-            throw new AuthException(result.getErrorMessage());
-        }
-        if (result.getResult() == null) {
-            throw new AuthException("Missing JWT token from central");
-        }
-        if (((Map) result.getResult()).get("token") == null) {
-            throw new AuthException("JWT token from central is empty");
-        }
-
-        return ((Map) result.getResult()).get("token").toString();
-    }
-
-    @Override
-    public User getUserInfoFromCentral(String centralToken) {
-
-        Map<String, Object> headers = new HashMap<>();
-        headers.put(authHeader, centralToken);
-        JsonResult<UserDTO> userDTO = centralClient.getUserInfo(headers);
-        return conversionService.convert(userDTO.getResult(), User.class);
     }
 
     @Override
@@ -245,9 +216,13 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     }
 
     @Override
-    public JsonResult<CommonUserDTO> getUserFromCentral(User user, Long centralUserId) {
+    public JsonResult<CommonUserDTO> getUserFromCentral(User user, String username) {
 
-        return centralClient.getUser(centralUserId);
+        try {
+            return centralClient.getUser(URLEncoder.encode(username, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

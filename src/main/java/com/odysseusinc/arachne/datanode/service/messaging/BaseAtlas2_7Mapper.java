@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements EntityMapper<T, CommonEntity, AtlasClient2_7> {
 
 	protected static final Logger logger = LoggerFactory.getLogger(BaseAtlas2_7Mapper.class.getName());
+	private static final String RUN_ANALYSIS_FILE = "runAnalysis.R";
 
 	private final AtlasService atlasService;
 
@@ -45,7 +46,7 @@ public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements E
 		params.put("packageFile", packageFile);
 		params.put("analysisDir", analysisDir);
 		String result = getRunnerTemplate().apply(params);
-		return new MockMultipartFile("runAnalysis.R", result.getBytes());
+		return new MockMultipartFile(RUN_ANALYSIS_FILE, RUN_ANALYSIS_FILE, "plain/text", result.getBytes());
 	}
 
 	protected <T extends AtlasClient> List<MultipartFile> doMapping(CommonEntity entity, Function<T, JsonNode> requestFunc) {

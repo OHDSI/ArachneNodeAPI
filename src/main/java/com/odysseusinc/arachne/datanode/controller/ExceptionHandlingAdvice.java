@@ -31,9 +31,11 @@ import static java.util.Arrays.asList;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
+import com.odysseusinc.arachne.datanode.exception.BadRequestException;
 import com.odysseusinc.arachne.datanode.exception.IllegalOperationException;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
+import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
 import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.nohandlerfoundexception.NoHandlerFoundExceptionUtils;
@@ -48,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
@@ -115,7 +118,11 @@ public class ExceptionHandlingAdvice extends BaseController {
     @ExceptionHandler(AuthException.class)
     public ResponseEntity<JsonResult> exceptionHandler(AuthException ex) {
 
-        return getErrorResponse(UNAUTHORIZED, ex);
+        JsonResult result = new JsonResult(UNAUTHORIZED);
+        result.setErrorMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .body(result);
     }
 
     private ResponseEntity<JsonResult> getErrorResponse(JsonResult.ErrorCode errorCode, Exception ex) {
@@ -179,6 +186,18 @@ public class ExceptionHandlingAdvice extends BaseController {
         JsonResult result = new JsonResult(SYSTEM_ERROR);
         result.setErrorMessage("External system is not available");
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity badRequestHandler() {
+
+        return ResponseEntity.badRequest().build();
+    }
+
+    @ExceptionHandler(ServiceNotAvailableException.class)
+    public ResponseEntity serviceNotAvailableHanlder() {
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
     }
 
     private String generateErrorToken() {

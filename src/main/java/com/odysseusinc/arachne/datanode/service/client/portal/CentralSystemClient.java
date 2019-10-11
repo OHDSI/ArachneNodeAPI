@@ -25,12 +25,14 @@ package com.odysseusinc.arachne.datanode.service.client.portal;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.Achilles.LIST_PERMISSIONS;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.Achilles.LIST_REPORTS;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.Achilles.PERMISSION;
+import static com.odysseusinc.arachne.datanode.Constants.CentralApi.DataNode.BUILD_NUMBER;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.LINK_TO_NODE;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAchillesGrantTypeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAchillesPermissionDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAchillesReportDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonBuildNumberDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityRequestDTO;
@@ -107,4 +109,7 @@ public interface CentralSystemClient {
     @RequestLine("PUT " + LINK_TO_NODE)
     @Headers("Content-Type: application/json")
     JsonResult<List<CommonUserDTO>> relinkUsers(@Param("datanodeId") Long centralId, List<CommonLinkUserToDataNodeDTO> userLinks);
+
+    @RequestLine("GET " + BUILD_NUMBER)
+    CommonBuildNumberDTO getBuildNumber();
 }
