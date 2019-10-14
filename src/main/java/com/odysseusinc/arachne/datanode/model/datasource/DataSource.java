@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.datanode.model.datasource;
 import com.google.common.base.MoreObjects;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.commons.types.DBMSType;
+import com.odysseusinc.arachne.datanode.dto.datasource.validation.ValidCredentials;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMechanism;
 import java.util.Date;
@@ -47,6 +48,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @Entity
 @Table(name = "datasource")
 @SQLDelete(sql = "UPDATE datasource SET deleted_at = current_timestamp WHERE id = ?")
+@ValidCredentials
 public class DataSource {
 
     @Id
@@ -77,7 +79,6 @@ public class DataSource {
     @Column(nullable = false)
     private String cdmSchema;
 
-    @NotBlank
     @Column(name = "dbms_username", nullable = false)
     private String username;
 

@@ -38,7 +38,7 @@ public interface CohortService {
     boolean isPreprocessingIgnored(File file);
 
     String translateSQL(String sourceStatement, Map<String, String> parameters,
-                        DBMSType dbmsType, CohortServiceImpl.TranslateOptions options);
+                        DBMSType dbmsType, String sessionId, String tempSchema, CohortServiceImpl.TranslateOptions options);
 
-    String translateSql(String dbmsType, String renderedSQL);
+    String translateSql(String dbmsType, String sessionId, String tempSchema, String renderedSQL);
 }

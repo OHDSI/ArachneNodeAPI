@@ -119,7 +119,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     @RequestMapping(value = Constants.Api.DataSource.ADD, method = RequestMethod.POST)
     public JsonResult<DataSourceDTO> add(Principal principal,
                                          @Valid @RequestPart("dataSource") CreateDataSourceDTO dataSourceDTO,
-                                         @RequestPart(name = "krbKeytab", required = false) MultipartFile keyfile,
+                                         @RequestPart(name = "keyfile", required = false) MultipartFile keyfile,
                                          BindingResult bindingResult
     ) throws NotExistException, PermissionDeniedException {
 
@@ -252,7 +252,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     public JsonResult<DataSourceDTO> update(Principal principal,
                                             @Valid @RequestPart("dataSource") CreateDataSourceDTO dataSourceDTO,
                                             @PathVariable("id") Long id,
-                                            @RequestPart(name = "krbKeytab", required = false) MultipartFile keytab,
+                                            @RequestPart(name = "keyfile", required = false) MultipartFile keyfile,
                                             BindingResult bindingResult)
             throws PermissionDeniedException {
 
@@ -260,7 +260,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
-        dataSourceDTO.setKeyfile(keytab);
+        dataSourceDTO.setKeyfile(keyfile);
         DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
         dataSource.setId(id);
 
