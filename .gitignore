@@ -132,3 +132,8 @@ target
 
 src/achilles
 src/main/resources/achilles
+
+### Developer's personal properties ###
+**/resources/config/application*-dev-*.properties
+**/resources/config/application*-dev-*.yaml
+**/resources/config/application*-dev-*.yml
