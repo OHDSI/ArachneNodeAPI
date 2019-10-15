@@ -175,7 +175,7 @@ migration:
     timeout: 10000
 cohorts:
   result:
-    countEnabled: false
+    countEnabled: true
     summaryEnabled: false
     defaultTargetTable: cohort
 tmp:
