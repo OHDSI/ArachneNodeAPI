@@ -27,6 +27,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -38,7 +39,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 @Configuration
 @ComponentScan(basePackages = {"com.odysseusinc.arachne.*", "org.ohdsi.authenticator.*"})
-@EnableAutoConfiguration
+@EnableAutoConfiguration( exclude = { HibernateJpaAutoConfiguration.class })
 @EnableAsync
 @EnableScheduling
 @EnableJpaRepositories(basePackages = {"com.odysseusinc.arachne.*"})

@@ -29,10 +29,8 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-@Component
 public class CreateDataSourceCredentialsValidator extends BaseValidator implements ConstraintValidator<ValidCredentials, CreateDataSourceDTO> {
 
     private static final String USERNAME_FIELDNAME = "dbUsername";

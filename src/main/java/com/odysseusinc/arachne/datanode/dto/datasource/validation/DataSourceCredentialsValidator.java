@@ -26,9 +26,7 @@ import com.odysseusinc.arachne.datanode.dto.datasource.validation.context.Creden
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import org.springframework.stereotype.Component;
 
-@Component
 public class DataSourceCredentialsValidator extends BaseValidator implements ConstraintValidator<ValidCredentials, DataSource> {
 
     private static final String USERNAME_FIELDNAME = "username";
