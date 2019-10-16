@@ -23,56 +23,77 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkPositionIndexes;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
+import static com.odysseusinc.arachne.commons.service.messaging.MessagingUtils.getResponseQueueName;
+import static com.odysseusinc.arachne.datanode.Constants.Api.DataSource.DS_MODEL_CHECK_FIRSTCHECK;
 import static com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode.NETWORK;
 import static com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode.STANDALONE;
+import static com.odysseusinc.arachne.datanode.service.messaging.MessagingUtils.DataSource.getBaseQueue;
 import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
+import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO.EXECUTED;
 
 import com.google.common.base.Preconditions;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
+import com.odysseusinc.arachne.commons.service.messaging.ConsumerTemplate;
+import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
 import com.odysseusinc.arachne.commons.types.DBMSType;
-import com.odysseusinc.arachne.datanode.dto.converters.DataSourceDTOToDataSourceConverter;
-import com.odysseusinc.arachne.datanode.dto.converters.DataSourceToCommonDataSourceDTOConverter;
-import com.odysseusinc.arachne.datanode.dto.converters.UserDTOToUserConverter;
-import com.odysseusinc.arachne.datanode.dto.converters.UserToUserDTOConverter;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
-import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.datasource.AutoDetectedFields;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
+import com.odysseusinc.arachne.datanode.service.DataSourceHelper;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
+import com.odysseusinc.arachne.datanode.service.ExecutionEngineIntegrationService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import com.odysseusinc.arachne.datanode.service.events.datasource.DataSourceCreatedEvent;
 import com.odysseusinc.arachne.datanode.service.events.datasource.DataSourceUpdatedEvent;
 import com.odysseusinc.arachne.datanode.util.DataNodeUtils;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
+import javax.jms.ObjectMessage;
+import org.apache.commons.io.FileUtils;
+import org.assertj.core.api.exception.RuntimeIOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.Sort;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Transactional
 public class DataSourceServiceImpl implements DataSourceService {
 
+    private final Logger logger = LoggerFactory.getLogger(DataSourceServiceImpl.class);
+
     private static final String DATANODE_IS_NOT_EXIST_EXCEPTION = "DataNode entry is not exist, create it before";
+    private static final String CDM_VERSION_FILENAME = "cdm_version.txt";
 
     private final DataSourceRepository dataSourceRepository;
     private final DataNodeService dataNodeService;
@@ -81,6 +102,12 @@ public class DataSourceServiceImpl implements DataSourceService {
     protected final ApplicationEventPublisher eventPublisher;
     protected final BaseCentralIntegrationService<DataSource, CommonDataSourceDTO> integrationService;
     protected final CentralClient centralClient;
+    protected final JmsTemplate jmsTemplate;
+    protected final DataSourceHelper dataSourceHelper;
+    protected final ExecutionEngineIntegrationService engineIntegrationService;
+    protected final DestinationResolver destinationResolver;
+
+    private final Long checkDataSourceTimeout;
 
     @Autowired
     public DataSourceServiceImpl(DataSourceRepository dataSourceRepository,
@@ -88,7 +115,11 @@ public class DataSourceServiceImpl implements DataSourceService {
                                  BaseCentralIntegrationService<DataSource, CommonDataSourceDTO> integrationService,
                                  GenericConversionService conversionService,
                                  ApplicationEventPublisher eventPublisher,
-                                 CentralClient centralClient) {
+                                 CentralClient centralClient,
+                                 JmsTemplate jmsTemplate,
+                                 DataSourceHelper dataSourceHelper,
+                                 ExecutionEngineIntegrationService engineIntegrationService,
+                                 @Value("${datanode.checkDataSourceTimeout}") Long checkDataSourceTimeout) {
 
         this.dataSourceRepository = dataSourceRepository;
         this.dataNodeService = dataNodeService;
@@ -96,6 +127,11 @@ public class DataSourceServiceImpl implements DataSourceService {
         this.conversionService = conversionService;
         this.eventPublisher = eventPublisher;
         this.centralClient = centralClient;
+        this.jmsTemplate = jmsTemplate;
+        this.dataSourceHelper = dataSourceHelper;
+        this.engineIntegrationService = engineIntegrationService;
+        this.destinationResolver = jmsTemplate.getDestinationResolver();
+        this.checkDataSourceTimeout = checkDataSourceTimeout;
     }
 
     @PostConstruct
@@ -319,7 +355,8 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     public AutoDetectedFields autoDetectFields(DataSource dataSource) {
 
-        return new AutoDetectedFields(CommonModelType.CDM);
+        CommonDataSourceDTO dataSourceDTO = checkDataSource(dataSource);
+        return new AutoDetectedFields(dataSourceDTO.getModelType(), dataSourceDTO.getCdmVersion());
     }
 
     @Override
@@ -349,9 +386,99 @@ public class DataSourceServiceImpl implements DataSourceService {
         return new JsonResult(NO_ERROR);
     }
 
+
     @Override
     public List<DataSource> findStandaloneSources() {
 
         return dataSourceRepository.findAllByCentralIdIsNull().collect(Collectors.toList());
+    }
+
+    @Override
+    public void firstCheckCallbackProcess(Long id, String password, AnalysisResultDTO result, MultipartFile[] files) {
+
+        CommonCDMVersionDTO cdmVersion = getCdmVersion(files, result);
+        CommonModelType modelType = getModelType(cdmVersion, result);
+
+        final CommonDataSourceDTO dataSourceDTO = new CommonDataSourceDTO();
+        dataSourceDTO.setModelType(modelType);
+        dataSourceDTO.setCdmVersion(cdmVersion);
+        jmsTemplate.send(
+                getResponseQueueName(getBaseQueue(password)),
+                session -> {
+                    ObjectMessage message = session.createObjectMessage(dataSourceDTO);
+                    message.setJMSCorrelationID(String.valueOf(id));
+                    return message;
+                }
+        );
+    }
+
+    private CommonDataSourceDTO checkDataSource(DataSource dataSource) {
+
+        logger.info("starting checkDatasource for DS: {}", dataSource.getName());
+        Path tempDirectory = null;
+        try {
+            tempDirectory = Files.createTempDirectory("datasource-check-");
+            AnalysisRequestDTO request = dataSourceHelper.getAnalysisRequestDTO(dataSource, tempDirectory,  System.currentTimeMillis(), DS_MODEL_CHECK_FIRSTCHECK);
+            engineIntegrationService.sendAnalysisRequest(request, tempDirectory.toFile(), false, false);
+            String responseQueue = getResponseQueueName(getBaseQueue(request.getCallbackPassword()));
+            ConsumerTemplate exchangeTpl = new ConsumerTemplate(
+                    destinationResolver,
+                    responseQueue,
+                    checkDataSourceTimeout,
+                    String.valueOf(request.getId())
+            );
+            ObjectMessage responseMessage = jmsTemplate.execute(exchangeTpl, true);
+
+            if (responseMessage == null || responseMessage.getObject() == null ||
+                    ((CommonDataSourceDTO) responseMessage.getObject()).getModelType() == null) {
+                throw new ValidationException("Cannot establish connection to the data source");
+            }
+            return (CommonDataSourceDTO) responseMessage.getObject();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new RuntimeIOException("Failed to check datasource", e);
+        } finally {
+            if (Objects.nonNull(tempDirectory)) {
+                FileUtils.deleteQuietly(tempDirectory.toFile());
+            }
+        }
+    }
+
+    private CommonCDMVersionDTO getCdmVersion(MultipartFile[] files, AnalysisResultDTO analysisResult) {
+
+        if (analysisResult == null || analysisResult.getStatus() != EXECUTED) {
+            return null;
+        }
+
+        return Arrays.stream(files)
+                .filter(file -> file.getOriginalFilename().equalsIgnoreCase(CDM_VERSION_FILENAME))
+                .map(this::getVersionFromFile)
+                .map(this::convertToVersionEnum)
+                .findAny().orElse(null);
+    }
+
+    private CommonModelType getModelType(CommonCDMVersionDTO cdmVersion, AnalysisResultDTO analysisResult) {
+
+        if (analysisResult == null || analysisResult.getStatus() != EXECUTED) {
+            return null;
+        }
+        return cdmVersion == null ? CommonModelType.OTHER : CommonModelType.CDM;
+    }
+
+    private CommonCDMVersionDTO convertToVersionEnum(String version) {
+        return Arrays.stream(CommonCDMVersionDTO.values())
+                .filter(enumVersion -> enumVersion.toString().equalsIgnoreCase(version))
+                .findAny().orElse(null);
+    }
+
+    private String getVersionFromFile(MultipartFile file) {
+
+        try {
+            Properties properties = new Properties();
+            properties.load(file.getInputStream());
+            return properties.getProperty("cdm_version");
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 }

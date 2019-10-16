@@ -48,8 +48,8 @@ import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
-import com.odysseusinc.arachne.datanode.util.DataNodeUtils;
 import com.odysseusinc.arachne.datanode.util.LogUtils;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
 import feign.FeignException;
 import feign.RetryableException;
 import io.swagger.annotations.ApiOperation;
@@ -290,6 +290,17 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     public List<OptionDTO> getDBMSTypes() {
 
         return converterUtils.convertList(asList(DBMSType.values()), OptionDTO.class);
+    }
+
+    @ApiOperation(value = "first check datasource result callback")
+    @RequestMapping(value = Constants.Api.DataSource.DS_MODEL_CHECK_FIRSTCHECK,
+            method = RequestMethod.POST,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public void firstCheck(@PathVariable Long id,
+                           @PathVariable String password,
+                           @RequestPart("analysisResult") AnalysisResultDTO result,
+                           @RequestPart("file") MultipartFile[] files) {
+        dataSourceService.firstCheckCallbackProcess(id, password, result, files);
     }
 
 }
