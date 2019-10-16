@@ -20,25 +20,10 @@
  *
  */
 
-package com.odysseusinc.arachne.datanode.model.datanode.validation;
+package com.odysseusinc.arachne.datanode.service;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import javax.validation.Constraint;
-import javax.validation.Payload;
+public interface Const {
 
-@Documented
-@Target({ElementType.TYPE })
-@Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = { DataNodeTokenValidator.class })
-public @interface NonEmptyToken {
-
-    String message() default "{org.hibernate.validator.constraints.NotBlank.message}";
-
-    Class<?>[] groups() default {};
-
-    Class<? extends Payload>[] payload() default {};
+    String TOKEN = "123456";
+    String USER = "admin@example.com";
 }

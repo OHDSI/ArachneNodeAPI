@@ -46,6 +46,7 @@ public class DataNodeTokenValidator implements ConstraintValidator<NonEmptyToken
         if (FunctionalMode.NETWORK.equals(dataNodeService.getDataNodeMode())) {
             boolean valid = Objects.nonNull(dataNode) && StringUtils.isNotBlank(dataNode.getToken());
             if (!valid) {
+                context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate("token should not be empty")
                         .addPropertyNode("token")
                         .addConstraintViolation();
