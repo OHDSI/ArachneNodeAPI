@@ -91,6 +91,7 @@ files:
   store:
     path: /var/arachne/files
 datanode:
+  checkDataSourceTimeout: 45000
   app:
     errorsTokenEnabled: false
   runMode: NETWORK
@@ -122,6 +123,7 @@ proxy:
     username:
     password:
 executionEngine:
+  host: qa.odysseusovh02.odysseusinc.com
   protocol: https
   port: 8888
   analysisUri: /api/v1/analyze
