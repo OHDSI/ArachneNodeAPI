@@ -70,7 +70,7 @@ atlas:
     checkInterval: 10000
 jasypt:
   encryptor:
-    password:
+    password: arachne
     algorythm: PBEWITHMD5ANDDES
 server:
   port: 8080
