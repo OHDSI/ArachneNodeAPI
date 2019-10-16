@@ -71,7 +71,9 @@ public class DataNodeServiceStandaloneTest {
         User user = userService.findByUsername(Const.USER).orElseThrow(NotFoundException::new);
         DataNode dataNode = new DataNode();
         Mockito.when(centralIntegrationService.sendDataNodeCreationRequest(user, dataNode))
-                .then(invocationOnMock -> dataNode);
+                .then(invocationOnMock -> {
+                    throw new RuntimeException("should not be called in Standalone mode");
+                });
         DataNode created = dataNodeService.create(user, dataNode);
         assertThat(created, notNullValue());
         assertThat(created.getId(), greaterThan(0L));
