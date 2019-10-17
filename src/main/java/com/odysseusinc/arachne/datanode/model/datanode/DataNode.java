@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.model.datanode;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
+import com.odysseusinc.arachne.datanode.model.datanode.validation.NonEmptyToken;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import java.util.Set;
 import javax.persistence.Column;
@@ -41,6 +42,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Entity
 @Table(name = "datanode")
+@NonEmptyToken
 public class DataNode {
 
     @Id
@@ -62,7 +64,6 @@ public class DataNode {
     @Column(name = "health_status_description")
     private String healthStatusDescription;
 
-    @NotEmpty
     @Column(name = "token")
     private String token;
 
