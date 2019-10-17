@@ -1,0 +1,1 @@
+ALTER TABLE datanode ALTER COLUMN token DROP NOT NULL;
