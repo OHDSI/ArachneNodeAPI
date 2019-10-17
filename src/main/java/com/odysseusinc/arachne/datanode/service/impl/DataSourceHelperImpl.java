@@ -31,6 +31,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.ohdsi.sql.SqlTranslate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,25 +64,27 @@ public class DataSourceHelperImpl implements DataSourceHelper {
     }
 
     @Override
-    public AnalysisRequestDTO getAnalysisRequestDTO(DataSource dataSource, Path tempDirectory, Long id, String path) throws IOException {
+    public AnalysisRequestDTO prepareRequest(DataSource dataSource, Path tempDirectory, Long id, String callbackPath) throws IOException {
 
-        AnalysisRequestDTO requestDTO = getDataSourceCheckRequest(dataSource, tempDirectory);
-        requestDTO.setResultCallback(String.format("%s%s", baseNodeUrl, path));
+        if (StringUtils.isEmpty(callbackPath)) {
+            throw new IllegalStateException("Callback path is not defined for ping query.");
+        }
+        addPingSqlScriptToTempDirectory(dataSource, tempDirectory);
+
+        AnalysisRequestDTO requestDTO = conversionService.convert(dataSource, AnalysisRequestDTO.class);
+        requestDTO.setResultCallback(String.format("%s%s", baseNodeUrl, callbackPath));
         requestDTO.setId(id);
         return requestDTO;
     }
 
-    private AnalysisRequestDTO getDataSourceCheckRequest(DataSource dataSource, Path tempDirectory) throws IOException {
-
-        AnalysisRequestDTO request = conversionService.convert(dataSource, AnalysisRequestDTO.class);
-        final Path testFile = Paths.get(tempDirectory.toAbsolutePath().toString(), FILE_FOR_PING_REQUEST);
-        String testSql = cohortService.translateSql(
-                dataSource.getType().getOhdsiDB(),
-                SqlTranslate.generateSessionId(),
-                dataSource.getResultSchema(),
-                PING_REQUEST
-        );
-        FileUtils.write(testFile.toFile(), testSql, Charset.defaultCharset());
-        return request;
+    private void addPingSqlScriptToTempDirectory(DataSource dataSource, Path tempDirectory) throws IOException {
+        if (dataSource == null || tempDirectory  == null) {
+            throw new IllegalStateException("Cannot create sql script to ping data source.");
+        }
+        String pingSqlQuery = cohortService.translateSql(dataSource.getType().getOhdsiDB(), SqlTranslate.generateSessionId(), dataSource.getResultSchema(), PING_REQUEST);
+        FileUtils.write(
+                Paths.get(tempDirectory.toAbsolutePath().toString(), FILE_FOR_PING_REQUEST).toFile(),
+                pingSqlQuery,
+                Charset.defaultCharset());
     }
 }

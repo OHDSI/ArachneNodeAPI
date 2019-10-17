@@ -71,6 +71,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.jms.ObjectMessage;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -391,8 +392,17 @@ public class DataSourceServiceImpl implements DataSourceService {
         return dataSourceRepository.findAllByCentralIdIsNull().collect(Collectors.toList());
     }
 
+
+
+
     @Override
     public void firstCheckCallbackProcess(Long id, String password, AnalysisResultDTO result, MultipartFile[] files) {
+
+        final CommonDataSourceDTO dataSourceDTO = createDataSourceDTO(result, files);
+        putResponseToQueue(id, password, dataSourceDTO);
+    }
+
+    protected CommonDataSourceDTO createDataSourceDTO(AnalysisResultDTO result, MultipartFile[] files) {
 
         CommonCDMVersionDTO cdmVersion = getCdmVersion(files, result);
         CommonModelType modelType = getModelType(cdmVersion, result);
@@ -400,6 +410,11 @@ public class DataSourceServiceImpl implements DataSourceService {
         final CommonDataSourceDTO dataSourceDTO = new CommonDataSourceDTO();
         dataSourceDTO.setModelType(modelType);
         dataSourceDTO.setCdmVersion(cdmVersion);
+        return dataSourceDTO;
+    }
+
+    protected void putResponseToQueue(Long id, String password, CommonDataSourceDTO dataSourceDTO) {
+
         jmsTemplate.send(
                 getResponseQueueName(getBaseQueue(password)),
                 session -> {
@@ -416,7 +431,7 @@ public class DataSourceServiceImpl implements DataSourceService {
         Path tempDirectory = null;
         try {
             tempDirectory = Files.createTempDirectory("datasource-check-");
-            AnalysisRequestDTO request = dataSourceHelper.getAnalysisRequestDTO(dataSource, tempDirectory,  System.currentTimeMillis(), DS_MODEL_CHECK_FIRSTCHECK);
+            AnalysisRequestDTO request = dataSourceHelper.prepareRequest(dataSource, tempDirectory,  System.currentTimeMillis(), DS_MODEL_CHECK_FIRSTCHECK);
             engineIntegrationService.sendAnalysisRequest(request, tempDirectory.toFile(), false, false);
             String responseQueue = getResponseQueueName(getBaseQueue(request.getCallbackPassword()));
             ConsumerTemplate exchangeTpl = new ConsumerTemplate(
@@ -444,7 +459,7 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     private CommonCDMVersionDTO getCdmVersion(MultipartFile[] files, AnalysisResultDTO analysisResult) {
 
-        if (analysisResult == null || analysisResult.getStatus() != EXECUTED) {
+        if (analysisResult == null || analysisResult.getStatus() != EXECUTED || ArrayUtils.isEmpty(files)) {
             return null;
         }
 
@@ -452,7 +467,9 @@ public class DataSourceServiceImpl implements DataSourceService {
                 .filter(file -> file.getOriginalFilename().equalsIgnoreCase(CDM_VERSION_FILENAME))
                 .map(this::getVersionFromFile)
                 .map(this::convertToVersionEnum)
+                .filter(Objects::nonNull)
                 .findAny().orElse(null);
+
     }
 
     private CommonModelType getModelType(CommonCDMVersionDTO cdmVersion, AnalysisResultDTO analysisResult) {
@@ -464,6 +481,10 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     private CommonCDMVersionDTO convertToVersionEnum(String version) {
+
+        if (version == null) {
+            return null;
+        }
         return Arrays.stream(CommonCDMVersionDTO.values())
                 .filter(enumVersion -> enumVersion.toString().equalsIgnoreCase(version))
                 .findAny().orElse(null);
