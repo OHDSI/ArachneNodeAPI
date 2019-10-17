@@ -29,5 +29,5 @@ import java.nio.file.Path;
 
 public interface DataSourceHelper {
 
-    AnalysisRequestDTO getAnalysisRequestDTO(DataSource dataSource, Path tempDirectory, Long id, String path) throws IOException;
+    AnalysisRequestDTO prepareRequest(DataSource dataSource, Path tempDirectory, Long id, String path) throws IOException;
 }
