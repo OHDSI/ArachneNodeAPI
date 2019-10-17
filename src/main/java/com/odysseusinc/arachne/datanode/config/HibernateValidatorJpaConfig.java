@@ -52,6 +52,14 @@ public class HibernateValidatorJpaConfig extends HibernateJpaAutoConfiguration {
 
         super.customizeVendorProperties(vendorProperties);
         if (Objects.nonNull(validator)) {
+            /*
+                This is required since Hibernate uses it's own validator factory by default
+                which instantiates validator from constructor rather than getting it from application context.
+                As custom validation that requires dependency injection is used for DataNode entity object
+                then LocalSpringContextValidatorFactory should be used by hibernate and that's exactly
+                that the following parameter does.
+                As
+             */
             vendorProperties.put("javax.persistence.validation.factory", validator);
         }
     }
