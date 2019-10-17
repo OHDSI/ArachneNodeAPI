@@ -40,4 +40,6 @@ public interface DataSourceRepository extends JpaRepository<DataSource, Long> {
     List<DataSource> findAllByDeletedAtIsNull(Sort sort);
 
     List<DataSource> findAllByDeletedAtIsNull();
+
+    Optional<DataSource> findByName(String name);
 }

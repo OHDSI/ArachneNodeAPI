@@ -13,12 +13,12 @@ import com.odysseusinc.arachne.datanode.service.impl.CohortServiceImpl;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.util.Random;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.ohdsi.sql.SqlTranslate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -97,11 +97,11 @@ public class CohortPreprocessor implements Preprocessor<Analysis> {
                                 = cohortService.translateSQL(satelliteSourceStatement, null, target, sessionId, resultDbSchema,  options);
                         FileUtils.writeByteArrayToFile(new File(satelliteFileName), satelliteNativeStatement.getBytes());
                     } catch (IOException e) {
-                        throw new RuntimeIOException(e.getMessage(), e);
+                        throw new UncheckedIOException(e.getMessage(), e);
                     }
                 });
             } catch (IOException e) {
-                throw new RuntimeIOException(e.getMessage(), e);
+                throw new UncheckedIOException(e.getMessage(), e);
             }
         }
     }

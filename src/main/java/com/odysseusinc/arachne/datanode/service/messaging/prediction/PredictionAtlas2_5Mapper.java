@@ -9,11 +9,11 @@ import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_5;
 import com.odysseusinc.arachne.datanode.service.messaging.BaseRequestHandler;
 import com.odysseusinc.arachne.datanode.service.messaging.EntityMapper;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -58,7 +58,7 @@ public class PredictionAtlas2_5Mapper extends BaseRequestHandler implements Enti
 			files.add(getRunner(initialName, outcomeName));
 		}catch (IOException e){
 			logger.error("Failed to build PLP data", e);
-			throw new RuntimeIOException("Failed to build PLP data", e);
+			throw new UncheckedIOException("Failed to build PLP data", e);
 		}
 		return files;
 	}

@@ -63,4 +63,6 @@ public interface DataSourceService {
     JsonResult unpublishAndDeleteOnCentral(Long dataSourceId);
 
     List<DataSource> findStandaloneSources();
+
+    boolean isDatasourceNameUnique(String name, Long dataSourceId);
 }

@@ -9,9 +9,9 @@ import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import org.apache.commons.io.FileUtils;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.ohdsi.circe.cohortdefinition.CohortExpressionQueryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -45,7 +45,7 @@ public class CohortDefinitionPreprocessor implements Preprocessor<Analysis> {
             cohortPreprocessor.preprocess(analysis, sqlFile);
             analysis.setExecutableFileName(sqlFile.getName());
         } catch (IOException e) {
-            throw new RuntimeIOException(e.getMessage(), e);
+            throw new UncheckedIOException(e.getMessage(), e);
         }
     }
 }

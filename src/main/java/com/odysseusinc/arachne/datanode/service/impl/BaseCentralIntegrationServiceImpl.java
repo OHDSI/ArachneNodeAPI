@@ -23,8 +23,9 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
-import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.SYSTEM_ERROR;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
+import static com.odysseusinc.arachne.datanode.Constants.DataSourceMessages.CANNOT_CREATE_DATASOURCE;
+import static com.odysseusinc.arachne.datanode.Constants.DataSourceMessages.CANNOT_UPDATE_DATASOURCE;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 import com.google.common.base.Functions;
@@ -115,8 +116,8 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
         if (jsonResult != null && JsonResult.ErrorCode.VALIDATION_ERROR.getCode().equals(jsonResult.getErrorCode())) {
             throw new IntegrationValidationException(jsonResult);
         }
-        if (jsonResult == null || !JsonResult.ErrorCode.NO_ERROR.getCode().equals(jsonResult.getErrorCode())
-                && !JsonResult.ErrorCode.VALIDATION_ERROR.getCode().equals(jsonResult.getErrorCode())) {
+        if (jsonResult == null || !JsonResult.ErrorCode.NO_ERROR.hasEqualCode(jsonResult)
+                && !JsonResult.ErrorCode.VALIDATION_ERROR.hasEqualCode(jsonResult)) {
             throw new IllegalStateException("Unable to register data node on central." + (jsonResult == null
                     ? "" : jsonResult.getErrorMessage()));
         }
@@ -137,10 +138,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             DTO commonCreateDataSourceDTO) {
 
         JsonResult<DTO> jsonResult = centralClient.createDataSource(dataNode.getCentralId(), commonCreateDataSourceDTO);
-        if (jsonResult == null || !NO_ERROR.getCode().equals(jsonResult.getErrorCode())) {
-            throw new IllegalStateException("Unable to create data source on central." + (jsonResult == null
-                    ? "" : jsonResult.getErrorMessage()));
-        }
+        validatePersistDataSourceResult(jsonResult, CANNOT_CREATE_DATASOURCE);
         return jsonResult.getResult();
     }
 
@@ -150,15 +148,25 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
             DTO commonCreateDataSourceDTO) {
 
         JsonResult<DTO> jsonResult = centralClient.updateDataSource(centralDataSourceId, commonCreateDataSourceDTO);
-        int errorCode = Objects.nonNull(jsonResult) ? jsonResult.getErrorCode() : SYSTEM_ERROR.getCode();
-        if (jsonResult == null || !NO_ERROR.getCode().equals(errorCode)) {
-            if (VALIDATION_ERROR.getCode().equals(errorCode)) {
-                throw new IntegrationValidationException(jsonResult);
-            }
-            throw new IllegalStateException("Unable to update data source on central." + (jsonResult == null
-                    ? "" : jsonResult.getErrorMessage()));
-        }
+        validatePersistDataSourceResult(jsonResult, CANNOT_UPDATE_DATASOURCE);
         return jsonResult.getResult();
+    }
+
+    private void validatePersistDataSourceResult(JsonResult<DTO> jsonResult, String errorMessageTemplate) {
+
+        if (NO_ERROR.hasEqualCode(jsonResult)) {
+            return;
+        }
+
+        if (jsonResult == null) {
+            throw new IllegalStateException(errorMessageTemplate);
+        }
+
+        if (VALIDATION_ERROR.hasEqualCode(jsonResult)) {
+            throw new IntegrationValidationException(jsonResult);
+        }
+
+        throw new IllegalStateException(errorMessageTemplate + jsonResult.getErrorMessage());
     }
 
     @Override
