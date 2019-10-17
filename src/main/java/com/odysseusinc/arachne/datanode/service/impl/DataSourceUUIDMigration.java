@@ -34,6 +34,7 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.retry.RetryPolicy;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
@@ -49,6 +50,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Component
 @Transactional
 @Profile("!test")
+@ConditionalOnProperty(name = "datanode.runMode", havingValue = "NETWORK")
 public class DataSourceUUIDMigration {
 
     private final PlatformTransactionManager transactionManager;

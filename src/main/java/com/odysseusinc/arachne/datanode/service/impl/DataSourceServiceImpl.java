@@ -126,8 +126,8 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     public void createOnCentral(User owner, DataSource dataSource) {
 
+        AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
         if (Objects.equals(NETWORK, dataNodeService.getDataNodeMode())) {
-            AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
             CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
             commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
             commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
@@ -288,8 +288,8 @@ public class DataSourceServiceImpl implements DataSourceService {
     public void updateOnCentral(User user,
                                 DataSource dataSource) {
 
+        AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
         if (Objects.nonNull(dataSource.getCentralId())) {
-            AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
             dataSourceRepository.save(dataSource);
 
             CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
