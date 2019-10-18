@@ -126,8 +126,8 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     public void createOnCentral(User owner, DataSource dataSource) {
 
-        if (Objects.equals(NETWORK, dataNodeService.getDataNodeMode())) {
-            AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
+        AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
+        if (NETWORK == dataNodeService.getDataNodeMode()) {
             CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
             commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
             commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
@@ -197,7 +197,7 @@ public class DataSourceServiceImpl implements DataSourceService {
 
         final String name = dataSource.getName();
         // Prevents name update in Standalone mode when datasource is synchronized
-        if (Objects.equals(STANDALONE, dataNodeService.getDataNodeMode()) && exists.getCentralId() != null && !Objects.equals(name, exists.getName())) {
+        if (STANDALONE == dataNodeService.getDataNodeMode() && exists.getCentralId() != null && !Objects.equals(name, exists.getName())) {
             throw new ValidationException("Cannot change Data source name which is published to Central in Standalone mode");
         }
         if (Objects.nonNull(name)) {
@@ -288,14 +288,14 @@ public class DataSourceServiceImpl implements DataSourceService {
     public void updateOnCentral(User user,
                                 DataSource dataSource) {
 
+        AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
         if (Objects.nonNull(dataSource.getCentralId())) {
-            AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
             dataSourceRepository.save(dataSource);
 
             CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
             commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
             commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
-            if (Objects.equals(NETWORK, dataNodeService.getDataNodeMode())) {
+            if (NETWORK == dataNodeService.getDataNodeMode()) {
                 integrationService.sendDataSourceUpdateRequest(
                         user,
                         dataSource.getCentralId(),
