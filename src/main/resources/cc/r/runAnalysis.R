@@ -44,7 +44,8 @@ tryCatch({
     connectionDetails = connectionDetails,
     cdmSchema = cdmDatabaseSchema,
     vocabularySchema = cdmDatabaseSchema,
-    resultSchema = resultsDatabaseSchema
+    resultSchema = resultsDatabaseSchema,
+    tempSchema = resultsDatabaseSchema
   )
 
   runAnalysis(connectionDetails = connectionDetails,
@@ -59,7 +60,8 @@ tryCatch({
   cleanupCohortTable(
     connectionDetails = connectionDetails,
     resultSchema = resultsDatabaseSchema,
-    cohortTable = cohortTable
+    cohortTable = cohortTable,
+    tempSchema = resultsDatabaseSchema
   )
 }, finally = {
   remove.packages('{{packageName}}', lib = libs_local)
