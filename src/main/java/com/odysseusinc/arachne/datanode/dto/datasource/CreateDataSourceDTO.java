@@ -22,11 +22,13 @@
 
 package com.odysseusinc.arachne.datanode.dto.datasource;
 
+import com.odysseusinc.arachne.datanode.dto.datasource.validation.ValidCredentials;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.KerberosAuthMechanism;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.web.multipart.MultipartFile;
 
+@ValidCredentials
 public class CreateDataSourceDTO {
 
     private Long id;
@@ -42,7 +44,6 @@ public class CreateDataSourceDTO {
     @NotBlank
     private String cdmSchema;
 
-    @NotBlank
     private String dbUsername;
 
     private String dbPassword;

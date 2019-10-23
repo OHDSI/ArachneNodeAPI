@@ -22,6 +22,8 @@
 
 package com.odysseusinc.arachne.datanode.util;
 
+import com.odysseusinc.arachne.datanode.exception.BadRequestException;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import java.io.File;
 import org.apache.commons.lang3.StringUtils;
@@ -84,6 +86,13 @@ public class RestUtils {
             return authScheme + " " + authParams;
         } else {
             return "";
+        }
+    }
+
+    public static void requireNetworkMode(FunctionalMode currentMode) {
+
+        if (!FunctionalMode.NETWORK.equals(currentMode)) {
+            throw new BadRequestException();
         }
     }
 }

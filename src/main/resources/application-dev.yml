@@ -35,4 +35,18 @@ analysis:
   scheduler:
     resendFailuresInterval: 60000
     invalidateExecutingInterval: 120000
+central:
+  scheduler:
+    checkingInterval: 20000
 
+
+
+authenticator:
+  methods:
+    rest-central:
+      config:
+        url: https://localhost:8080/api/v1/auth/login
+        infoUrl: https://localhost:8080/api/v1/auth/me
+security.method: rest-central
+security.jwt.token.secretKey: ${datanode.jwt.secret}
+security.jwt.token.validityInSeconds: ${datanode.jwt.expiration}

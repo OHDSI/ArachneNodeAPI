@@ -36,8 +36,11 @@ import com.odysseusinc.arachne.datanode.dto.datasource.CreateDataSourceDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceBusinessDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
+import com.odysseusinc.arachne.datanode.exception.BadRequestException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
+import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
@@ -45,6 +48,10 @@ import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
+import com.odysseusinc.arachne.datanode.util.DataNodeUtils;
+import com.odysseusinc.arachne.datanode.util.LogUtils;
+import feign.FeignException;
+import feign.RetryableException;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
 import java.util.Collections;
@@ -54,6 +61,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.modelmapper.ModelMapper;
+import org.ohdsi.authenticator.exception.AuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -71,6 +79,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 public abstract class BaseDataSourceController<DS extends DataSource, BusinessDTO extends DataSourceBusinessDTO, CommonDTO extends CommonDataSourceDTO> extends BaseController {
 
+    private static final String COMMUNICATION_FAILED = "Failed to communicate with Central, error: {}";
+    private static final String AUTH_ERROR_MESSAGE = "Couldn't autheticate on Central, {}";
+    private static final String UNEXPECTED_ERROR = "Unexpected error during request to Central, {}";
     protected final DataSourceService dataSourceService;
     protected final BaseCentralIntegrationService<DS, CommonDTO> integrationService;
     protected final ModelMapper modelMapper;
@@ -108,7 +119,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     @RequestMapping(value = Constants.Api.DataSource.ADD, method = RequestMethod.POST)
     public JsonResult<DataSourceDTO> add(Principal principal,
                                          @Valid @RequestPart("dataSource") CreateDataSourceDTO dataSourceDTO,
-                                         @RequestPart(name = "krbKeytab", required = false) MultipartFile keyfile,
+                                         @RequestPart(name = "keyfile", required = false) MultipartFile keyfile,
                                          BindingResult bindingResult
     ) throws NotExistException, PermissionDeniedException {
 
@@ -143,8 +154,9 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         List<DataSourceDTO> dtos = dataSourceService.findAllNotDeleted(sortBy, sortAsc).stream()
                 .map(dataSource -> conversionService.convert(dataSource, DataSourceDTO.class))
                 .collect(Collectors.toList());
+        FunctionalMode mode = dataNodeService.getDataNodeMode();
 
-        if (!CollectionUtils.isEmpty(dtos)) {
+        if (!CollectionUtils.isEmpty(dtos) && Objects.equals(mode, FunctionalMode.NETWORK)) {
             dtos = setFieldsFromCentral(getUser(principal), dtos);
         }
         result.setResult(dtos);
@@ -153,22 +165,33 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
 
     private List<DataSourceDTO> setFieldsFromCentral(User user, List<DataSourceDTO> dtos) {
 
-        JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs =
-                integrationService.getDataSources(user,
-                        dtos.stream().filter(e -> e.getCentralId() != null).map(DataSourceDTO::getCentralId)
-                                .collect(Collectors.toList()));
+        try {
+            JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs =
+                    integrationService.getDataSources(user,
+                            dtos.stream().filter(e -> e.getCentralId() != null).map(DataSourceDTO::getCentralId)
+                                    .collect(Collectors.toList()));
 
-        Map<Long, CommonDataSourceDTO> idToDto = centralCommonDTOs.getResult()
-                .stream()
-                .collect(Collectors.toMap(CommonDataSourceDTO::getId, e -> e));
+            Map<Long, CommonDataSourceDTO> idToDto = centralCommonDTOs.getResult()
+                    .stream()
+                    .collect(Collectors.toMap(CommonDataSourceDTO::getId, e -> e));
 
-        dtos.forEach(e -> {
-            CommonDataSourceDTO dto = idToDto.get(e.getCentralId());
-            if (!Objects.isNull(dto)) {
-                e.setPublished(dto.getPublished());
-                e.setModelType(dto.getModelType());
-            }
-        });
+            dtos.forEach(e -> {
+                CommonDataSourceDTO dto = idToDto.get(e.getCentralId());
+                if (!Objects.isNull(dto)) {
+                    e.setPublished(dto.getPublished());
+                    e.setModelType(dto.getModelType());
+                }
+            });
+        } catch (RetryableException e) {
+            LogUtils.logError(LOGGER, COMMUNICATION_FAILED, e);
+            throw new ServiceNotAvailableException("Central is not available");
+        } catch (AuthenticationException | FeignException.Unauthorized e) {
+            LogUtils.logError(LOGGER, AUTH_ERROR_MESSAGE, e);
+            throw new AuthException(e.getMessage());
+        } catch (Exception e) {
+            LogUtils.logError(LOGGER, UNEXPECTED_ERROR, e);
+            throw new BadRequestException();
+        }
         return dtos;
     }
 
@@ -186,7 +209,9 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
         DataSource dataSource = dataSourceService.getById(id);
         DataSourceDTO resultDTO = conversionService.convert(dataSource, DataSourceDTO.class);
-        resultDTO = setFieldsFromCentral(getUser(principal), Collections.singletonList(resultDTO)).get(0);
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            resultDTO = setFieldsFromCentral(getUser(principal), Collections.singletonList(resultDTO)).get(0);
+        }
         result.setResult(resultDTO);
         return result;
     }
@@ -201,7 +226,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         if (principal == null) {
             throw new AuthException("user not found");
         }
-        JsonResult centralResult = unpublishAndDeleteOnCentral(id);
+        JsonResult centralResult = dataSourceService.unpublishAndDeleteOnCentral(id);
         JsonResult<Boolean> result = new JsonResult<>();
         Integer centralErrorCode = centralResult.getErrorCode();
 
@@ -227,7 +252,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
     public JsonResult<DataSourceDTO> update(Principal principal,
                                             @Valid @RequestPart("dataSource") CreateDataSourceDTO dataSourceDTO,
                                             @PathVariable("id") Long id,
-                                            @RequestPart(name = "krbKeytab", required = false) MultipartFile keytab,
+                                            @RequestPart(name = "keyfile", required = false) MultipartFile keyfile,
                                             BindingResult bindingResult)
             throws PermissionDeniedException {
 
@@ -235,7 +260,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             return setValidationErrors(bindingResult);
         }
         final User user = getAdmin(principal);
-        dataSourceDTO.setKeyfile(keytab);
+        dataSourceDTO.setKeyfile(keyfile);
         DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
         dataSource.setId(id);
 
@@ -255,12 +280,6 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         DataSource dataSource = dataSourceService.getById(id);
         dataSourceService.removeKeytab(dataSource);
         return new JsonResult(NO_ERROR);
-    }
-
-    public JsonResult unpublishAndDeleteOnCentral(Long dataSourceId) {
-
-        DataSource dataSource = dataSourceService.getById(dataSourceId);
-        return centralClient.unpublishAndSoftDeleteDataSource(dataSource.getCentralId());
     }
 
     @ApiOperation("List supported DBMS")

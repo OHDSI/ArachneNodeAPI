@@ -107,7 +107,7 @@ public class AnalysisController {
             analysisService.sendToEngine(analysis);
 
             return ResponseEntity.ok().build();
-        } catch (IOException | ZipException e) {
+        } catch (IOException e) {
 	        logger.error(ERROR_MESSAGE, e);
 	        throw new IllegalOperationException(ERROR_MESSAGE);
         }
@@ -156,6 +156,8 @@ public class AnalysisController {
     public List<OptionDTO> getTypes() {
 
 	    return Stream.of(CommonAnalysisType.values())
+                //Hide this types until it implemented/fixed
+                .filter(type -> !(CommonAnalysisType.COHORT_HERACLES.equals(type) || CommonAnalysisType.COHORT_PATHWAY.equals(type)))
                 .map(type -> new OptionDTO(type.name(), type.getTitle()))
                 .collect(Collectors.toList());
     }

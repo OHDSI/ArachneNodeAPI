@@ -23,3 +23,9 @@ executionEngine:
 analysis:
   scheduler:
     invalidateExecutingInterval: 3600000
+authenticator:
+  methods:
+    rest-central:
+      config:
+        url: https://testcommunity.arachnenetwork.com:8070/api/v1/auth/login
+        infoUrl: https://testcommunity.arachnenetwork.com:8070/api/v1/auth/me

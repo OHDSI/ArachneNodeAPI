@@ -24,9 +24,12 @@ package com.odysseusinc.arachne.datanode.service.impl;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataNodeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.repository.DataNodeRepository;
 import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
+import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
+import java.util.Objects;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -52,6 +55,7 @@ public class DataSourceUUIDMigration {
     private final DataNodeRepository dataNodeRepository;
     private final DataSourceRepository dataSourceRepository;
     private final CentralSystemClient centralClient;
+    private final DataNodeService dataNodeService;
     @Value("${migration.retry.timeout}")
     private long retryTimeout;
 
@@ -59,12 +63,14 @@ public class DataSourceUUIDMigration {
     public DataSourceUUIDMigration(@Qualifier("transactionManager") PlatformTransactionManager transactionManager,
                                    DataNodeRepository dataNodeRepository,
                                    DataSourceRepository dataSourceRepository,
-                                   CentralSystemClient centralClient) {
+                                   CentralSystemClient centralClient,
+                                   DataNodeService dataNodeService) {
 
         this.transactionManager = transactionManager;
         this.dataNodeRepository = dataNodeRepository;
         this.dataSourceRepository = dataSourceRepository;
         this.centralClient = centralClient;
+        this.dataNodeService = dataNodeService;
     }
 
     @PostConstruct
@@ -97,13 +103,15 @@ public class DataSourceUUIDMigration {
 
     public void migrateDataSources() {
 
-        dataSourceRepository.findAllByCentralIdIsNull().forEach(ds -> {
-            CommonDataSourceDTO dto = centralClient.getDataSource(ds.getUuid()).getResult();
-            if (dto != null) {
-                ds.setCentralId(dto.getId());
-                dataSourceRepository.save(ds);
-            }
-        });
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            dataSourceRepository.findAllByCentralIdIsNull().forEach(ds -> {
+                CommonDataSourceDTO dto = centralClient.getDataSource(ds.getUuid()).getResult();
+                if (dto != null) {
+                    ds.setCentralId(dto.getId());
+                    dataSourceRepository.save(ds);
+                }
+            });
+        }
     }
 
     private RetryTemplate getRetryTemplate() {

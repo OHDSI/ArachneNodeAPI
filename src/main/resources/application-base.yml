@@ -93,9 +93,10 @@ files:
 datanode:
   app:
     errorsTokenEnabled: false
+  runMode: NETWORK
   jwt:
     header: Arachne-Auth-Token
-    secret: 129DF19C8A91AFD8375A2826A3353
+    secret: 129DF19C8A91AFD8375A2826A33539K01ACQ778QOJFAA9MGWLWH73PLXVFVHBR7860MTIE2O8EEVF9KCO77P6A7NUNX4XHAGCRFSBWG879XPDOIN6C2LFCKJI002OIABS4D6Q9VMJJIX8UCE48EF
     expiration: 900
   arachneCentral:
     admin.email:
@@ -160,6 +161,10 @@ entities:
   scheduler:
     checkListRequestsInterval: 10000
     checkRequestInterval: 10000
+central:
+  scheduler:
+    checkingInterval: 60000
+
 jasypt:
   encryptor:
     password:
@@ -170,7 +175,7 @@ migration:
     timeout: 10000
 cohorts:
   result:
-    countEnabled: false
+    countEnabled: true
     summaryEnabled: false
     defaultTargetTable: cohort
 tmp:
@@ -187,3 +192,30 @@ submission:
   result:
     files:
       exclusions:
+authenticator:
+  user:
+    registrationStrategy: CREATE_IF_FIRST
+  methods:
+    rest-central:
+      service: org.ohdsi.authenticator.service.rest.RestAuthService
+      config:
+        bodyFormat: JSON
+        params:
+          username: username
+          password: password
+        loginSuccessCriteria:
+          status: OK
+          bodyProperty: '$[?(@.errorCode == 0)]'
+        token:
+          source: BODY
+          key: $.result.token
+          targetHeader: Arachne-Auth-Token
+          targetFormat: '%s'
+          copyExpirationDate: true
+        fieldsToExtract:
+          id: result.id
+          email: result.email
+          username: result.username
+          firstName: result.firstname
+          middleName: result.middlename
+          lastName: result.lastname
