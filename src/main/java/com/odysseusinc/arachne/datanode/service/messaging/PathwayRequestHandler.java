@@ -1,9 +1,6 @@
 package com.odysseusinc.arachne.datanode.service.messaging;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
@@ -45,6 +42,7 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
     private static final int PAGE_SIZE = 10000;
     public static final String PATHWAY_BUILD_ERROR = "Failed to build Pathway data";
     public static final Logger LOGGER = LoggerFactory.getLogger(PathwayRequestHandler.class);
+    private static String SKELETON_RESOURCE = "/pathways/hydra/CohortPathways_1.0.1.zip";
 
     @Autowired
     public PathwayRequestHandler(SqlRenderService sqlRenderService,
@@ -77,19 +75,14 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
         return commonEntityService.findByGuid(guid).map(entity -> {
             Atlas origin = entity.getOrigin();
             JsonNode design = atlasService.<AtlasClient2_7, JsonNode>execute(origin, atlasClient -> atlasClient.exportPathwayDesign(entity.getLocalId()));
+            String analysisName = design.get("name").asText();
+            String packageName = String.format("CohortPathways%d", entity.getLocalId());
             List<MultipartFile> files = new ArrayList<>();
             try {
-				String prettyPrint;
-				try {
-					ObjectMapper mapper = new ObjectMapper();
-					prettyPrint = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(design);
-				} catch (JsonProcessingException e) {
-					LOGGER.error("JSON Pretty print failed.");
-					throw new RuntimeJsonMappingException("JSON Pretty print failed.");
-				}
-				// Pathways design
-				MultipartFile designFile = new MockMultipartFile(DESIGN_FILENAME, DESIGN_FILENAME, MediaType.APPLICATION_JSON_VALUE,
-								prettyPrint.getBytes());
+			 	byte[] packageContent = atlasService.hydrateAnalysis(design, packageName, SKELETON_RESOURCE);
+			 	String packageFileName = String.format("CohortPathways - %s.zip", analysisName);
+			 	MultipartFile packageFile = new MockMultipartFile(packageFileName, packageFileName, MediaType.APPLICATION_OCTET_STREAM_VALUE,
+						packageContent);
 				// Target cohorts
 				List<CohortDefinition> cohortDefinitions = new ArrayList<>();
 				JsonNode targetCohortsNode = design.get("targetCohorts");
@@ -101,8 +94,11 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
 				if (eventCohortsNode instanceof ArrayNode) {
 					cohortDefinitions.addAll(addCohorts(origin, files, (ArrayNode) eventCohortsNode));
 				}
-				files.add(designFile);
-				files.add(getRunner(cohortDefinitions));
+//				files.add(designFile);
+				int localId = entity.getLocalId();
+				files.add(packageFile);
+				files.add(getRunner(cohortDefinitions, localId, packageName, String.format("pathwaysAnalysis_%d", localId),
+						packageFileName));
 				return files.stream().filter(Objects::nonNull).collect(Collectors.toList());
 			} catch (IOException e) {
             	LOGGER.error(PATHWAY_BUILD_ERROR, e);
@@ -135,22 +131,26 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
 			return cohortDefinitions;
 		}
 
-		private MultipartFile getRunner(List<CohortDefinition> cohorts) throws IOException {
+	private MultipartFile getRunner(List<CohortDefinition> cohorts, int analysisId, String packageName, String analysisDir, String packageFile) throws IOException {
 
     	Map<String, Object> params = new HashMap<>();
-    	String cohortDefinitions = cohorts.stream()
+		String cohortDefinitions = cohorts.stream()
 							.map(cd -> String.format("list(file = \"%s.sql\", id = %d)", cd.getName(), cd.getId()))
 							.collect(Collectors.joining(","));
-    	params.put("cohortDefinitions", cohortDefinitions);
+		params.put("cohortDefinitions", cohortDefinitions);
+		params.put("analysisId", analysisId);
+		params.put("packageName", packageName);
+		params.put("analysisDir", analysisDir);
+		params.put("packageFile", packageFile);
     	String result = pathwaysRunnerTemplate.apply(params);
     	return new MockMultipartFile("file", "main.R", MediaType.TEXT_PLAIN_VALUE, result.getBytes());
 		}
 
-		private class CohortDefinition {
+		private static class CohortDefinition {
     	private Integer id;
     	private String name;
 
-			public CohortDefinition(Integer id, String name) {
+			CohortDefinition(Integer id, String name) {
 
 				this.id = id;
 				this.name = name;
