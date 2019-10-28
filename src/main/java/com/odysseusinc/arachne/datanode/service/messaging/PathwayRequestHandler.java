@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonPathwayDTO;
-import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.commons.utils.CommonFilenameUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.Pathway;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
@@ -36,7 +35,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRequestHandler<CommonPathwayDTO, List<MultipartFile>> {
 
-    private static final String DESIGN_FILENAME = "pathways.json";
     private final GenericConversionService conversionService;
     private final CommonEntityService commonEntityService;
     private final CentralSystemClient centralClient;
@@ -122,19 +120,19 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
 
     private List<CohortDefinition> addCohorts(Atlas origin, List<MultipartFile> files, ArrayNode cohorts) {
 
-    	List<CohortDefinition> cohortDefinitions = new ArrayList<>();
-			cohorts.forEach(cohort -> {
+		List<CohortDefinition> cohortDefinitions = new ArrayList<>();
+		cohorts.forEach(cohort -> {
 				int id = cohort.get("id").intValue();
 				String name = CommonFilenameUtils.sanitizeFilename(cohort.get("name").textValue());
 				cohortDefinitions.add(new CohortDefinition(id, name));
 				files.add(getCohortFile(origin, id, String.format("%s.sql", name)));
 			});
 			return cohortDefinitions;
-		}
+	}
 
 	private MultipartFile getRunner(List<CohortDefinition> cohorts, int analysisId, String packageName, String analysisDir, String packageFile) throws IOException {
 
-    	Map<String, Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		String cohortDefinitions = cohorts.stream()
 							.map(cd -> String.format("list(file = \"%s.sql\", id = %d)", cd.getName(), cd.getId()))
 							.collect(Collectors.joining(","));
@@ -143,13 +141,13 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
 		params.put("packageName", packageName);
 		params.put("analysisDir", analysisDir);
 		params.put("packageFile", packageFile);
-    	String result = pathwaysRunnerTemplate.apply(params);
-    	return new MockMultipartFile("file", "main.R", MediaType.TEXT_PLAIN_VALUE, result.getBytes());
+		String result = pathwaysRunnerTemplate.apply(params);
+		return new MockMultipartFile("file", "main.R", MediaType.TEXT_PLAIN_VALUE, result.getBytes());
 		}
 
 		private static class CohortDefinition {
-    	private Integer id;
-    	private String name;
+	 	private Integer id;
+	 	private String name;
 
 			CohortDefinition(Integer id, String name) {
 
