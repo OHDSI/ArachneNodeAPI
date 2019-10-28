@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonPathwayDTO;
+import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
+import com.odysseusinc.arachne.commons.utils.CommonFilenameUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.Pathway;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
@@ -94,7 +96,6 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
 				if (eventCohortsNode instanceof ArrayNode) {
 					cohortDefinitions.addAll(addCohorts(origin, files, (ArrayNode) eventCohortsNode));
 				}
-//				files.add(designFile);
 				int localId = entity.getLocalId();
 				files.add(packageFile);
 				files.add(getRunner(cohortDefinitions, localId, packageName, String.format("pathwaysAnalysis_%d", localId),
@@ -124,7 +125,7 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
     	List<CohortDefinition> cohortDefinitions = new ArrayList<>();
 			cohorts.forEach(cohort -> {
 				int id = cohort.get("id").intValue();
-				String name = cohort.get("name").textValue();
+				String name = CommonFilenameUtils.sanitizeFilename(cohort.get("name").textValue());
 				cohortDefinitions.add(new CohortDefinition(id, name));
 				files.add(getCohortFile(origin, id, String.format("%s.sql", name)));
 			});
