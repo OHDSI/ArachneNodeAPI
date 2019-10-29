@@ -26,6 +26,7 @@ import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCo
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
 import static java.util.Arrays.asList;
 
+import com.google.common.collect.ImmutableMap;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.OptionDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
@@ -157,15 +158,15 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         return result;
     }
 
-    private Optional<JsonResult> validatePersistDataSourceRequest(BindingResult bindingResult, String dataSourceName, Long dataSourceId){
+    private Optional<JsonResult<DataSourceDTO>> validatePersistDataSourceRequest(BindingResult bindingResult, String dataSourceName, Long dataSourceId) {
 
         if (bindingResult.hasErrors()) {
             return Optional.of(setValidationErrors(bindingResult));
         }
 
-        if(!dataSourceService.isDatasourceNameUnique(dataSourceName, dataSourceId)){
-            JsonResult notUniqueNameResult = new JsonResult<>(JsonResult.ErrorCode.VALIDATION_ERROR);
-            notUniqueNameResult.getValidatorErrors().put("name", Constants.DataSourceMessages.DATASOURCE_NAME_UNIQUE);
+        if (!dataSourceService.isDatasourceNameUnique(dataSourceName, dataSourceId)) {
+            JsonResult<DataSourceDTO> notUniqueNameResult = new JsonResult(JsonResult.ErrorCode.VALIDATION_ERROR);
+            notUniqueNameResult.setValidatorErrors(ImmutableMap.of("name", Constants.DataSourceMessages.DATASOURCE_NAME_UNIQUE));
             return Optional.of(notUniqueNameResult);
         }
 
