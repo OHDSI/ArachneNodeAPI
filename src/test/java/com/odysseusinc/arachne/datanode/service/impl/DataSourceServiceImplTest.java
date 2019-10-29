@@ -8,8 +8,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -32,7 +30,7 @@ public class DataSourceServiceImplTest {
     @Test
     public void shouldReturnTrueIfDataSourceWithTheSameNameDoesNotExists() {
 
-        when(dataSourceRepository.findByName(any())).thenReturn(Optional.empty());
+        when(dataSourceRepository.countByName(any())).thenReturn(0);
 
         final boolean isUnique = dataSourceService.isDatasourceNameUnique("dataSourceName", dataSourceId);
 
@@ -43,7 +41,7 @@ public class DataSourceServiceImplTest {
     public void shouldReturnTrueIfDataSourceWithTheSameNameAndIdExists() {
 
         when(dataSource.getId()).thenReturn(dataSourceId);
-        when(dataSourceRepository.findByName(dataSourceName)).thenReturn(Optional.of(dataSource));
+        when(dataSourceRepository.countByName(dataSourceName)).thenReturn(1);
 
         final boolean isUnique = dataSourceService.isDatasourceNameUnique(dataSourceName, dataSourceId);
 
@@ -54,7 +52,7 @@ public class DataSourceServiceImplTest {
     public void shouldReturnFalseIfDataSourceWithTheSameNameButAnotherIdExists() {
 
         when(dataSource.getId()).thenReturn(dataSourceId);
-        when(dataSourceRepository.findByName(dataSourceName)).thenReturn(Optional.of(dataSource));
+        when(dataSourceRepository.countByIdNotAndName(33L, dataSourceName)).thenReturn(1);
 
         final boolean isUnique = dataSourceService.isDatasourceNameUnique(dataSourceName, 33L);
 

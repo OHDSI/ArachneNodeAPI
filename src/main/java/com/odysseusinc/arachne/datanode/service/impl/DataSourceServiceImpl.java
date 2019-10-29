@@ -352,8 +352,10 @@ public class DataSourceServiceImpl implements DataSourceService {
     @Override
     public boolean isDatasourceNameUnique(String name, Long dataSourceId) {
 
-        return dataSourceRepository.findByName(name)
-                .map(ds -> ds.getId().equals(dataSourceId))
-                .orElse(true);
+        int nameUsagesCount = (dataSourceId == null) ?
+                dataSourceRepository.countByName(name):
+                dataSourceRepository.countByIdNotAndName(dataSourceId, name);
+
+        return nameUsagesCount == 0;
     }
 }
