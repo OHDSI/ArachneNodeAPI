@@ -145,7 +145,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                 .orElseGet(() -> saveDataSource(id, dataSourceDTO, principal, keyfile, dataSourceService::update));
     }
 
-    private JsonResult saveDataSource(Long dataSourceId, CreateDataSourceDTO dataSourceDTO, Principal principal, MultipartFile keyfile, BiFunction<User, DataSource, DataSource> persistDatasource) {
+    private JsonResult<DataSourceDTO> saveDataSource(Long dataSourceId, CreateDataSourceDTO dataSourceDTO, Principal principal, MultipartFile keyfile, BiFunction<User, DataSource, DataSource> persistDatasource) {
 
         final User user = getAdmin(principal);
         dataSourceDTO.setKeyfile(keyfile);
@@ -165,7 +165,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         }
 
         if (!dataSourceService.isDatasourceNameUnique(dataSourceName, dataSourceId)) {
-            JsonResult<DataSourceDTO> notUniqueNameResult = new JsonResult(JsonResult.ErrorCode.VALIDATION_ERROR);
+            JsonResult<DataSourceDTO> notUniqueNameResult = new JsonResult<>(JsonResult.ErrorCode.VALIDATION_ERROR);
             notUniqueNameResult.setValidatorErrors(ImmutableMap.of("name", Constants.DataSourceMessages.DATASOURCE_NAME_UNIQUE));
             return Optional.of(notUniqueNameResult);
         }
