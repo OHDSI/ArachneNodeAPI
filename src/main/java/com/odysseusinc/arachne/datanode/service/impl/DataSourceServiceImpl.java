@@ -23,7 +23,6 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkPositionIndexes;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
 import static com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode.NETWORK;
 import static com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode.STANDALONE;
@@ -35,14 +34,9 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.commons.types.DBMSType;
-import com.odysseusinc.arachne.datanode.dto.converters.DataSourceDTOToDataSourceConverter;
-import com.odysseusinc.arachne.datanode.dto.converters.DataSourceToCommonDataSourceDTOConverter;
-import com.odysseusinc.arachne.datanode.dto.converters.UserDTOToUserConverter;
-import com.odysseusinc.arachne.datanode.dto.converters.UserToUserDTOConverter;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
-import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.datasource.AutoDetectedFields;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
@@ -353,5 +347,15 @@ public class DataSourceServiceImpl implements DataSourceService {
     public List<DataSource> findStandaloneSources() {
 
         return dataSourceRepository.findAllByCentralIdIsNull().collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean isDatasourceNameUnique(String name, Long dataSourceId) {
+
+        int nameUsagesCount = (dataSourceId == null) ?
+                dataSourceRepository.countByName(name):
+                dataSourceRepository.countByIdNotAndName(dataSourceId, name);
+
+        return nameUsagesCount == 0;
     }
 }

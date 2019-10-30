@@ -40,4 +40,8 @@ public interface DataSourceRepository extends JpaRepository<DataSource, Long> {
     List<DataSource> findAllByDeletedAtIsNull(Sort sort);
 
     List<DataSource> findAllByDeletedAtIsNull();
+
+    int countByName(String name);
+
+    int countByIdNotAndName(Long id, String name);
 }

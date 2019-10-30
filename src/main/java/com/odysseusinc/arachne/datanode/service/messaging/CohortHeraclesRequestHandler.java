@@ -39,6 +39,7 @@ import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,7 +48,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,7 +126,7 @@ public class CohortHeraclesRequestHandler implements AtlasRequestHandler<CommonC
                         }
                     } catch (IOException e) {
                         logger.error("Failed to build CC data", e);
-                        throw new RuntimeIOException("Failed to build CC data", e);
+                        throw new UncheckedIOException("Failed to build CC data", e);
                     }
 
                 } else {

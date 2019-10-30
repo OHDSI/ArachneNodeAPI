@@ -14,12 +14,12 @@ import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_7;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.util.AtlasUtils;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
@@ -80,7 +80,7 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 				files.add(file);
 				files.add(getRunner(packageName, file.getName(), String.format("analysis_%d", localId), localId));
 			} catch (IOException e) {
-				throw new RuntimeIOException("Failed to build analysis data", e);
+				throw new UncheckedIOException("Failed to build analysis data", e);
 			}
 			return files;
 		}).orElse(null);

@@ -26,6 +26,7 @@ import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCo
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
 import static java.util.Arrays.asList;
 
+import com.google.common.collect.ImmutableMap;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.OptionDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
@@ -48,7 +49,6 @@ import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
-import com.odysseusinc.arachne.datanode.util.DataNodeUtils;
 import com.odysseusinc.arachne.datanode.util.LogUtils;
 import feign.FeignException;
 import feign.RetryableException;
@@ -58,6 +58,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.modelmapper.ModelMapper;
@@ -121,18 +123,54 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
                                          @Valid @RequestPart("dataSource") CreateDataSourceDTO dataSourceDTO,
                                          @RequestPart(name = "keyfile", required = false) MultipartFile keyfile,
                                          BindingResult bindingResult
-    ) throws NotExistException, PermissionDeniedException {
+    ) throws NotExistException {
 
-        if (bindingResult.hasErrors()) {
-            return setValidationErrors(bindingResult);
-        }
+        return validatePersistDataSourceRequest(bindingResult, dataSourceDTO.getName(), null)
+                .orElseGet(() -> saveDataSource(null, dataSourceDTO, principal, keyfile, dataSourceService::create));
+    }
+
+    @ApiOperation(value = "Updates given data source")
+    @RequestMapping(
+            value = Constants.Api.DataSource.UPDATE,
+            method = RequestMethod.PUT
+    )
+    public JsonResult<DataSourceDTO> update(Principal principal,
+                                            @Valid @RequestPart("dataSource") CreateDataSourceDTO dataSourceDTO,
+                                            @PathVariable("id") Long id,
+                                            @RequestPart(name = "keyfile", required = false) MultipartFile keyfile,
+                                            BindingResult bindingResult)
+            throws PermissionDeniedException {
+
+        return validatePersistDataSourceRequest(bindingResult, dataSourceDTO.getName(), id)
+                .orElseGet(() -> saveDataSource(id, dataSourceDTO, principal, keyfile, dataSourceService::update));
+    }
+
+    private JsonResult<DataSourceDTO> saveDataSource(Long dataSourceId, CreateDataSourceDTO dataSourceDTO, Principal principal, MultipartFile keyfile, BiFunction<User, DataSource, DataSource> persistDatasource) {
+
         final User user = getAdmin(principal);
         dataSourceDTO.setKeyfile(keyfile);
         DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
-        DataSource optional = dataSourceService.create(user, dataSource);
+        dataSource.setId(dataSourceId);
+
+        DataSource persistedDataSource = persistDatasource.apply(user, dataSource);
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
-        result.setResult(conversionService.convert(optional, DataSourceDTO.class));
+        result.setResult(conversionService.convert(persistedDataSource, DataSourceDTO.class));
         return result;
+    }
+
+    private Optional<JsonResult<DataSourceDTO>> validatePersistDataSourceRequest(BindingResult bindingResult, String dataSourceName, Long dataSourceId) {
+
+        if (bindingResult.hasErrors()) {
+            return Optional.of(setValidationErrors(bindingResult));
+        }
+
+        if (!dataSourceService.isDatasourceNameUnique(dataSourceName, dataSourceId)) {
+            JsonResult<DataSourceDTO> notUniqueNameResult = new JsonResult<>(JsonResult.ErrorCode.VALIDATION_ERROR);
+            notUniqueNameResult.setValidatorErrors(ImmutableMap.of("name", Constants.DataSourceMessages.DATASOURCE_NAME_UNIQUE));
+            return Optional.of(notUniqueNameResult);
+        }
+
+        return Optional.empty();
     }
 
     @ApiOperation(value = "Returns all data sources for current data node")
@@ -241,32 +279,6 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
             result.setErrorCode(centralErrorCode);
             result.setResult(Boolean.FALSE);
         }
-        return result;
-    }
-
-    @ApiOperation(value = "Updates given data source")
-    @RequestMapping(
-            value = Constants.Api.DataSource.UPDATE,
-            method = RequestMethod.PUT
-    )
-    public JsonResult<DataSourceDTO> update(Principal principal,
-                                            @Valid @RequestPart("dataSource") CreateDataSourceDTO dataSourceDTO,
-                                            @PathVariable("id") Long id,
-                                            @RequestPart(name = "keyfile", required = false) MultipartFile keyfile,
-                                            BindingResult bindingResult)
-            throws PermissionDeniedException {
-
-        if (bindingResult.hasErrors()) {
-            return setValidationErrors(bindingResult);
-        }
-        final User user = getAdmin(principal);
-        dataSourceDTO.setKeyfile(keyfile);
-        DataSource dataSource = conversionService.convert(dataSourceDTO, DataSource.class);
-        dataSource.setId(id);
-
-        final DataSource savedDataSource = dataSourceService.update(user, dataSource);
-        JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
-        result.setResult(conversionService.convert(savedDataSource, DataSourceDTO.class));
         return result;
     }
 
