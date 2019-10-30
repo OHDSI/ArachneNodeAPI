@@ -40,6 +40,7 @@ import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.BadRequestException;
 import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.User;
+import org.ohdsi.authenticator.service.AccessTokenResolver;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserRegistrationStrategy;
@@ -50,6 +51,7 @@ import java.security.Principal;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import org.ohdsi.authenticator.model.UserInfo;
+import org.ohdsi.authenticator.service.AccessToken;
 import org.ohdsi.authenticator.service.Authenticator;
 import org.pac4j.core.credentials.UsernamePasswordCredentials;
 import org.slf4j.Logger;
@@ -62,7 +64,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 
 @RestController
 public class AuthController {
@@ -85,6 +86,9 @@ public class AuthController {
 
     @Autowired
     private UserRegistrationStrategy userRegisterStrategy;
+
+    @Autowired
+    private AccessTokenResolver accessTokenResolver;
 
     @Value("${datanode.jwt.header}")
     private String tokenHeader;
@@ -128,9 +132,11 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
     public JsonResult<String> refresh(HttpServletRequest request) {
 
-        String token = request.getHeader(tokenHeader);
-        UserInfo userInfo = authenticator.refreshToken(token);
-        userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
+        AccessToken accessToken = accessTokenResolver.getAccessToken(request::getHeader)
+                .orElseThrow(() -> new AuthException("Access token is not defined in header requests"));
+        UserInfo userInfo = authenticator.refreshToken(accessToken);
+        userService.findByUsername(userInfo.getUsername())
+                .orElseThrow(() -> new AuthException("user not registered"));
 
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
     }
@@ -163,10 +169,8 @@ public class AuthController {
 
         JsonResult result;
         try {
-            String token = request.getHeader(tokenHeader);
-            if (token != null) {
-                authenticator.invalidateToken(token);
-            }
+            accessTokenResolver.getAccessToken(request::getHeader)
+                    .ifPresent(accessToken -> authenticator.invalidateToken(accessToken));
             result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
             result.setResult(true);
         } catch (Exception ex) {

@@ -168,7 +168,9 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         try {
             JsonResult<List<CommonDataSourceDTO>> centralCommonDTOs =
                     integrationService.getDataSources(user,
-                            dtos.stream().filter(e -> e.getCentralId() != null).map(DataSourceDTO::getCentralId)
+                            dtos.stream()
+                                    .map(DataSourceDTO::getCentralId)
+                                    .filter(Objects::nonNull)
                                     .collect(Collectors.toList()));
 
             Map<Long, CommonDataSourceDTO> idToDto = centralCommonDTOs.getResult()

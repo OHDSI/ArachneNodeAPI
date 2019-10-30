@@ -25,6 +25,8 @@ package com.odysseusinc.arachne.datanode.service.impl;
 import com.odysseusinc.arachne.datanode.service.AuthenticationService;
 import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
+
+import org.ohdsi.authenticator.service.AccessToken;
 import org.ohdsi.authenticator.service.Authenticator;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -50,7 +52,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, Initial
     }
 
     @Override
-    public Authentication authenticate(String authToken, HttpServletRequest httpRequest) {
+    public Authentication authenticate(AccessToken authToken, HttpServletRequest httpRequest) {
 
         if (authToken != null) {
             String username = authenticator.resolveUsername(authToken);

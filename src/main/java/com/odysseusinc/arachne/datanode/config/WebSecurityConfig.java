@@ -22,12 +22,14 @@
 
 package com.odysseusinc.arachne.datanode.config;
 
+import org.ohdsi.authenticator.service.AccessTokenResolver;
 import com.odysseusinc.arachne.datanode.security.AuthenticationTokenFilter;
 import com.odysseusinc.arachne.datanode.security.EntryPointUnauthorizedHandler;
 import com.odysseusinc.arachne.datanode.service.AuthenticationService;
 import com.odysseusinc.arachne.datanode.service.impl.AuthenticationServiceImpl;
 import org.ohdsi.authenticator.service.Authenticator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -60,6 +62,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         registrationBean.setFilter(filter);
         registrationBean.setEnabled(false);
         return registrationBean;
+    }
+
+    @Bean
+    public AccessTokenResolver accessTokenResolver(
+            @Value("${datanode.jwt.header}") String tokenHeader,
+            @Value("${security.googleIap.enabled:false}") boolean googleIapEnabled) {
+        return new AccessTokenResolver(tokenHeader, googleIapEnabled);
     }
 
     @Bean
