@@ -35,6 +35,7 @@ import org.ohdsi.authenticator.service.AccessTokenResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.filter.GenericFilterBean;
@@ -49,6 +50,9 @@ public class AuthenticationTokenFilter extends GenericFilterBean {
     @Autowired
     private AuthenticationService authenticationService;
 
+    @Value("${security.method}")
+    private String authMethod;
+
     @Override
     public void doFilter(
             ServletRequest request,
@@ -58,7 +62,7 @@ public class AuthenticationTokenFilter extends GenericFilterBean {
 
 
         HttpServletRequest httpRequest = (HttpServletRequest) request;
-        accessTokenResolver.getAccessToken(httpRequest::getHeader).ifPresent(accessToken -> {
+        accessTokenResolver.getAccessToken(authMethod, httpRequest::getHeader).ifPresent(accessToken -> {
             try {
                 authenticationService.authenticate(accessToken, httpRequest);
             } catch (AuthenticationException | AuthException | org.ohdsi.authenticator.exception.AuthenticationException ex) {

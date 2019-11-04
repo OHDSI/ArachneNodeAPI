@@ -106,11 +106,13 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/auth/method", method = GET)
     @Deprecated
     public JsonResult<CommonAuthMethodDTO> authMethod() {
-
-        if (!FunctionalMode.NETWORK.equals(dataNodeService.getDataNodeMode())) {
-            throw new BadRequestException();
+        if (dataNodeService.getDataNodeMode() == FunctionalMode.STANDALONE) {
+            return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthMethodDTO(authMethod));
         }
-        return integrationService.getAuthMethod();
+        if (dataNodeService.getDataNodeMode() == FunctionalMode.NETWORK) {
+            return integrationService.getAuthMethod();
+        }
+        throw new BadRequestException();
     }
 
     @ApiOperation(value = "Sign in user. Returns JWT token.")
@@ -132,11 +134,11 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
     public JsonResult<String> refresh(HttpServletRequest request) {
 
-        AccessToken accessToken = accessTokenResolver.getAccessToken(request::getHeader)
+        AccessToken accessToken = accessTokenResolver.getAccessToken(authMethod, request::getHeader)
                 .orElseThrow(() -> new AuthException("Access token is not defined in header requests"));
         UserInfo userInfo = authenticator.refreshToken(accessToken);
         userService.findByUsername(userInfo.getUsername())
-                .orElseThrow(() -> new AuthException("user not registered"));
+                .orElseThrow(() -> new AuthException("User is not registered"));
 
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
     }
@@ -169,7 +171,7 @@ public class AuthController {
 
         JsonResult result;
         try {
-            accessTokenResolver.getAccessToken(request::getHeader)
+            accessTokenResolver.getAccessToken(authMethod, request::getHeader)
                     .ifPresent(accessToken -> authenticator.invalidateToken(accessToken));
             result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
             result.setResult(true);

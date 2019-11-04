@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.config;
 
+import com.odysseusinc.arachne.datanode.service.UserRegistrationStrategy;
 import org.ohdsi.authenticator.service.AccessTokenResolver;
 import com.odysseusinc.arachne.datanode.security.AuthenticationTokenFilter;
 import com.odysseusinc.arachne.datanode.security.EntryPointUnauthorizedHandler;
@@ -65,62 +66,60 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public AccessTokenResolver accessTokenResolver(
-            @Value("${datanode.jwt.header}") String tokenHeader,
-            @Value("${security.googleIap.enabled:false}") boolean googleIapEnabled) {
-        return new AccessTokenResolver(tokenHeader, googleIapEnabled);
+    public AccessTokenResolver accessTokenResolver(@Value("${datanode.jwt.header}") String tokenHeader) {
+        return new AccessTokenResolver(tokenHeader);
     }
 
     @Bean
-    public AuthenticationService authenticationService(ApplicationContext context, Authenticator authenticator) {
+    public AuthenticationService authenticationService(ApplicationContext context, Authenticator authenticator, UserRegistrationStrategy userRegisterStrategy) {
 
-        return new AuthenticationServiceImpl(context, authenticator);
+        return new AuthenticationServiceImpl(context, authenticator, userRegisterStrategy);
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
         http
-                .csrf().disable()
-                .exceptionHandling()
-                .authenticationEntryPoint(unauthorizedHandler)
+                    .csrf().disable()
+                    .exceptionHandling()
+                    .authenticationEntryPoint(unauthorizedHandler)
                 .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    .sessionManagement()
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-                .authorizeRequests()
-                .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .antMatchers("/index.html", "/css/**").permitAll()
-                .antMatchers("/").permitAll()
-                .antMatchers("/js/**").permitAll()
-                .antMatchers("/fonts/**").permitAll()
-                .antMatchers("/img/**").permitAll()
-                .antMatchers("/auth/login**").permitAll()
-                .antMatchers("/auth/register**").permitAll()
-                .antMatchers("/api/v1/build-number**").permitAll()
-                .antMatchers("/data-catalog**").permitAll()
-                .antMatchers("/cdm-source-list/data-sources**").permitAll()
-                .antMatchers("/cdm-source-list/data-sources/**").permitAll()
-                .antMatchers("/api/v1/auth/logout**").permitAll()
-                .antMatchers("/api/v1/auth/login**").permitAll()
-                .antMatchers("/api/v1/auth/register**").permitAll()
-                .antMatchers("/api/v1/auth/refresh**").permitAll()
-                .antMatchers("/api/v1/auth/method**").permitAll()
-                .antMatchers("/api/v1/auth/password-policies**").permitAll()
-                .antMatchers("/api/v1/user-management/professional-types**").permitAll()
-                .antMatchers("/api/v1/user-management/countries/**").permitAll()
-                .antMatchers("/api/v1/user-management/state-province/**").permitAll()
-                .antMatchers("/api/v1/auth/registration**").permitAll()
-                .antMatchers("/configuration/**").permitAll()
-                .antMatchers("/api/v1/submissions/**").permitAll()
-                .antMatchers("/admin-settings/**").permitAll()
-                .antMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                .antMatchers("/api/v1/data-sources/**/check/result/**").permitAll()
-                .antMatchers("/api/v1/data-sources/**/check/update/**").permitAll()
-                .antMatchers("/api/v1/datanode/mode").permitAll()
+                    .authorizeRequests()
+                    .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    .antMatchers("/index.html", "/css/**").permitAll()
+                    .antMatchers("/").permitAll()
+                    .antMatchers("/js/**").permitAll()
+                    .antMatchers("/fonts/**").permitAll()
+                    .antMatchers("/img/**").permitAll()
+                    .antMatchers("/auth/login**").permitAll()
+                    .antMatchers("/auth/register**").permitAll()
+                    .antMatchers("/api/v1/build-number**").permitAll()
+                    .antMatchers("/data-catalog**").permitAll()
+                    .antMatchers("/cdm-source-list/data-sources**").permitAll()
+                    .antMatchers("/cdm-source-list/data-sources/**").permitAll()
+                    .antMatchers("/api/v1/auth/logout**").permitAll()
+                    .antMatchers("/api/v1/auth/login**").permitAll()
+                    .antMatchers("/api/v1/auth/register**").permitAll()
+                    .antMatchers("/api/v1/auth/refresh**").permitAll()
+                    .antMatchers("/api/v1/auth/method**").permitAll()
+                    .antMatchers("/api/v1/auth/password-policies**").permitAll()
+                    .antMatchers("/api/v1/user-management/professional-types**").permitAll()
+                    .antMatchers("/api/v1/user-management/countries/**").permitAll()
+                    .antMatchers("/api/v1/user-management/state-province/**").permitAll()
+                    .antMatchers("/api/v1/auth/registration**").permitAll()
+                    .antMatchers("/configuration/**").permitAll()
+                    .antMatchers("/api/v1/submissions/**").permitAll()
+                    .antMatchers("/admin-settings/**").permitAll()
+                    .antMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                    .antMatchers("/api/v1/data-sources/**/check/result/**").permitAll()
+                    .antMatchers("/api/v1/data-sources/**/check/update/**").permitAll()
+                    .antMatchers("/api/v1/datanode/mode").permitAll()
 
-                .antMatchers("/api**").authenticated()
-                .antMatchers("/api/**").authenticated()
+                    .antMatchers("/api**").authenticated()
+                    .antMatchers("/api/**").authenticated()
                 .anyRequest().permitAll();
         http
                 .addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
