@@ -29,7 +29,7 @@ import com.odysseusinc.arachne.datanode.service.UserRegistrationStrategy;
 import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
-import org.ohdsi.authenticator.service.AccessToken;
+import org.ohdsi.authenticator.service.AuthenticationMode;
 import org.ohdsi.authenticator.service.Authenticator;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -49,21 +49,25 @@ public class AuthenticationServiceImpl implements AuthenticationService, Initial
 
     private UserRegistrationStrategy userRegisterStrategy;
 
-    public AuthenticationServiceImpl(ApplicationContext applicationContext, Authenticator authenticator, UserRegistrationStrategy userRegisterStrategy) {
+    private AuthenticationMode authenticationMode;
+
+    public AuthenticationServiceImpl(ApplicationContext applicationContext, Authenticator authenticator,
+                                     UserRegistrationStrategy userRegisterStrategy, AuthenticationMode authenticationMode) {
 
         this.applicationContext = applicationContext;
         this.authenticator = authenticator;
         this.userRegisterStrategy = userRegisterStrategy;
+        this.authenticationMode = authenticationMode;
     }
 
     @Override
-    public Authentication authenticate(AccessToken accessToken, HttpServletRequest httpRequest) {
+    public Authentication authenticate(String accessToken, HttpServletRequest httpRequest) {
 
-        if (accessToken != null) {
+        if (StringUtils.isNotEmpty(accessToken)) {
             String username = authenticator.resolveUsername(accessToken);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                createUserByTokenIfNecessary(accessToken.getType(), username);
+                createUserByTokenIfNecessary(username);
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, accessToken, userDetails.getAuthorities());
@@ -83,8 +87,8 @@ public class AuthenticationServiceImpl implements AuthenticationService, Initial
         userDetailsService = applicationContext.getBean(UserDetailsService.class);
     }
 
-    private void createUserByTokenIfNecessary(AccessToken.Type accessTokenType, String username) {
-        if (accessTokenType != AccessToken.Type.IAP) {
+    private void createUserByTokenIfNecessary(String username) {
+        if (authenticationMode == AuthenticationMode.STANDARD) {
             return;
         }
         if (StringUtils.isEmpty(username)) {

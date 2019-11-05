@@ -31,6 +31,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
 import org.ohdsi.authenticator.service.AccessTokenResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,13 +63,14 @@ public class AuthenticationTokenFilter extends GenericFilterBean {
 
 
         HttpServletRequest httpRequest = (HttpServletRequest) request;
-        accessTokenResolver.getAccessToken(authMethod, httpRequest::getHeader).ifPresent(accessToken -> {
+        String accessToken = httpRequest.getHeader(accessTokenResolver.getTokenHeader());
+        if (StringUtils.isNotEmpty(accessToken)){
             try {
                 authenticationService.authenticate(accessToken, httpRequest);
             } catch (AuthenticationException | AuthException | org.ohdsi.authenticator.exception.AuthenticationException ex) {
                 logAuthenticationException(httpRequest, ex);
             }
-        });
+        }
         chain.doFilter(request, response);
     }
 

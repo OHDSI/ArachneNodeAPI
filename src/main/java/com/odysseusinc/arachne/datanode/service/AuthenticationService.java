@@ -24,11 +24,10 @@ package com.odysseusinc.arachne.datanode.service;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.ohdsi.authenticator.service.AccessToken;
 import org.springframework.security.core.Authentication;
 
 public interface AuthenticationService {
 
-    Authentication authenticate(AccessToken authToken, HttpServletRequest httpRequest);
+    Authentication authenticate(String authToken, HttpServletRequest httpRequest);
 
 }

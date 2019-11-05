@@ -40,6 +40,7 @@ import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.BadRequestException;
 import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.User;
+import org.apache.commons.lang3.StringUtils;
 import org.ohdsi.authenticator.service.AccessTokenResolver;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
@@ -51,7 +52,6 @@ import java.security.Principal;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import org.ohdsi.authenticator.model.UserInfo;
-import org.ohdsi.authenticator.service.AccessToken;
 import org.ohdsi.authenticator.service.Authenticator;
 import org.pac4j.core.credentials.UsernamePasswordCredentials;
 import org.slf4j.Logger;
@@ -134,8 +134,7 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
     public JsonResult<String> refresh(HttpServletRequest request) {
 
-        AccessToken accessToken = accessTokenResolver.getAccessToken(authMethod, request::getHeader)
-                .orElseThrow(() -> new AuthException("Access token is not defined in header requests"));
+        String accessToken = request.getHeader(accessTokenResolver.getTokenHeader());
         UserInfo userInfo = authenticator.refreshToken(accessToken);
         userService.findByUsername(userInfo.getUsername())
                 .orElseThrow(() -> new AuthException("User is not registered"));
@@ -171,8 +170,10 @@ public class AuthController {
 
         JsonResult result;
         try {
-            accessTokenResolver.getAccessToken(authMethod, request::getHeader)
-                    .ifPresent(accessToken -> authenticator.invalidateToken(accessToken));
+            String accessToken = request.getHeader(accessTokenResolver.getTokenHeader());
+            if (StringUtils.isNotEmpty(accessToken)) {
+                authenticator.invalidateToken(accessToken);
+            }
             result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
             result.setResult(true);
         } catch (Exception ex) {
