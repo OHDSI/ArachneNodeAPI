@@ -192,6 +192,9 @@ submission:
   result:
     files:
       exclusions:
+security:
+  authentication:
+    mode: STANDARD
 authenticator:
   user:
     registrationStrategy: CREATE_IF_FIRST

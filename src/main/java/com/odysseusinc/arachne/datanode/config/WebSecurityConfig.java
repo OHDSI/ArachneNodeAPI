@@ -53,7 +53,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Value("${datanode.jwt.header}")
     private String tokenHeader;
-    @Value("${security.authentication.mode:" + AuthenticationMode.Const.STANDARD + "}")
+
+    @Value("${security.authentication.mode}")
     private AuthenticationMode authenticationMode = AuthenticationMode.STANDARD;
 
     @Bean
@@ -112,6 +113,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/auth/register**").permitAll()
                 .antMatchers("/api/v1/auth/refresh**").permitAll()
                 .antMatchers("/api/v1/auth/method**").permitAll()
+                .antMatchers("/api/v1/auth/mode**").permitAll()
                 .antMatchers("/api/v1/auth/password-policies**").permitAll()
                 .antMatchers("/api/v1/user-management/professional-types**").permitAll()
                 .antMatchers("/api/v1/user-management/countries/**").permitAll()

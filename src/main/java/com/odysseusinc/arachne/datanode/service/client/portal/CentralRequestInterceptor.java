@@ -53,7 +53,7 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
     private String getToken() {
 
         final Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
-        if (credentials instanceof String) {
+        if (credentials instanceof String && StringUtils.isNotEmpty(credentials.toString())) {
             String accessToken = (String)credentials;
             String centralToken = tokenService.resolveAdditionalInfo(accessToken, "token", String.class);
             return Objects.nonNull(centralToken) ? centralToken : credentials.toString();

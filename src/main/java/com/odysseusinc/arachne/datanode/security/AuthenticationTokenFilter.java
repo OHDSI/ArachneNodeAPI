@@ -63,7 +63,7 @@ public class AuthenticationTokenFilter extends GenericFilterBean {
 
 
         HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String accessToken = httpRequest.getHeader(accessTokenResolver.getTokenHeader());
+        String accessToken = httpRequest.getHeader(accessTokenResolver.getTokenHeaderName());
         if (StringUtils.isNotEmpty(accessToken)){
             try {
                 authenticationService.authenticate(accessToken, httpRequest);

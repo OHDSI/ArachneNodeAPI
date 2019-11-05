@@ -27,6 +27,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationModeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationResponse;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCountryDTO;
@@ -52,6 +53,7 @@ import java.security.Principal;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import org.ohdsi.authenticator.model.UserInfo;
+import org.ohdsi.authenticator.service.AuthenticationMode;
 import org.ohdsi.authenticator.service.Authenticator;
 import org.pac4j.core.credentials.UsernamePasswordCredentials;
 import org.slf4j.Logger;
@@ -96,6 +98,9 @@ public class AuthController {
     @Value("${security.method}")
     private String authMethod;
 
+    @Value("${security.authentication.mode}")
+    private AuthenticationMode authenticationMode = AuthenticationMode.STANDARD;
+
     /**
      * @deprecated not required as authenticator was implemented that provides authentication source
      *          in a very flexible way.
@@ -106,13 +111,18 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/auth/method", method = GET)
     @Deprecated
     public JsonResult<CommonAuthMethodDTO> authMethod() {
-        if (dataNodeService.getDataNodeMode() == FunctionalMode.STANDALONE) {
-            return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthMethodDTO(authMethod));
-        }
         if (dataNodeService.getDataNodeMode() == FunctionalMode.NETWORK) {
             return integrationService.getAuthMethod();
         }
         throw new BadRequestException();
+    }
+
+
+    @ApiOperation("Get authentication mode")
+    @RequestMapping(value = "/api/v1/auth/mode", method = GET)
+    @Deprecated
+    public JsonResult<CommonAuthenticationModeDTO> authenticationMode() {
+        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationModeDTO(authenticationMode.getValue()));
     }
 
     @ApiOperation(value = "Sign in user. Returns JWT token.")
@@ -134,7 +144,7 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
     public JsonResult<String> refresh(HttpServletRequest request) {
 
-        String accessToken = request.getHeader(accessTokenResolver.getTokenHeader());
+        String accessToken = request.getHeader(accessTokenResolver.getTokenHeaderName());
         UserInfo userInfo = authenticator.refreshToken(accessToken);
         userService.findByUsername(userInfo.getUsername())
                 .orElseThrow(() -> new AuthException("User is not registered"));
@@ -170,7 +180,7 @@ public class AuthController {
 
         JsonResult result;
         try {
-            String accessToken = request.getHeader(accessTokenResolver.getTokenHeader());
+            String accessToken = request.getHeader(accessTokenResolver.getTokenHeaderName());
             if (StringUtils.isNotEmpty(accessToken)) {
                 authenticator.invalidateToken(accessToken);
             }
