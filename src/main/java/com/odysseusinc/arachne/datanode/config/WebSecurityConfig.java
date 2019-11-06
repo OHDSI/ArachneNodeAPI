@@ -23,13 +23,13 @@
 package com.odysseusinc.arachne.datanode.config;
 
 import com.odysseusinc.arachne.datanode.service.UserRegistrationStrategy;
-import org.ohdsi.authenticator.service.AccessTokenResolver;
+import org.ohdsi.authenticator.service.authentication.AccessTokenResolver;
 import com.odysseusinc.arachne.datanode.security.AuthenticationTokenFilter;
 import com.odysseusinc.arachne.datanode.security.EntryPointUnauthorizedHandler;
 import com.odysseusinc.arachne.datanode.service.AuthenticationService;
 import com.odysseusinc.arachne.datanode.service.impl.AuthenticationServiceImpl;
-import org.ohdsi.authenticator.service.AuthenticationMode;
-import org.ohdsi.authenticator.service.Authenticator;
+import org.ohdsi.authenticator.service.authentication.AuthenticationMode;
+import org.ohdsi.authenticator.service.authentication.Authenticator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
