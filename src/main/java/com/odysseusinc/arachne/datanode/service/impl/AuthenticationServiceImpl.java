@@ -88,6 +88,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, Initial
     }
 
     private void createUserByTokenIfNecessary(String username) {
+
         if (authenticationMode == AuthenticationMode.STANDARD) {
             return;
         }
@@ -99,6 +100,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, Initial
     }
 
     private User getUserByUserEmail(String email) {
+
         String name = StringUtils.split(email, "@")[0];
         User user = new User();
         user.setFirstName(name);

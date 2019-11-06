@@ -41,8 +41,6 @@ import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.BadRequestException;
 import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.User;
-import org.apache.commons.lang3.StringUtils;
-import org.ohdsi.authenticator.service.authentication.AccessTokenResolver;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserRegistrationStrategy;
@@ -52,7 +50,9 @@ import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.ohdsi.authenticator.model.UserInfo;
+import org.ohdsi.authenticator.service.authentication.AccessTokenResolver;
 import org.ohdsi.authenticator.service.authentication.AuthenticationMode;
 import org.ohdsi.authenticator.service.authentication.Authenticator;
 import org.pac4j.core.credentials.UsernamePasswordCredentials;
@@ -102,15 +102,15 @@ public class AuthController {
     private AuthenticationMode authenticationMode = AuthenticationMode.STANDARD;
 
     /**
-     * @deprecated not required as authenticator was implemented that provides authentication source
-     *          in a very flexible way.
-     *
      * @return
+     * @deprecated not required as authenticator was implemented that provides authentication source
+     * in a very flexible way.
      */
     @ApiOperation("Get auth method")
     @RequestMapping(value = "/api/v1/auth/method", method = GET)
     @Deprecated
     public JsonResult<CommonAuthMethodDTO> authMethod() {
+
         if (dataNodeService.getDataNodeMode() == FunctionalMode.NETWORK) {
             return integrationService.getAuthMethod();
         }
@@ -122,6 +122,7 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/auth/mode", method = GET)
     @Deprecated
     public JsonResult<CommonAuthenticationModeDTO> authenticationMode() {
+
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationModeDTO(authenticationMode.getValue()));
     }
 
@@ -131,8 +132,8 @@ public class AuthController {
             @RequestBody CommonAuthenticationRequest request) {
 
         UserInfo userInfo = authenticator.authenticate(
-            authMethod,
-            new UsernamePasswordCredentials(request.getUsername(), request.getPassword())
+                authMethod,
+                new UsernamePasswordCredentials(request.getUsername(), request.getPassword())
         );
         User centralUser = conversionService.convert(userInfo, User.class);
         userRegisterStrategy.registerUser(centralUser);
