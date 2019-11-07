@@ -393,9 +393,6 @@ public class DataSourceServiceImpl implements DataSourceService {
         return dataSourceRepository.findAllByCentralIdIsNull().collect(Collectors.toList());
     }
 
-
-
-
     @Override
     public void firstCheckCallbackProcess(Long id, String password, AnalysisResultDTO result, MultipartFile[] files) {
 

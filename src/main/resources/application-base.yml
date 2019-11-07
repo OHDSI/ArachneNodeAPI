@@ -123,7 +123,6 @@ proxy:
     username:
     password:
 executionEngine:
-  host: qa.odysseusovh02.odysseusinc.com
   protocol: https
   port: 8888
   analysisUri: /api/v1/analyze
