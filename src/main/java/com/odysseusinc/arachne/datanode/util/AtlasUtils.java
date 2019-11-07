@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.datanode.util;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public final class AtlasUtils {
@@ -33,6 +34,7 @@ public final class AtlasUtils {
 	public static List<Atlas> filterAtlasByVersion27(List<Atlas> atlasList) {
 
 		return atlasList.stream()
+						.filter(a -> Objects.nonNull(a) && Objects.nonNull(a.getVersion()))
 						.filter(atlas -> Constants.Atlas.ATLAS_2_7_VERSION.isLesserOrEqualsThan(atlas.getVersion()))
 						.collect(Collectors.toList());
 	}
