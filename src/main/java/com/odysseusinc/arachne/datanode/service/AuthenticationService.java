@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.service;
 
 import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.security.core.Authentication;
 
 public interface AuthenticationService {
