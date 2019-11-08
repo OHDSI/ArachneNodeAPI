@@ -16,13 +16,13 @@ import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_7;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.util.AtlasUtils;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
     private static final int PAGE_SIZE = 10000;
     public static final String PATHWAY_BUILD_ERROR = "Failed to build Pathway data";
     public static final Logger LOGGER = LoggerFactory.getLogger(PathwayRequestHandler.class);
-    private static String SKELETON_RESOURCE = "/pathways/hydra/CohortPathways_1.0.1.zip";
+    private static final String SKELETON_RESOURCE = "/pathways/hydra/CohortPathways_1.0.1.zip";
 
     @Autowired
     public PathwayRequestHandler(SqlRenderService sqlRenderService,
@@ -101,7 +101,7 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
 				return files.stream().filter(Objects::nonNull).collect(Collectors.toList());
 			} catch (IOException e) {
             	LOGGER.error(PATHWAY_BUILD_ERROR, e);
-            	throw new RuntimeIOException(PATHWAY_BUILD_ERROR, e);
+            	throw new UncheckedIOException(PATHWAY_BUILD_ERROR, e);
             }
         }).orElse(null);
     }
