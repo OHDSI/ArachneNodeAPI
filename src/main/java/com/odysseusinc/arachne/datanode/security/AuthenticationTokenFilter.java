@@ -22,55 +22,47 @@
 
 package com.odysseusinc.arachne.datanode.security;
 
-import com.odysseusinc.arachne.datanode.exception.AuthException;
-import com.odysseusinc.arachne.datanode.service.AuthenticationService;
-import java.io.IOException;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.ohdsi.authenticator.filter.JWTAuthenticationFilter;
+import org.ohdsi.authenticator.service.authentication.Authenticator;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
-public class AuthenticationTokenFilter extends GenericFilterBean {
-
-    Logger log = LoggerFactory.getLogger(AuthenticationTokenFilter.class);
+public class AuthenticationTokenFilter extends JWTAuthenticationFilter {
 
     @Value("${datanode.jwt.header}")
     private String tokenHeader;
 
-    @Autowired
-    private AuthenticationService authenticationService;
+    private final UserDetailsService userDetailsService;
 
-    @Override
-    public void doFilter(
-            ServletRequest request,
-            ServletResponse response,
-            FilterChain chain)
-            throws IOException, ServletException {
+    public AuthenticationTokenFilter(Authenticator authenticator,
+                                     UserDetailsService userDetailsService) {
 
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String authToken = httpRequest.getHeader(this.tokenHeader);
-        try {
-
-            authenticationService.authenticate(authToken, httpRequest);
-        } catch (AuthenticationException | AuthException | org.ohdsi.authenticator.exception.AuthenticationException ex) {
-            String method = httpRequest.getMethod();
-            if (!HttpMethod.OPTIONS.matches(method)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Authentication failed", ex);
-                } else {
-                    log.error("Authentication failed: {}, requested: {} {}", ex.getMessage(), method, httpRequest.getRequestURI());
-                }
-            }
-        }
-        chain.doFilter(request, response);
+        super(authenticator);
+        this.userDetailsService = userDetailsService;
     }
 
+    @Override
+    protected String getToken(HttpServletRequest httpRequest) {
+
+        return httpRequest.getHeader(this.tokenHeader);
+    }
+
+    @Override
+    protected void onSuccessAuthentication(HttpServletRequest httpRequest, UserDetails userDetails, AbstractAuthenticationToken authentication) {
+
+        if (Objects.nonNull(httpRequest)) {
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpRequest));
+        }
+    }
+
+    @Override
+    protected UserDetails getUserDetails(String username) {
+
+        return userDetailsService.loadUserByUsername(username);
+    }
 }

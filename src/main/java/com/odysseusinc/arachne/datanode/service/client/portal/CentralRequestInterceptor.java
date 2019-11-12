@@ -26,7 +26,7 @@ import com.odysseusinc.arachne.datanode.service.UserService;
 import feign.RequestTemplate;
 import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
-import org.ohdsi.authenticator.service.TokenService;
+import org.ohdsi.authenticator.service.authentication.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
