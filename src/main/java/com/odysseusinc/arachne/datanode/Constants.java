@@ -202,4 +202,10 @@ public interface Constants {
         String p90_value = "p90_value";
     }
 
+    interface DataSourceMessages {
+        String CANNOT_CREATE_DATASOURCE = "Unable to create data source on central.";
+        String CANNOT_UPDATE_DATASOURCE = "Unable to update data source on central.";
+        String DATASOURCE_NAME_UNIQUE = "Data source name is not unique";
+    }
+
 }

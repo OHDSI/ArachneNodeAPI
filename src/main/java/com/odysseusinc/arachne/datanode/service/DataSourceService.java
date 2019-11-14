@@ -66,5 +66,7 @@ public interface DataSourceService {
 
     List<DataSource> findStandaloneSources();
 
+    boolean isDatasourceNameUnique(String name, Long dataSourceId);
+
     void firstCheckCallbackProcess(Long id, String password, AnalysisResultDTO result, MultipartFile[] files);
 }

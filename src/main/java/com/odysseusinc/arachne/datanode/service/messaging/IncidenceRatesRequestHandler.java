@@ -36,6 +36,7 @@ import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -43,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,7 +119,7 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
                 files.add(getRunner(analysis, cohortFileNames, packageName, filename, String.format("analysis_%d", localId)));
             } catch (IOException e) {
                 logger.error(IR_BUILD_ERROR, e);
-                throw new RuntimeIOException(IR_BUILD_ERROR, e);
+                throw new UncheckedIOException(IR_BUILD_ERROR, e);
             }
             return files;
         }).orElse(null);

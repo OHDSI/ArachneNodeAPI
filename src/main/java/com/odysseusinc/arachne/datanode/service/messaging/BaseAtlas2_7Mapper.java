@@ -10,12 +10,12 @@ import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_7;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.ohdsi.hydra.Hydra;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +64,7 @@ public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements E
 			return files;
 		} catch (IOException e) {
 			logger.error("Failed to build analysis data", e);
-			throw new RuntimeIOException("Failed to build analysis data", e);
+			throw new UncheckedIOException("Failed to build analysis data", e);
 		}
 	}
 

@@ -394,6 +394,16 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     @Override
+    public boolean isDatasourceNameUnique(String name, Long dataSourceId) {
+
+        int nameUsagesCount = (dataSourceId == null) ?
+                dataSourceRepository.countByName(name):
+                dataSourceRepository.countByIdNotAndName(dataSourceId, name);
+
+        return nameUsagesCount == 0;
+    }
+
+    @Override
     public void firstCheckCallbackProcess(Long id, String password, AnalysisResultDTO result, MultipartFile[] files) {
 
         final CommonDataSourceDTO dataSourceDTO = createDataSourceDTO(result, files);
