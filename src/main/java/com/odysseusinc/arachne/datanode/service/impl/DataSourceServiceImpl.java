@@ -72,7 +72,6 @@ import javax.annotation.PostConstruct;
 import javax.jms.ObjectMessage;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,7 +91,6 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     private final Logger logger = LoggerFactory.getLogger(DataSourceServiceImpl.class);
 
-    private static final String DATANODE_IS_NOT_EXIST_EXCEPTION = "DataNode entry is not exist, create it before";
     private static final String CDM_VERSION_FILENAME = "cdm_version.txt";
 
     private final DataSourceRepository dataSourceRepository;
@@ -397,7 +395,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     public boolean isDatasourceNameUnique(String name, Long dataSourceId) {
 
         int nameUsagesCount = (dataSourceId == null) ?
-                dataSourceRepository.countByName(name):
+                dataSourceRepository.countByName(name) :
                 dataSourceRepository.countByIdNotAndName(dataSourceId, name);
 
         return nameUsagesCount == 0;
@@ -439,7 +437,7 @@ public class DataSourceServiceImpl implements DataSourceService {
         Path tempDirectory = null;
         try {
             tempDirectory = Files.createTempDirectory("datasource-check-");
-            AnalysisRequestDTO request = dataSourceHelper.prepareRequest(dataSource, tempDirectory,  System.currentTimeMillis(), DS_MODEL_CHECK_FIRSTCHECK);
+            AnalysisRequestDTO request = dataSourceHelper.prepareRequest(dataSource, tempDirectory, System.currentTimeMillis(), DS_MODEL_CHECK_FIRSTCHECK);
             engineIntegrationService.sendAnalysisRequest(request, tempDirectory.toFile(), false, false);
             String responseQueue = getResponseQueueName(getBaseQueue(request.getCallbackPassword()));
             ConsumerTemplate exchangeTpl = new ConsumerTemplate(
@@ -450,14 +448,15 @@ public class DataSourceServiceImpl implements DataSourceService {
             );
             ObjectMessage responseMessage = jmsTemplate.execute(exchangeTpl, true);
 
-            if (responseMessage == null || responseMessage.getObject() == null ||
-                    ((CommonDataSourceDTO) responseMessage.getObject()).getModelType() == null) {
+            if (responseMessage == null || responseMessage.getObject() == null || ((CommonDataSourceDTO) responseMessage.getObject()).getModelType() == null) {
                 throw new ValidationException("Cannot establish connection to the data source");
             }
             return (CommonDataSourceDTO) responseMessage.getObject();
+        } catch (ValidationException e) {
+            throw e;
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            throw new RuntimeIOException("Failed to check datasource", e);
+            throw new ValidationException("Failed to check datasource. Inner error. Please contact system administrator");
         } finally {
             if (Objects.nonNull(tempDirectory)) {
                 FileUtils.deleteQuietly(tempDirectory.toFile());

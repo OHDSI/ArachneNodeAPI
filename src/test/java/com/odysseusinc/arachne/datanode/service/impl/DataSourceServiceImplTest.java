@@ -76,6 +76,12 @@ public class DataSourceServiceImplTest {
     @Mock
     private DestinationResolver destinationResolver;
 
+    @Mock
+    private DataSource dataSource;
+
+    private final Long dataSourceId = 1000L;
+    private final String dataSourceName = "dataSourceName";
+
     @Captor
     private ArgumentCaptor<CommonDataSourceDTO> dataSourceCaptor;
     private AnalysisResultDTO result;
@@ -159,17 +165,6 @@ public class DataSourceServiceImplTest {
         assertNull(dataSourceCaptor.getValue().getModelType());
         assertNull(dataSourceCaptor.getValue().getCdmVersion());
     }
-
-    @Mock
-    private DataSource dataSource;
-    @Mock
-    private DataSourceRepository dataSourceRepository;
-    @InjectMocks
-    private DataSourceServiceImpl dataSourceService;
-
-    private final Long dataSourceId = 1000L;
-    private final String dataSourceName = "dataSourceName";
-
 
     @Test
     public void shouldReturnTrueIfDataSourceWithTheSameNameDoesNotExists() {
