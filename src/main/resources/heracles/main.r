@@ -1,5 +1,7 @@
-source("run_cc_reports.R")
+source("run_heracles_analysis.r")
+
 workDir <- getwd()
+unzip('cohortresults_pack.zip', exdir = file.path("."), overwrite = T)
 
 dbms <- Sys.getenv("DBMS_TYPE")
 connStr <- Sys.getenv("CONNECTION_STRING")
@@ -30,7 +32,7 @@ run_cohort_characterization(cohortDefinitionSqlPath = file.path(workDir, "{{init
                                                    "drugEraTreemap" = TRUE,
                                                    "drugExposuresTreemap" = TRUE,
                                                    "procedureTreemap" = TRUE,
-                                                   "visitTreemap" = TRUE,
+                                                   "visitTreemap" = FALSE,
                                                    "conditionEraTreemap" = TRUE,
                                                    "conditionsByIndex" = TRUE,
                                                    "proceduresByIndex" = TRUE,

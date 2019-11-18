@@ -32,6 +32,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
@@ -42,6 +43,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,34 +109,9 @@ public class CohortHeraclesRequestHandler implements AtlasRequestHandler<CommonC
     @Override
     public List<MultipartFile> getAtlasObject(String guid) {
 
-        return commonEntityService.findByGuid(guid).map(entity -> {
-            List<MultipartFile> files = new ArrayList<>(2);
-
-            CohortDefinition definition = atlasService.execute(entity.getOrigin(), atlasClient -> atlasClient.getCohortDefinition(entity.getLocalId()));
-            if (Objects.nonNull(definition)) {
-                String content = sqlRenderService.renderSql(definition);
-                if (Objects.nonNull(content)) {
-                    String cohortSqlFileName = definition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT;
-                    files.add(new MockMultipartFile("file", cohortSqlFileName, MediaType.APPLICATION_OCTET_STREAM_VALUE, ignorePreprocessingMark(content).getBytes()));
-                    try {
-                        files.add(getRunner(cohortSqlFileName));
-                        if (countEnabled) {
-                            files.add(generateFile("cohort/cohort-count.sql", "cohort-count.ohdsi.sql"));
-                        }
-                        if (summaryEnabled) {
-                            files.add(generateFile("cohort/cohort-summary.sql", "cohort-summary.ohdsi.sql"));
-                        }
-                    } catch (IOException e) {
-                        logger.error("Failed to build CC data", e);
-                        throw new UncheckedIOException("Failed to build CC data", e);
-                    }
-
-                } else {
-                    return null;
-                }
-            }
-            return files;
-        }).orElse(null);
+        return commonEntityService
+                .findByGuid(guid).map(this::buildCohortAnalysisFileList)
+                .orElse(Collections.emptyList());
     }
 
     private MockMultipartFile generateFile(String resourcePath, String outputName) throws IOException {
@@ -163,4 +140,34 @@ public class CohortHeraclesRequestHandler implements AtlasRequestHandler<CommonC
 
         centralClient.sendCommonEntityResponse(id, response.toArray(new MultipartFile[response.size()]));
     }
+
+    private List<MultipartFile> buildCohortAnalysisFileList(CommonEntity cohortEntity) {
+
+        logger.debug("Generating Cohort analysis files for {} : {}", cohortEntity.getAnalysisType().getTitle(), cohortEntity.getId());
+        CohortDefinition cohortDefinition = atlasService.execute(cohortEntity.getOrigin(), atlasClient -> atlasClient.getCohortDefinition(cohortEntity.getLocalId()));
+        if (Objects.nonNull(cohortDefinition)) {
+            String definitionSql = sqlRenderService.renderSql(cohortDefinition);
+            if (Objects.nonNull(definitionSql)) {
+                List<MultipartFile> files = new ArrayList<>(2);
+                String cohortSqlFileName = cohortDefinition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT;
+                final byte[] cohordDefinitionBytes = ignorePreprocessingMark(definitionSql).getBytes();
+                files.add(new MockMultipartFile("file", cohortSqlFileName, MediaType.APPLICATION_OCTET_STREAM_VALUE, cohordDefinitionBytes));
+                try {
+                    files.add(getRunner(cohortSqlFileName));
+                    if (countEnabled) {
+                        files.add(generateFile("cohort/cohort-count.sql", "cohort-count.ohdsi.sql"));
+                    }
+                    if (summaryEnabled) {
+                        files.add(generateFile("cohort/cohort-summary.sql", "cohort-summary.ohdsi.sql"));
+                    }
+                    return files;
+                } catch (IOException e) {
+                    logger.error("Failed to build Cohort Analyses data", e);
+                    throw new UncheckedIOException("Failed to build Cohort Analyses data", e);
+                }
+            }
+        }
+        return Collections.emptyList();
+    }
+
 }
