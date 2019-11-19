@@ -37,4 +37,6 @@ run_cohort_characterization(cohortDefinitionSqlPath = file.path(workDir, "{{init
                                                    "conditionsByIndex" = TRUE,
                                                    "proceduresByIndex" = TRUE,
                                                    "drugsByIndex" = TRUE)
-)
+
+
+unlink('cohortresults-sql', recursive = TRUE, force = TRUE)
