@@ -49,8 +49,9 @@ import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import org.ohdsi.authenticator.model.UserInfo;
-import org.ohdsi.authenticator.service.Authenticator;
+import org.ohdsi.authenticator.service.authentication.Authenticator;
 import org.pac4j.core.credentials.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,7 +113,7 @@ public class AuthController {
     @ApiOperation(value = "Sign in user. Returns JWT token.")
     @RequestMapping(value = "${api.loginEnteryPoint}", method = RequestMethod.POST)
     public JsonResult<CommonAuthenticationResponse> login(
-            @RequestBody CommonAuthenticationRequest request) {
+            @Valid @RequestBody CommonAuthenticationRequest request) {
 
         UserInfo userInfo = authenticator.authenticate(
             authMethod,
@@ -121,7 +122,7 @@ public class AuthController {
         User centralUser = conversionService.convert(userInfo, User.class);
         userRegisterStrategy.registerUser(centralUser);
 
-        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getToken()));
+        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getAuthenticationInfo().getToken()));
     }
 
     @ApiOperation("Refresh session token.")
@@ -130,9 +131,9 @@ public class AuthController {
 
         String token = request.getHeader(tokenHeader);
         UserInfo userInfo = authenticator.refreshToken(token);
-        userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
+        userService.findByUsername(userInfo.getUser().getUsername()).orElseThrow(() -> new AuthException("user not registered"));
 
-        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
+        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getAuthenticationInfo().getToken());
     }
 
     @ApiOperation("Get current principal")

@@ -41,10 +41,11 @@ public class UserInfoToUserConverter implements Converter<UserInfo, User>{
     public User convert(UserInfo source) {
 
         User user = new User();
-        user.setUsername((String) source.getAdditionalInfo().getOrDefault("username", source.getUsername()));
-        user.setEmail((String) source.getAdditionalInfo().get("email"));
-        user.setFirstName((String) source.getAdditionalInfo().get("firstName"));
-        user.setLastName((String) source.getAdditionalInfo().get("lastName"));
+
+        user.setUsername(source.getUser().getUsername());
+        user.setFirstName(source.getUser().getFirstname());
+        user.setLastName(source.getUser().getLastname());
+        user.setEmail(source.getUser().getEmail());
         return user;
     }
 }

@@ -332,7 +332,7 @@
         <dependency>
             <groupId>org.ohdsi</groupId>
             <artifactId>authenticator</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.3-SNAPSHOT</version>
         </dependency>
 
     </dependencies>
@@ -454,8 +454,8 @@
                 <configuration>
                     <imageName>${dockerImagePrefix}/${project.artifactId}</imageName>
                     <imageTags>
-                        <imageTag>${project.version}</imageTag>
-                        <imageTag>latest${latestSuffix}</imageTag>
+                        <imageTag>1.15.1-QA-PROXY</imageTag>
+<!--                        <imageTag>latest${latestSuffix}</imageTag>-->
                     </imageTags>
                     <dockerDirectory>src/main/docker</dockerDirectory>
                     <resources>
