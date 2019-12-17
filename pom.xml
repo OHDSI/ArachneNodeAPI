@@ -454,8 +454,8 @@
                 <configuration>
                     <imageName>${dockerImagePrefix}/${project.artifactId}</imageName>
                     <imageTags>
-                        <imageTag>1.15.1-QA-PROXY</imageTag>
-<!--                        <imageTag>latest${latestSuffix}</imageTag>-->
+                        <imageTag>${project.version}</imageTag>
+                        <imageTag>latest${latestSuffix}</imageTag>
                     </imageTags>
                     <dockerDirectory>src/main/docker</dockerDirectory>
                     <resources>

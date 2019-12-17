@@ -58,6 +58,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -122,6 +123,9 @@ public class AuthController {
         User centralUser = conversionService.convert(userInfo, User.class);
         userRegisterStrategy.registerUser(centralUser);
 
+        if (userInfo == null || userInfo.getAdditionalInfo() == null || userInfo.getAuthenticationInfo().getToken() == null) {
+            throw new AuthenticationServiceException("Cannot refresh token user info is either null or does not contain token");
+        }
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getAuthenticationInfo().getToken()));
     }
 
@@ -131,6 +135,10 @@ public class AuthController {
 
         String token = request.getHeader(tokenHeader);
         UserInfo userInfo = authenticator.refreshToken(token);
+
+        if (userInfo == null || userInfo.getUser() == null || userInfo.getUser().getUsername() == null) {
+            throw new AuthenticationServiceException("Cannot refresh token user info is either null or does not contain token");
+        }
         userService.findByUsername(userInfo.getUser().getUsername()).orElseThrow(() -> new AuthException("user not registered"));
 
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getAuthenticationInfo().getToken());
