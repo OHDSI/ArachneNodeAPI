@@ -123,10 +123,10 @@ public class AuthController {
         User centralUser = conversionService.convert(userInfo, User.class);
         userRegisterStrategy.registerUser(centralUser);
 
-        if (userInfo == null || userInfo.getAdditionalInfo() == null || userInfo.getAuthenticationInfo().getToken() == null) {
+        if (userInfo == null || userInfo.getAdditionalInfo() == null || userInfo.getToken() == null) {
             throw new AuthenticationServiceException("Cannot refresh token user info is either null or does not contain token");
         }
-        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getAuthenticationInfo().getToken()));
+        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getToken()));
     }
 
     @ApiOperation("Refresh session token.")
@@ -141,7 +141,7 @@ public class AuthController {
         }
         userService.findByUsername(userInfo.getUser().getUsername()).orElseThrow(() -> new AuthException("user not registered"));
 
-        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getAuthenticationInfo().getToken());
+        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
     }
 
     @ApiOperation("Get current principal")
