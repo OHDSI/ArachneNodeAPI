@@ -136,10 +136,10 @@ public class AuthController {
         String token = request.getHeader(tokenHeader);
         UserInfo userInfo = authenticator.refreshToken(token);
 
-        if (userInfo == null || userInfo.getUser() == null || userInfo.getUser().getUsername() == null) {
+        if (userInfo == null || userInfo.getUsername() == null) {
             throw new AuthenticationServiceException("Cannot refresh token user info is either null or does not contain token");
         }
-        userService.findByUsername(userInfo.getUser().getUsername()).orElseThrow(() -> new AuthException("user not registered"));
+        userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
 
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
     }
