@@ -79,6 +79,9 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 				MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, ccPackage);
 				files.add(file);
 				files.add(getRunner(packageName, file.getName(), String.format("analysis_%d", localId), localId));
+
+				MultipartFile descriptionFile = new MockMultipartFile("file", "description.meta.txt", MediaType.TEXT_PLAIN_VALUE, "description meta content".getBytes());
+				files.add(descriptionFile);
 			} catch (IOException e) {
 				throw new UncheckedIOException("Failed to build analysis data", e);
 			}

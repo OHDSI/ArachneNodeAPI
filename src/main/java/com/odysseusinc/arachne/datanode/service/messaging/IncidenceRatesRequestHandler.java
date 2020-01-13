@@ -117,6 +117,8 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
                 MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, content);
                 files.add(file);
                 files.add(getRunner(analysis, cohortFileNames, packageName, filename, String.format("analysis_%d", localId)));
+                MultipartFile descriptionFile = new MockMultipartFile("file", "description.meta.txt", MediaType.TEXT_PLAIN_VALUE, "description meta content".getBytes());
+                files.add(descriptionFile);
             } catch (IOException e) {
                 logger.error(IR_BUILD_ERROR, e);
                 throw new UncheckedIOException(IR_BUILD_ERROR, e);

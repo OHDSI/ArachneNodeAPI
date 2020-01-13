@@ -22,24 +22,20 @@
 
 package com.odysseusinc.arachne.datanode.service.messaging;
 
-import static com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType.COHORT;
-
 import com.google.common.collect.ImmutableMap;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +44,14 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType.COHORT;
+import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ARACHNE_META_FILE_PREFIX;
 
 
 @Service
@@ -64,7 +68,7 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
             .put("|", "-verticalbar-")
             .put("\"", "-quote-")
             .build();
-    private static final Logger LOGGER = LoggerFactory.getLogger(LegacyCohortRequestHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(LegacyCohortRequestHandler.class);
     private final CentralSystemClient centralClient;
     private final GenericConversionService conversionService;
     private final CommonEntityService commonEntityService;
@@ -99,26 +103,50 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
     @Override
     public MultipartFile[] getAtlasObject(String guid) {
 
-        return commonEntityService.findByGuid(guid).map(entity -> {
-            CohortDefinition definition = atlasService.execute(
-                    entity.getOrigin(),
-                    atlasClient -> atlasClient.getCohortDefinition(entity.getLocalId())
-            );
-            if (Objects.nonNull(definition)) {
-                String content = sqlRenderService.renderSql(definition);
-                if (Objects.nonNull(content)) {
-                    final String definitionName = definition.getName().trim();
-                    final String filteredDefinitionName = filterFileName(definitionName);
-                    return new MockMultipartFile[]{
-                            new MockMultipartFile("file", filteredDefinitionName + CommonFileUtils.OHDSI_JSON_EXT, MediaType.APPLICATION_JSON_VALUE, definition.getExpression().getBytes()),
-                            new MockMultipartFile("file", filteredDefinitionName + CommonFileUtils.OHDSI_SQL_EXT, MediaType.TEXT_PLAIN_VALUE, content.getBytes())
-                    };
-                } else {
-                    return null;
-                }
+        return commonEntityService.findByGuid(guid)
+                .map(this::buildAnalysisData)
+                .orElse(null);
+    }
+
+    private MultipartFile[] buildAnalysisData(CommonEntity entity) {
+
+        CohortDefinition definition = atlasService.execute(
+                entity.getOrigin(),
+                atlasClient -> atlasClient.getCohortDefinition(entity.getLocalId())
+        );
+
+        if (Objects.nonNull(definition)) {
+            String content = sqlRenderService.renderSql(definition);
+            String description = generateDescriptionMeta(definition);
+            if (Objects.nonNull(content)) {
+                final String definitionName = definition.getName().trim();
+                final String filteredDefinitionName = filterFileName(definitionName);
+                MockMultipartFile[] files = new MockMultipartFile[]{
+                        new MockMultipartFile("file", filteredDefinitionName + CommonFileUtils.OHDSI_JSON_EXT, MediaType.APPLICATION_JSON_VALUE, definition.getExpression().getBytes()),
+                        new MockMultipartFile("file", filteredDefinitionName + CommonFileUtils.OHDSI_SQL_EXT, MediaType.TEXT_PLAIN_VALUE, content.getBytes()),
+                        new MockMultipartFile("file", ARACHNE_META_FILE_PREFIX+".description", MediaType.TEXT_PLAIN_VALUE, description.getBytes())
+                };
+                return files;
             }
-            return null;
-        }).orElse(null);
+        }
+        return null;
+    }
+
+    private String generateDescriptionMeta(CohortDefinition definition) {
+
+        StringBuilder description = new StringBuilder();
+        if (StringUtils.isNotBlank(definition.getDescription())) {
+            appendLine(description, "Cohort: " + definition.getName());
+            appendLine(description, "Description: " + definition.getDescription());
+        }
+        appendLine(description, "Created by: " + definition.getCreatedBy());
+        appendLine(description, "Creation date: " + definition.getCreatedDate());
+        return description.toString();
+    }
+
+    private static void appendLine(StringBuilder builder, String text){
+        builder.append(text);
+        builder.append(System.lineSeparator());
     }
 
     @Override
