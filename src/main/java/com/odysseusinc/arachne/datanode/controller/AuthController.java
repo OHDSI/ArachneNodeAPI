@@ -123,7 +123,7 @@ public class AuthController {
         User centralUser = conversionService.convert(userInfo, User.class);
         userRegisterStrategy.registerUser(centralUser);
 
-        if (userInfo == null || userInfo.getAdditionalInfo() == null || userInfo.getToken() == null) {
+        if (userInfo == null || userInfo.getToken() == null) {
             throw new AuthenticationServiceException("Cannot refresh token user info is either null or does not contain token");
         }
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getToken()));
