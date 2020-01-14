@@ -2,7 +2,6 @@ package com.odysseusinc.arachne.datanode.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.service.AnalysisInfoBuilder;
 import org.apache.commons.lang3.StringUtils;
@@ -43,14 +42,14 @@ public class AnalysisInfoBuilderImpl implements AnalysisInfoBuilder {
             appendLine(description, "included cohorts:");
             final JsonNode cohorts = analysisJson.get("cohorts");
             for (JsonNode cohortNode : cohorts) {
-                appendLine(description, cohortNode.get("name").asText());
+                appendLine(description, cohortNode.get("name"));
             }
             appendLine(description, StringUtils.EMPTY);
 
             appendLine(description, "List of the featured analyses:");
             final ArrayNode featuredAnalyses = (ArrayNode) analysisJson.get("featureAnalyses");
             for (JsonNode analysis : featuredAnalyses) {
-                appendLine(description, analysis.get("name").asText());
+                appendLine(description, analysis.get("name"));
             }
         } catch (Exception ex) {
             log.warn("Cannot build analysis description: {}", analysisJson);
@@ -68,13 +67,13 @@ public class AnalysisInfoBuilderImpl implements AnalysisInfoBuilder {
         try {
             appendLine(description, "target cohorts:");
             for (JsonNode targetCohortNode : targetCohortsNode) {
-                appendLine(description, targetCohortNode.get("name").asText());
+                appendLine(description, targetCohortNode.get("name"));
             }
             appendLine(description, StringUtils.EMPTY);
 
             appendLine(description, "event cohorts:");
             for (JsonNode eventCohortNode : eventCohortsNode) {
-                appendLine(description, eventCohortNode.get("name").asText());
+                appendLine(description, eventCohortNode.get("name"));
             }
         } catch (Exception ex) {
             log.warn("Cannot build analysis description: {} {}", targetCohortsNode, eventCohortsNode);
@@ -82,6 +81,26 @@ public class AnalysisInfoBuilderImpl implements AnalysisInfoBuilder {
         return description.toString();
     }
 
+    @Override
+    public String generatePredictionAnalysisDescription(JsonNode analysis) {
+
+        StringBuilder description = new StringBuilder();
+        try {
+            appendLine(description, analysis.get("name"));
+            appendLine(description, analysis.get("description"));
+        } catch (Exception ex) {
+            log.warn("Cannot build analysis description");
+        }
+        return description.toString();
+    }
+
+    private static void appendLine(StringBuilder builder, JsonNode textNode) {
+
+        if (textNode != null && !textNode.isNull()) {
+            builder.append(textNode.asText());
+            builder.append(System.lineSeparator());
+        }
+    }
 
     private static void appendLine(StringBuilder builder, String text) {
 
