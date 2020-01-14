@@ -22,8 +22,6 @@
 
 package com.odysseusinc.arachne.datanode.service.messaging;
 
-import static com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType.ESTIMATION;
-
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEstimationDTO;
@@ -32,6 +30,7 @@ import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
+import com.odysseusinc.arachne.datanode.service.AnalysisInfoBuilder;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
@@ -40,20 +39,22 @@ import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.service.messaging.estimation.EstimationAtlas2_5Mapper;
 import com.odysseusinc.arachne.datanode.service.messaging.estimation.EstimationAtlas2_7Mapper;
-import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_5Mapper;
-import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_7Mapper;
-import java.util.Collections;
-import java.util.List;
 import org.ohdsi.circe.cohortdefinition.CohortExpressionQueryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
+import java.util.List;
+
+import static com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType.ESTIMATION;
+
 
 @Service
 public class EstimationRequestHandler extends CommonAnalysisRequestHandler implements AtlasRequestHandler<CommonEstimationDTO, List<MultipartFile>> {
 
+    protected final AnalysisInfoBuilder analysisInfoBuilder;
     protected final AtlasService atlasService;
     protected final CentralSystemClient centralClient;
     protected final CommonEntityService commonEntityService;
@@ -64,7 +65,8 @@ public class EstimationRequestHandler extends CommonAnalysisRequestHandler imple
     protected final ConverterUtils converterUtils;
 
     @Autowired
-    public EstimationRequestHandler(AtlasService atlasService,
+    public EstimationRequestHandler(AnalysisInfoBuilder analysisInfoBuilder,
+                                    AtlasService atlasService,
                                     CentralSystemClient centralClient,
                                     CommonEntityService commonEntityService,
                                     @Qualifier("estimationRunnerTemplate") Template legacyRunnerTemplate,
@@ -76,6 +78,7 @@ public class EstimationRequestHandler extends CommonAnalysisRequestHandler imple
         super(sqlRenderService, atlasService, estimationRunnerTemplate, legacyRunnerTemplate, centralClient);
 
         this.atlasService = atlasService;
+        this.analysisInfoBuilder = analysisInfoBuilder;
         this.centralClient = centralClient;
         this.commonEntityService = commonEntityService;
         this.runnerTemplate = legacyRunnerTemplate;
@@ -108,7 +111,7 @@ public class EstimationRequestHandler extends CommonAnalysisRequestHandler imple
     protected <T extends BaseAtlasEntity, C extends AtlasClient> EntityMapper<T, CommonEntity, C> getEntityMapper(Atlas atlas) {
 
         if (Constants.Atlas.ATLAS_2_7_VERSION.isLesserOrEqualsThan(atlas.getVersion())) {
-            return (EntityMapper<T, CommonEntity, C>) new EstimationAtlas2_7Mapper(atlasService, runnerTemplate);
+            return (EntityMapper<T, CommonEntity, C>) new EstimationAtlas2_7Mapper(atlasService, runnerTemplate, analysisInfoBuilder);
         } else {
             return (EntityMapper<T, CommonEntity, C>) new EstimationAtlas2_5Mapper(sqlRenderService, atlasService, queryBuilder, legacyRunnerTemplate);
         }

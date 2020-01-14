@@ -31,6 +31,7 @@ import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
+import com.odysseusinc.arachne.datanode.service.AnalysisInfoBuilder;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
@@ -39,14 +40,15 @@ import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_5Mapper;
 import com.odysseusinc.arachne.datanode.service.messaging.prediction.PredictionAtlas2_7Mapper;
-import java.util.Collections;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class PatientLevelPredictionRequestHandler extends CommonAnalysisRequestHandler implements AtlasRequestHandler<CommonPredictionDTO, List<MultipartFile>> {
@@ -55,19 +57,22 @@ public class PatientLevelPredictionRequestHandler extends CommonAnalysisRequestH
 
     private final CommonEntityService commonEntityService;
     private final ConverterUtils converterUtils;
+    private final AnalysisInfoBuilder analysisInfoBuilder;
 
     @Autowired
     public PatientLevelPredictionRequestHandler(AtlasService atlasService,
+                                                AnalysisInfoBuilder analysisInfoBuilder,
                                                 CommonEntityService commonEntityService,
                                                 CentralSystemClient centralClient,
                                                 SqlRenderService sqlRenderService,
                                                 @Qualifier("patientLevelPredictionRunnerTemplate")
-                                                            Template patientLevelPredictionRunnerTemplate,
+                                                        Template patientLevelPredictionRunnerTemplate,
                                                 @Qualifier("predictionRunnerTemplate") Template predictionRunnerTemplate,
                                                 ConverterUtils converterUtils) {
 
         super(sqlRenderService, atlasService, predictionRunnerTemplate, patientLevelPredictionRunnerTemplate, centralClient);
 
+        this.analysisInfoBuilder = analysisInfoBuilder;
         this.commonEntityService = commonEntityService;
         this.converterUtils = converterUtils;
     }
@@ -94,7 +99,7 @@ public class PatientLevelPredictionRequestHandler extends CommonAnalysisRequestH
     protected <T extends BaseAtlasEntity, C extends AtlasClient> EntityMapper<T, CommonEntity, C> getEntityMapper(Atlas atlas) {
 
         if (Constants.Atlas.ATLAS_2_7_VERSION.isLesserOrEqualsThan(atlas.getVersion())) {
-            return (EntityMapper<T, CommonEntity, C>) new PredictionAtlas2_7Mapper(atlasService, runnerTemplate);
+            return (EntityMapper<T, CommonEntity, C>) new PredictionAtlas2_7Mapper(atlasService, analysisInfoBuilder, runnerTemplate);
         } else {
             return (EntityMapper<T, CommonEntity, C>) new PredictionAtlas2_5Mapper(sqlRenderService, atlasService, legacyRunnerTemplate);
         }
