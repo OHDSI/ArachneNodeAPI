@@ -7,7 +7,9 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonPathwayDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFilenameUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.Pathway;
+import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.service.AnalysisInfoBuilder;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
@@ -15,14 +17,6 @@ import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_7;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.util.AtlasUtils;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,9 +26,21 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
+
 @Service
 public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRequestHandler<CommonPathwayDTO, List<MultipartFile>> {
 
+	private final AnalysisInfoBuilder analysisInfoBuilder;
     private final GenericConversionService conversionService;
     private final CommonEntityService commonEntityService;
     private final CentralSystemClient centralClient;
@@ -44,20 +50,23 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
     public static final Logger LOGGER = LoggerFactory.getLogger(PathwayRequestHandler.class);
     private static final String SKELETON_RESOURCE = "/pathways/hydra/CohortPathways_1.0.1.zip";
 
-    @Autowired
-    public PathwayRequestHandler(SqlRenderService sqlRenderService,
-																 AtlasService atlasService,
-																 CommonEntityService commonEntityService,
-																 GenericConversionService conversionService,
-																 CentralSystemClient centralClient,
-																 Template pathwaysRunnerTemplate) {
+	@Autowired
+	public PathwayRequestHandler(SqlRenderService sqlRenderService,
+								 AnalysisInfoBuilder analysisInfoBuilder,
+								 AtlasService atlasService,
+								 CommonEntityService commonEntityService,
+								 GenericConversionService conversionService,
+								 CentralSystemClient centralClient,
+								 Template pathwaysRunnerTemplate) {
 
-        super(sqlRenderService, atlasService);
-        this.commonEntityService = commonEntityService;
-        this.conversionService = conversionService;
-        this.centralClient = centralClient;
-			this.pathwaysRunnerTemplate = pathwaysRunnerTemplate;
-		}
+		super(sqlRenderService, atlasService);
+
+		this.analysisInfoBuilder = analysisInfoBuilder;
+		this.commonEntityService = commonEntityService;
+		this.conversionService = conversionService;
+		this.centralClient = centralClient;
+		this.pathwaysRunnerTemplate = pathwaysRunnerTemplate;
+	}
 
     @Override
     public List<CommonPathwayDTO> getObjectsList(List<Atlas> atlasList) {
@@ -94,14 +103,16 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
 				if (eventCohortsNode instanceof ArrayNode) {
 					cohortDefinitions.addAll(addCohorts(origin, files, (ArrayNode) eventCohortsNode));
 				}
+				String description = analysisInfoBuilder.generatePathwayAnalysisDescription(analysisName, targetCohortsNode, eventCohortsNode);
 				int localId = entity.getLocalId();
 				files.add(packageFile);
 				files.add(getRunner(cohortDefinitions, localId, packageName, String.format("pathwaysAnalysis_%d", localId),
 						packageFileName));
+				files.add(new MockMultipartFile("file", ANALYSIS_INFO_FILE_DESCRIPTION, MediaType.TEXT_PLAIN_VALUE, description.getBytes()));
 				return files.stream().filter(Objects::nonNull).collect(Collectors.toList());
 			} catch (IOException e) {
             	LOGGER.error(PATHWAY_BUILD_ERROR, e);
-            	throw new UncheckedIOException(PATHWAY_BUILD_ERROR, e);
+            	throw new ArachneSystemRuntimeException(PATHWAY_BUILD_ERROR, e);
             }
         }).orElse(null);
     }

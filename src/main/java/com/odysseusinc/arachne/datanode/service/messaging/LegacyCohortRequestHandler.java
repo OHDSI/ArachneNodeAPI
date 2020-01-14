@@ -51,7 +51,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType.COHORT;
-import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ARACHNE_META_FILE_DESCRIPTION;
+import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
 
 
 @Service
@@ -116,14 +116,14 @@ public class LegacyCohortRequestHandler implements AtlasRequestHandler<CommonCoh
 
         if (Objects.nonNull(definition)) {
             String content = sqlRenderService.renderSql(definition);
-            String description = analysisInfoBuilder.generateAnalysisDescription(definition);
+            String description = analysisInfoBuilder.generateCountAnalysisDescription(definition);
             if (Objects.nonNull(content)) {
                 final String definitionName = definition.getName().trim();
                 final String filteredDefinitionName = filterFileName(definitionName);
                 MockMultipartFile[] files = new MockMultipartFile[]{
                         new MockMultipartFile("file", filteredDefinitionName + CommonFileUtils.OHDSI_JSON_EXT, MediaType.APPLICATION_JSON_VALUE, definition.getExpression().getBytes()),
                         new MockMultipartFile("file", filteredDefinitionName + CommonFileUtils.OHDSI_SQL_EXT, MediaType.TEXT_PLAIN_VALUE, content.getBytes()),
-                        new MockMultipartFile("file", ARACHNE_META_FILE_DESCRIPTION, MediaType.TEXT_PLAIN_VALUE, description.getBytes())
+                        new MockMultipartFile("file", ANALYSIS_INFO_FILE_DESCRIPTION, MediaType.TEXT_PLAIN_VALUE, description.getBytes())
                 };
                 return files;
             }
