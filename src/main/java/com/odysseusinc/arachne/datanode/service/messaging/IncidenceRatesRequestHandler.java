@@ -28,6 +28,7 @@ import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonIncidenceRatesDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.IRAnalysis;
+import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
@@ -53,6 +54,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
 
 @Service
 public class IncidenceRatesRequestHandler extends BaseRequestHandler implements AtlasRequestHandler<CommonIncidenceRatesDTO, List<MultipartFile>> {
@@ -117,11 +120,11 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
                 MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, content);
                 files.add(file);
                 files.add(getRunner(analysis, cohortFileNames, packageName, filename, String.format("analysis_%d", localId)));
-                MultipartFile descriptionFile = new MockMultipartFile("file", "description.meta.txt", MediaType.TEXT_PLAIN_VALUE, "description meta content".getBytes());
+                MultipartFile descriptionFile = new MockMultipartFile("file", ANALYSIS_INFO_FILE_DESCRIPTION, MediaType.TEXT_PLAIN_VALUE, analysisName.getBytes());
                 files.add(descriptionFile);
             } catch (IOException e) {
                 logger.error(IR_BUILD_ERROR, e);
-                throw new UncheckedIOException(IR_BUILD_ERROR, e);
+                throw new ArachneSystemRuntimeException(IR_BUILD_ERROR, e);
             }
             return files;
         }).orElse(null);
