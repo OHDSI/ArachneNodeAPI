@@ -25,7 +25,7 @@ package com.odysseusinc.arachne.datanode.service.impl;
 import com.odysseusinc.arachne.datanode.service.AuthenticationService;
 import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
-import org.ohdsi.authenticator.service.Authenticator;
+import org.ohdsi.authenticator.service.authentication.Authenticator;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

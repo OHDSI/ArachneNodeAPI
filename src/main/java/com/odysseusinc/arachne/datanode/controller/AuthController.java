@@ -49,14 +49,16 @@ import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import org.ohdsi.authenticator.model.UserInfo;
-import org.ohdsi.authenticator.service.Authenticator;
+import org.ohdsi.authenticator.service.authentication.Authenticator;
 import org.pac4j.core.credentials.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -112,7 +114,7 @@ public class AuthController {
     @ApiOperation(value = "Sign in user. Returns JWT token.")
     @RequestMapping(value = "${api.loginEnteryPoint}", method = RequestMethod.POST)
     public JsonResult<CommonAuthenticationResponse> login(
-            @RequestBody CommonAuthenticationRequest request) {
+            @Valid @RequestBody CommonAuthenticationRequest request) {
 
         UserInfo userInfo = authenticator.authenticate(
             authMethod,
@@ -121,6 +123,9 @@ public class AuthController {
         User centralUser = conversionService.convert(userInfo, User.class);
         userRegisterStrategy.registerUser(centralUser);
 
+        if (userInfo == null || userInfo.getToken() == null) {
+            throw new AuthenticationServiceException("Cannot refresh token user info is either null or does not contain token");
+        }
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getToken()));
     }
 
@@ -130,6 +135,10 @@ public class AuthController {
 
         String token = request.getHeader(tokenHeader);
         UserInfo userInfo = authenticator.refreshToken(token);
+
+        if (userInfo == null || userInfo.getUsername() == null) {
+            throw new AuthenticationServiceException("Cannot refresh token user info is either null or does not contain token");
+        }
         userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
 
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
