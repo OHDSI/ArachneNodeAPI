@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonPathwayDTO;
+import com.odysseusinc.arachne.commons.utils.AnalysisArchiveUtils;
 import com.odysseusinc.arachne.commons.utils.CommonFilenameUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.Pathway;
 import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
@@ -89,7 +90,7 @@ public class PathwayRequestHandler extends BaseRequestHandler implements AtlasRe
             List<MultipartFile> files = new ArrayList<>();
             try {
 			 	byte[] packageContent = atlasService.hydrateAnalysis(design, packageName, SKELETON_RESOURCE);
-			 	String packageFileName = String.format("CohortPathways - %s.zip", analysisName);
+				String packageFileName = AnalysisArchiveUtils.getArchiveFileName(getAnalysisType(), analysisName);
 			 	MultipartFile packageFile = new MockMultipartFile(packageFileName, packageFileName, MediaType.APPLICATION_OCTET_STREAM_VALUE,
 						packageContent);
 				// Target cohorts

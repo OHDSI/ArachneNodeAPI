@@ -1,8 +1,11 @@
 package com.odysseusinc.arachne.datanode.service.messaging;
 
+import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.jknack.handlebars.Template;
+import com.odysseusinc.arachne.commons.utils.AnalysisArchiveUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
@@ -23,8 +26,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-
-import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
 
 public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements EntityMapper<T, CommonEntity, AtlasClient2_7> {
 
@@ -61,7 +62,7 @@ public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements E
 		((ObjectNode)analysis).put("packageName", packageName);
 		try {
 			List<MultipartFile> files = new ArrayList<>();
-			String filename = String.format("%s.zip", packageName);
+			String filename = AnalysisArchiveUtils.getArchiveFileName(entity.getAnalysisType(), AnalysisArchiveUtils.getAnalysisName(analysis));
 			byte[] data = hydrate(analysis);
 			String description = analysisInfoBuilder.generatePredictionAnalysisDescription(analysis);
 			MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, data);
