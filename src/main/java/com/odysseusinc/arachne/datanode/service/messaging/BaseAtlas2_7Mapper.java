@@ -27,6 +27,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
+
 public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements EntityMapper<T, CommonEntity, AtlasClient2_7> {
 
 	protected static final Logger logger = LoggerFactory.getLogger(BaseAtlas2_7Mapper.class.getName());

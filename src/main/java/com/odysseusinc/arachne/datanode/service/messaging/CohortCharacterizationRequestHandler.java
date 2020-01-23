@@ -31,6 +31,15 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
+
 @Component
 public class CohortCharacterizationRequestHandler implements AtlasRequestHandler<CommonEntityDTO, List<MultipartFile>> {
 
@@ -84,7 +93,6 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 			try {
 				byte[] ccPackage = atlasService.hydrateAnalysis(analysis, packageName, SKELETON_RESOURCE);
 				String filename = AnalysisArchiveUtils.getArchiveFileName(getAnalysisType(), AnalysisArchiveUtils.getAnalysisName(analysis));
-				String description = analysisInfoBuilder.generateCCAnalysisDescription(analysis);
 				MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, ccPackage);
 				files.add(file);
 				files.add(getRunner(packageName, file.getName(), String.format("analysis_%d", localId), localId));
