@@ -93,6 +93,7 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 			try {
 				byte[] ccPackage = atlasService.hydrateAnalysis(analysis, packageName, SKELETON_RESOURCE);
 				String filename = AnalysisArchiveUtils.getArchiveFileName(getAnalysisType(), AnalysisArchiveUtils.getAnalysisName(analysis));
+				String description = analysisInfoBuilder.generateCCAnalysisDescription(analysis);
 				MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, ccPackage);
 				files.add(file);
 				files.add(getRunner(packageName, file.getName(), String.format("analysis_%d", localId), localId));
