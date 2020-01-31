@@ -62,7 +62,6 @@ public class DataNode {
     @Column(name = "health_status_description")
     private String healthStatusDescription;
 
-    @NotEmpty
     @Column(name = "token")
     private String token;
 
