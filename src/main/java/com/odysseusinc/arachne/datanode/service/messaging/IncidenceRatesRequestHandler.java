@@ -22,11 +22,14 @@
 
 package com.odysseusinc.arachne.datanode.service.messaging;
 
+import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonIncidenceRatesDTO;
+import com.odysseusinc.arachne.commons.utils.AnalysisArchiveUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.IRAnalysis;
 import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
@@ -115,7 +118,8 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
 
                 JsonNode json = mapper.valueToTree(expression);
                 byte[] content = atlasService.hydrateAnalysis(json, packageName, SKELETON_RESOURCE);
-                String filename = packageName + ".zip";
+                String filename = AnalysisArchiveUtils.getArchiveFileName(getAnalysisType(), AnalysisArchiveUtils.getAnalysisName(analysis));
+
                 MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, content);
                 files.add(file);
                 files.add(getRunner(analysis, cohortFileNames, packageName, filename, String.format("analysis_%d", localId)));
