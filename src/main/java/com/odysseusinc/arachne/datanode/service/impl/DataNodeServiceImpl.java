@@ -83,7 +83,7 @@ public class DataNodeServiceImpl implements DataNodeService {
         if (currentDataNode.isPresent()) {
             throw new AlreadyExistsException(ALREADY_EXISTS_EXCEPTION);
         }
-        if (FunctionalMode.NETWORK == getDataNodeMode()) {
+        if (getDataNodeMode() != FunctionalMode.STANDALONE) {
             dataNode = centralIntegrationService.sendDataNodeCreationRequest(user, dataNode);
         }
         return dataNodeRepository.save(dataNode);

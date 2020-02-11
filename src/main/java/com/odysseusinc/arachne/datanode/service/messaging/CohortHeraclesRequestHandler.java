@@ -24,6 +24,7 @@
 package com.odysseusinc.arachne.datanode.service.messaging;
 
 
+import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
 import static com.odysseusinc.arachne.datanode.service.messaging.MessagingUtils.ignorePreprocessingMark;
 
 import com.github.jknack.handlebars.Template;
@@ -32,6 +33,8 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonCohortShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortDefinition;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
+import com.odysseusinc.arachne.datanode.service.AnalysisInfoBuilder;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
@@ -39,15 +42,16 @@ import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +70,7 @@ public class CohortHeraclesRequestHandler implements AtlasRequestHandler<CommonC
     private static final Logger logger = LoggerFactory.getLogger(CohortHeraclesRequestHandler.class);
 
     private final AtlasService atlasService;
+    private final AnalysisInfoBuilder analysisInfoBuilder;
     private final GenericConversionService conversionService;
     private final CommonEntityService commonEntityService;
     private final CentralSystemClient centralClient;
@@ -79,6 +84,7 @@ public class CohortHeraclesRequestHandler implements AtlasRequestHandler<CommonC
 
     @Autowired
     public CohortHeraclesRequestHandler(AtlasService atlasService,
+                                        AnalysisInfoBuilder analysisInfoBuilder,
                                         GenericConversionService conversionService,
                                         CommonEntityService commonEntityService,
                                         CentralSystemClient centralClient,
@@ -87,6 +93,7 @@ public class CohortHeraclesRequestHandler implements AtlasRequestHandler<CommonC
                                                         Template runnerTemplate) {
 
         this.atlasService = atlasService;
+        this.analysisInfoBuilder = analysisInfoBuilder;
         this.conversionService = conversionService;
         this.commonEntityService = commonEntityService;
         this.centralClient = centralClient;
@@ -107,34 +114,9 @@ public class CohortHeraclesRequestHandler implements AtlasRequestHandler<CommonC
     @Override
     public List<MultipartFile> getAtlasObject(String guid) {
 
-        return commonEntityService.findByGuid(guid).map(entity -> {
-            List<MultipartFile> files = new ArrayList<>(2);
-
-            CohortDefinition definition = atlasService.execute(entity.getOrigin(), atlasClient -> atlasClient.getCohortDefinition(entity.getLocalId()));
-            if (Objects.nonNull(definition)) {
-                String content = sqlRenderService.renderSql(definition);
-                if (Objects.nonNull(content)) {
-                    String cohortSqlFileName = definition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT;
-                    files.add(new MockMultipartFile("file", cohortSqlFileName, MediaType.APPLICATION_OCTET_STREAM_VALUE, ignorePreprocessingMark(content).getBytes()));
-                    try {
-                        files.add(getRunner(cohortSqlFileName));
-                        if (countEnabled) {
-                            files.add(generateFile("cohort/cohort-count.sql", "cohort-count.ohdsi.sql"));
-                        }
-                        if (summaryEnabled) {
-                            files.add(generateFile("cohort/cohort-summary.sql", "cohort-summary.ohdsi.sql"));
-                        }
-                    } catch (IOException e) {
-                        logger.error("Failed to build CC data", e);
-                        throw new RuntimeIOException("Failed to build CC data", e);
-                    }
-
-                } else {
-                    return null;
-                }
-            }
-            return files;
-        }).orElse(null);
+        return commonEntityService
+                .findByGuid(guid).map(this::buildCohortAnalysisFileList)
+                .orElse(Collections.emptyList());
     }
 
     private MockMultipartFile generateFile(String resourcePath, String outputName) throws IOException {
@@ -163,4 +145,36 @@ public class CohortHeraclesRequestHandler implements AtlasRequestHandler<CommonC
 
         centralClient.sendCommonEntityResponse(id, response.toArray(new MultipartFile[response.size()]));
     }
+
+    private List<MultipartFile> buildCohortAnalysisFileList(CommonEntity cohortEntity) {
+
+        logger.debug("Generating Cohort analysis files for {} : {}", cohortEntity.getAnalysisType().getTitle(), cohortEntity.getId());
+        CohortDefinition cohortDefinition = atlasService.execute(cohortEntity.getOrigin(), atlasClient -> atlasClient.getCohortDefinition(cohortEntity.getLocalId()));
+        if (Objects.nonNull(cohortDefinition)) {
+            String definitionSql = sqlRenderService.renderSql(cohortDefinition);
+            if (Objects.nonNull(definitionSql)) {
+                List<MultipartFile> files = new ArrayList<>(3);
+                String cohortSqlFileName = cohortDefinition.getName().trim() + CommonFileUtils.OHDSI_SQL_EXT;
+                final byte[] cohordDefinitionBytes = ignorePreprocessingMark(definitionSql).getBytes();
+                files.add(new MockMultipartFile("file", cohortSqlFileName, MediaType.APPLICATION_OCTET_STREAM_VALUE, cohordDefinitionBytes));
+                String description = analysisInfoBuilder.generateHeraclesAnalysisDescription(cohortDefinition);
+                files.add(new MockMultipartFile("file", ANALYSIS_INFO_FILE_DESCRIPTION, MediaType.TEXT_PLAIN_VALUE, description.getBytes()));
+                try {
+                    files.add(getRunner(cohortSqlFileName));
+                    if (countEnabled) {
+                        files.add(generateFile("cohort/cohort-count.sql", "cohort-count.ohdsi.sql"));
+                    }
+                    if (summaryEnabled) {
+                        files.add(generateFile("cohort/cohort-summary.sql", "cohort-summary.ohdsi.sql"));
+                    }
+                    return files;
+                } catch (IOException e) {
+                    logger.error("Failed to build Cohort Analyses data", e);
+                    throw new UncheckedIOException("Failed to build Cohort Analyses data", e);
+                }
+            }
+        }
+        return Collections.emptyList();
+    }
+
 }

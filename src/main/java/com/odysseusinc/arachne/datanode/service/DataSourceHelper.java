@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2019 Odysseus Data Services, inc.
+ * Copyright 2017 Observational Health Data Sciences and Informatics
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,18 +15,19 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
- * Created: Jul 29, 2019
+ * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
+ * Created: July 11, 2017
  *
  */
 
 package com.odysseusinc.arachne.datanode.service;
 
-import javax.servlet.http.HttpServletRequest;
-import org.springframework.security.core.Authentication;
+import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
+import java.io.IOException;
+import java.nio.file.Path;
 
-public interface AuthenticationService {
+public interface DataSourceHelper {
 
-    Authentication authenticate(String authToken, HttpServletRequest httpRequest);
-
+    AnalysisRequestDTO prepareRequest(DataSource dataSource, Path tempDirectory, Long id, String path) throws IOException;
 }

@@ -27,7 +27,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
-import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationModeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationResponse;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCountryDTO;
@@ -50,10 +49,8 @@ import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.commons.lang3.StringUtils;
+import javax.validation.Valid;
 import org.ohdsi.authenticator.model.UserInfo;
-import org.ohdsi.authenticator.service.authentication.AccessTokenResolver;
-import org.ohdsi.authenticator.service.authentication.AuthenticationMode;
 import org.ohdsi.authenticator.service.authentication.Authenticator;
 import org.pac4j.core.credentials.UsernamePasswordCredentials;
 import org.slf4j.Logger;
@@ -61,11 +58,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 
 @RestController
 public class AuthController {
@@ -89,55 +88,44 @@ public class AuthController {
     @Autowired
     private UserRegistrationStrategy userRegisterStrategy;
 
-    @Autowired
-    private AccessTokenResolver accessTokenResolver;
-
     @Value("${datanode.jwt.header}")
     private String tokenHeader;
 
     @Value("${security.method}")
     private String authMethod;
 
-    @Value("${security.authentication.mode}")
-    private AuthenticationMode authenticationMode = AuthenticationMode.STANDARD;
-
     /**
-     * @return
      * @deprecated not required as authenticator was implemented that provides authentication source
-     * in a very flexible way.
+     *          in a very flexible way.
+     *
+     * @return
      */
     @ApiOperation("Get auth method")
     @RequestMapping(value = "/api/v1/auth/method", method = GET)
     @Deprecated
     public JsonResult<CommonAuthMethodDTO> authMethod() {
 
-        if (dataNodeService.getDataNodeMode() == FunctionalMode.NETWORK) {
-            return integrationService.getAuthMethod();
+        if (!FunctionalMode.NETWORK.equals(dataNodeService.getDataNodeMode())) {
+            throw new BadRequestException();
         }
-        throw new BadRequestException();
-    }
-
-
-    @ApiOperation("Get authentication mode")
-    @RequestMapping(value = "/api/v1/auth/mode", method = GET)
-    @Deprecated
-    public JsonResult<CommonAuthenticationModeDTO> authenticationMode() {
-
-        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationModeDTO(authenticationMode.getValue()));
+        return integrationService.getAuthMethod();
     }
 
     @ApiOperation(value = "Sign in user. Returns JWT token.")
     @RequestMapping(value = "${api.loginEnteryPoint}", method = RequestMethod.POST)
     public JsonResult<CommonAuthenticationResponse> login(
-            @RequestBody CommonAuthenticationRequest request) {
+            @Valid @RequestBody CommonAuthenticationRequest request) {
 
         UserInfo userInfo = authenticator.authenticate(
-                authMethod,
-                new UsernamePasswordCredentials(request.getUsername(), request.getPassword())
+            authMethod,
+            new UsernamePasswordCredentials(request.getUsername(), request.getPassword())
         );
         User centralUser = conversionService.convert(userInfo, User.class);
         userRegisterStrategy.registerUser(centralUser);
 
+        if (userInfo == null || userInfo.getToken() == null) {
+            throw new AuthenticationServiceException("Cannot refresh token user info is either null or does not contain token");
+        }
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getToken()));
     }
 
@@ -145,10 +133,13 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
     public JsonResult<String> refresh(HttpServletRequest request) {
 
-        String accessToken = request.getHeader(accessTokenResolver.getTokenHeaderName());
-        UserInfo userInfo = authenticator.refreshToken(accessToken);
-        userService.findByUsername(userInfo.getUsername())
-                .orElseThrow(() -> new AuthException("User is not registered"));
+        String token = request.getHeader(tokenHeader);
+        UserInfo userInfo = authenticator.refreshToken(token);
+
+        if (userInfo == null || userInfo.getUsername() == null) {
+            throw new AuthenticationServiceException("Cannot refresh token user info is either null or does not contain token");
+        }
+        userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
 
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
     }
@@ -181,9 +172,9 @@ public class AuthController {
 
         JsonResult result;
         try {
-            String accessToken = request.getHeader(accessTokenResolver.getTokenHeaderName());
-            if (StringUtils.isNotEmpty(accessToken)) {
-                authenticator.invalidateToken(accessToken);
+            String token = request.getHeader(tokenHeader);
+            if (token != null) {
+                authenticator.invalidateToken(token);
             }
             result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
             result.setResult(true);

@@ -30,9 +30,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.lang3.StringUtils;
-import org.ohdsi.authenticator.service.authentication.AccessTokenResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,14 +42,11 @@ public class AuthenticationTokenFilter extends GenericFilterBean {
 
     Logger log = LoggerFactory.getLogger(AuthenticationTokenFilter.class);
 
-    @Autowired
-    private AccessTokenResolver accessTokenResolver;
+    @Value("${datanode.jwt.header}")
+    private String tokenHeader;
 
     @Autowired
     private AuthenticationService authenticationService;
-
-    @Value("${security.method}")
-    private String authMethod;
 
     @Override
     public void doFilter(
@@ -61,28 +55,22 @@ public class AuthenticationTokenFilter extends GenericFilterBean {
             FilterChain chain)
             throws IOException, ServletException {
 
-
         HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String accessToken = httpRequest.getHeader(accessTokenResolver.getTokenHeaderName());
-        if (StringUtils.isNotEmpty(accessToken)){
-            try {
-                authenticationService.authenticate(accessToken, httpRequest);
-            } catch (AuthenticationException | AuthException | org.ohdsi.authenticator.exception.AuthenticationException ex) {
-                logAuthenticationException(httpRequest, ex);
+        String authToken = httpRequest.getHeader(this.tokenHeader);
+        try {
+
+            authenticationService.authenticate(authToken, httpRequest);
+        } catch (AuthenticationException | AuthException | org.ohdsi.authenticator.exception.AuthenticationException ex) {
+            String method = httpRequest.getMethod();
+            if (!HttpMethod.OPTIONS.matches(method)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Authentication failed", ex);
+                } else {
+                    log.error("Authentication failed: {}, requested: {} {}", ex.getMessage(), method, httpRequest.getRequestURI());
+                }
             }
         }
         chain.doFilter(request, response);
-    }
-
-    private void logAuthenticationException(HttpServletRequest httpRequest, RuntimeException ex) {
-        if (HttpMethod.OPTIONS.matches(httpRequest.getMethod())) {
-            return;
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("Authentication failed", ex);
-        } else {
-            log.error("Authentication failed: {}, requested: {} {}", ex.getMessage(), httpRequest.getMethod(), httpRequest.getRequestURI());
-        }
     }
 
 }

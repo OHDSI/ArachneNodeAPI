@@ -26,7 +26,7 @@ import com.odysseusinc.arachne.datanode.service.UserService;
 import feign.RequestTemplate;
 import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
-import org.ohdsi.authenticator.service.authentication.TokenService;
+import org.ohdsi.authenticator.service.authentication.TokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -41,7 +41,7 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
 
     private ApplicationContext applicationContext;
     private UserService userService;
-    private TokenService tokenService;
+    private TokenProvider tokenProvider;
 
     @Autowired
     public CentralRequestInterceptor(ApplicationContext applicationContext) {
@@ -53,9 +53,8 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
     private String getToken() {
 
         final Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
-        if (credentials instanceof String && StringUtils.isNotEmpty(credentials.toString())) {
-            String accessToken = (String)credentials;
-            String centralToken = tokenService.resolveAdditionalInfo(accessToken, "token", String.class);
+        if (credentials instanceof String && StringUtils.isNotBlank((String)credentials)) {
+            String centralToken = tokenProvider.resolveValue(credentials.toString(), "token", String.class);
             return Objects.nonNull(centralToken) ? centralToken : credentials.toString();
         }
         return null;
@@ -77,8 +76,8 @@ public class CentralRequestInterceptor implements feign.RequestInterceptor {
         if (Objects.isNull(this.userService)) {
             this.userService = applicationContext.getBean(UserService.class);
         }
-        if (Objects.isNull(this.tokenService)) {
-            this.tokenService = applicationContext.getBean(TokenService.class);
+        if (Objects.isNull(this.tokenProvider)) {
+            this.tokenProvider = applicationContext.getBean(TokenProvider.class);
         }
     }
 }

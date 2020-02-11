@@ -6,14 +6,14 @@
 
     <artifactId>datanode</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.15.1-QA</version>
+    <version>1.16.0-QA</version>
     <packaging>jar</packaging>
 
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.5.21.RELEASE</version>
+        <version>1.5.22.RELEASE</version>
         <relativePath/>
     </parent>
 
@@ -37,6 +37,7 @@
         <!-- Overrides SpringBoot defaults to conform Hydra -->
         <json.version>20170516</json.version>
         <feign.version>10.2.3</feign.version>
+        <assertj.version>3.13.2</assertj.version>
     </properties>
 
     <dependencyManagement>
@@ -109,6 +110,10 @@
                 <exclusion>
                     <groupId>com.vaadin.external.google</groupId>
                     <artifactId>android-json</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.assertj</groupId>
+                    <artifactId>assertj-core</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.hamcrest</groupId>
@@ -274,6 +279,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest</artifactId>
             <version>2.1</version>
@@ -314,14 +325,14 @@
         </dependency>
         <dependency>
             <groupId>org.jasypt</groupId>
-            <artifactId>jasypt-hibernate4</artifactId>
-            <version>1.9.2</version>
+            <artifactId>jasypt-hibernate5</artifactId>
+            <version>1.9.3</version>
         </dependency>
 
         <dependency>
             <groupId>org.ohdsi</groupId>
             <artifactId>authenticator</artifactId>
-            <version>0.0.2-QA</version>
+            <version>0.0.3-SNAPSHOT</version>
         </dependency>
 
     </dependencies>
@@ -515,16 +526,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.2</version>
-                <configuration>
-                    <classpathDependencyExcludes>
-                        <classpathDependencyExclude>com.amazon.redshift:redshift-jdbc42</classpathDependencyExclude>
-                    </classpathDependencyExcludes>
-                </configuration>
-            </plugin>
         </plugins>
         <testResources>
             <testResource>
@@ -588,11 +589,6 @@
     </profiles>
 
     <repositories>
-        <repository>
-            <id>central</id>
-            <name>Central Repository</name>
-            <url>http://repo.maven.apache.org/maven2/</url>
-        </repository>
         <repository>
             <id>odysseus.community.snapshots</id>
             <name>Odysseus community snapshots</name>

@@ -51,7 +51,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -156,8 +155,6 @@ public class AnalysisController {
     public List<OptionDTO> getTypes() {
 
 	    return Stream.of(CommonAnalysisType.values())
-                //Hide this types until it implemented/fixed
-                .filter(type -> !(CommonAnalysisType.COHORT_HERACLES.equals(type) || CommonAnalysisType.COHORT_PATHWAY.equals(type)))
                 .map(type -> new OptionDTO(type.name(), type.getTitle()))
                 .collect(Collectors.toList());
     }

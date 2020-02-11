@@ -146,16 +146,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        return userRepository
-                .findOneByUsernameAndEnabled(username, true)
-                .map(user ->
+        return userRepository.findOneByUsernameAndEnabled(username, true).map(
+                user ->
                         new org.springframework.security.core.userdetails.User(
                                 user.getUsername(), "",
-                                user.getRoles().stream()
-                                        .map(role -> new SimpleGrantedAuthority(role.getName()))
+                                user.getRoles().stream().map(
+                                        role -> new SimpleGrantedAuthority(role.getName()))
                                         .collect(Collectors.toList())
                         ))
-                .orElseThrow(() -> new AuthException(String.format("The %s user is not found.", username)));
+                .orElseThrow(AuthException::new);
     }
 
     @Transactional
