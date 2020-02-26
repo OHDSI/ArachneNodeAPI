@@ -27,6 +27,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
+import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationModeDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationRequest;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthenticationResponse;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCountryDTO;
@@ -50,7 +51,10 @@ import java.security.Principal;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import org.apache.commons.lang3.StringUtils;
 import org.ohdsi.authenticator.model.UserInfo;
+import org.ohdsi.authenticator.service.authentication.AccessTokenResolver;
+import org.ohdsi.authenticator.service.authentication.AuthenticationMode;
 import org.ohdsi.authenticator.service.authentication.Authenticator;
 import org.pac4j.core.credentials.UsernamePasswordCredentials;
 import org.slf4j.Logger;
@@ -64,7 +68,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 
 @RestController
 public class AuthController {
@@ -88,27 +91,41 @@ public class AuthController {
     @Autowired
     private UserRegistrationStrategy userRegisterStrategy;
 
+    @Autowired
+    private AccessTokenResolver accessTokenResolver;
+
     @Value("${datanode.jwt.header}")
     private String tokenHeader;
 
     @Value("${security.method}")
     private String authMethod;
 
+    @Value("${security.authentication.mode}")
+    private AuthenticationMode authenticationMode = AuthenticationMode.STANDARD;
+
     /**
-     * @deprecated not required as authenticator was implemented that provides authentication source
-     *          in a very flexible way.
-     *
      * @return
+     * @deprecated not required as authenticator was implemented that provides authentication source
+     * in a very flexible way.
      */
     @ApiOperation("Get auth method")
     @RequestMapping(value = "/api/v1/auth/method", method = GET)
     @Deprecated
     public JsonResult<CommonAuthMethodDTO> authMethod() {
 
-        if (!FunctionalMode.NETWORK.equals(dataNodeService.getDataNodeMode())) {
-            throw new BadRequestException();
+        if (dataNodeService.getDataNodeMode() == FunctionalMode.NETWORK) {
+            return integrationService.getAuthMethod();
         }
-        return integrationService.getAuthMethod();
+        throw new BadRequestException();
+    }
+
+
+    @ApiOperation("Get authentication mode")
+    @RequestMapping(value = "/api/v1/auth/mode", method = GET)
+    @Deprecated
+    public JsonResult<CommonAuthenticationModeDTO> authenticationMode() {
+
+        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationModeDTO(authenticationMode.getValue()));
     }
 
     @ApiOperation(value = "Sign in user. Returns JWT token.")
@@ -117,8 +134,8 @@ public class AuthController {
             @Valid @RequestBody CommonAuthenticationRequest request) {
 
         UserInfo userInfo = authenticator.authenticate(
-            authMethod,
-            new UsernamePasswordCredentials(request.getUsername(), request.getPassword())
+                authMethod,
+                new UsernamePasswordCredentials(request.getUsername(), request.getPassword())
         );
         User centralUser = conversionService.convert(userInfo, User.class);
         userRegisterStrategy.registerUser(centralUser);
@@ -133,13 +150,10 @@ public class AuthController {
     @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
     public JsonResult<String> refresh(HttpServletRequest request) {
 
-        String token = request.getHeader(tokenHeader);
-        UserInfo userInfo = authenticator.refreshToken(token);
-
-        if (userInfo == null || userInfo.getUsername() == null) {
-            throw new AuthenticationServiceException("Cannot refresh token user info is either null or does not contain token");
-        }
-        userService.findByUsername(userInfo.getUsername()).orElseThrow(() -> new AuthException("user not registered"));
+        String accessToken = request.getHeader(accessTokenResolver.getTokenHeaderName());
+        UserInfo userInfo = authenticator.refreshToken(accessToken);
+        userService.findByUsername(userInfo.getUsername())
+                .orElseThrow(() -> new AuthException("User is not registered"));
 
         return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
     }
@@ -172,9 +186,9 @@ public class AuthController {
 
         JsonResult result;
         try {
-            String token = request.getHeader(tokenHeader);
-            if (token != null) {
-                authenticator.invalidateToken(token);
+            String accessToken = request.getHeader(accessTokenResolver.getTokenHeaderName());
+            if (StringUtils.isNotEmpty(accessToken)) {
+                authenticator.invalidateToken(accessToken);
             }
             result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
             result.setResult(true);
