@@ -100,7 +100,7 @@ public class AuthController {
     @Value("${security.method}")
     private String authMethod;
 
-    @Value("${security.authentication.mode}")
+    @Value("${security.authentication.mode:" + AuthenticationMode.Const.STANDARD + "}")
     private AuthenticationMode authenticationMode = AuthenticationMode.STANDARD;
 
     /**
