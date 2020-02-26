@@ -77,3 +77,6 @@ server:
 build:
   number: no_build_number
   id: no_build_id
+security:
+  authentication:
+    mode: STANDARD

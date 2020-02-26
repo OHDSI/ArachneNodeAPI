@@ -22,9 +22,14 @@
 
 package com.odysseusinc.arachne.datanode.service.impl;
 
+import com.odysseusinc.arachne.datanode.exception.AuthException;
+import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.AuthenticationService;
+import com.odysseusinc.arachne.datanode.service.UserRegistrationStrategy;
 import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
+import org.ohdsi.authenticator.service.authentication.AuthenticationMode;
 import org.ohdsi.authenticator.service.authentication.Authenticator;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -36,29 +41,36 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
 public class AuthenticationServiceImpl implements AuthenticationService, InitializingBean {
-
     private final Authenticator authenticator;
 
     private final ApplicationContext applicationContext;
 
     private UserDetailsService userDetailsService;
 
-    public AuthenticationServiceImpl(ApplicationContext applicationContext, Authenticator authenticator) {
+    private UserRegistrationStrategy userRegisterStrategy;
+
+    private AuthenticationMode authenticationMode;
+
+    public AuthenticationServiceImpl(ApplicationContext applicationContext, Authenticator authenticator,
+                                     UserRegistrationStrategy userRegisterStrategy, AuthenticationMode authenticationMode) {
 
         this.applicationContext = applicationContext;
         this.authenticator = authenticator;
+        this.userRegisterStrategy = userRegisterStrategy;
+        this.authenticationMode = authenticationMode;
     }
 
     @Override
-    public Authentication authenticate(String authToken, HttpServletRequest httpRequest) {
+    public Authentication authenticate(String accessToken, HttpServletRequest httpRequest) {
 
-        if (authToken != null) {
-            String username = authenticator.resolveUsername(authToken);
-
+        if (StringUtils.isNotEmpty(accessToken)) {
+            String username = authenticator.resolveUsername(accessToken);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                createUserByTokenIfNecessary(username);
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, authToken, userDetails.getAuthorities());
+                        new UsernamePasswordAuthenticationToken(userDetails, accessToken, userDetails.getAuthorities());
                 if (Objects.nonNull(httpRequest)) {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpRequest));
                 }
@@ -74,4 +86,28 @@ public class AuthenticationServiceImpl implements AuthenticationService, Initial
 
         userDetailsService = applicationContext.getBean(UserDetailsService.class);
     }
+
+    private void createUserByTokenIfNecessary(String username) {
+
+        if (authenticationMode == AuthenticationMode.STANDARD) {
+            return;
+        }
+        if (StringUtils.isEmpty(username)) {
+            throw new AuthException("Username cannot be empty.");
+        }
+        User user = getUserByUserEmail(username);
+        userRegisterStrategy.registerUser(user);
+    }
+
+    private User getUserByUserEmail(String email) {
+
+        String name = StringUtils.split(email, "@")[0];
+        User user = new User();
+        user.setFirstName(name);
+        user.setLastName(StringUtils.EMPTY);
+        user.setEmail(email);
+        user.setUsername(email);
+        return user;
+    }
+
 }
