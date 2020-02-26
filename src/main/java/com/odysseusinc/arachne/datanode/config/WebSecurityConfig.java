@@ -54,7 +54,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${datanode.jwt.header}")
     private String tokenHeader;
 
-    @Value("${security.authentication.mode}")
+    @Value("${security.authentication.mode:" + AuthenticationMode.Const.STANDARD + "}")
     private AuthenticationMode authenticationMode = AuthenticationMode.STANDARD;
 
     @Bean
