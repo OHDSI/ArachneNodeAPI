@@ -25,9 +25,13 @@ package com.odysseusinc.arachne.datanode.config;
 import com.odysseusinc.arachne.datanode.security.AuthenticationTokenFilter;
 import com.odysseusinc.arachne.datanode.security.EntryPointUnauthorizedHandler;
 import com.odysseusinc.arachne.datanode.service.AuthenticationService;
+import com.odysseusinc.arachne.datanode.service.UserRegistrationStrategy;
 import com.odysseusinc.arachne.datanode.service.impl.AuthenticationServiceImpl;
+import org.ohdsi.authenticator.service.authentication.AccessTokenResolver;
+import org.ohdsi.authenticator.service.authentication.AuthenticationMode;
 import org.ohdsi.authenticator.service.authentication.Authenticator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -47,6 +51,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private EntryPointUnauthorizedHandler unauthorizedHandler;
 
+    @Value("${datanode.jwt.header}")
+    private String tokenHeader;
+
+    @Value("${security.authentication.mode:" + AuthenticationMode.Const.STANDARD + "}")
+    private AuthenticationMode authenticationMode = AuthenticationMode.STANDARD;
+
     @Bean
     public AuthenticationTokenFilter authenticationTokenFilterBean() {
 
@@ -63,9 +73,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public AuthenticationService authenticationService(ApplicationContext context, Authenticator authenticator) {
+    public AccessTokenResolver accessTokenResolver() {
 
-        return new AuthenticationServiceImpl(context, authenticator);
+        return new AccessTokenResolver(tokenHeader, authenticationMode);
+    }
+
+    @Bean
+    public AuthenticationService authenticationService(ApplicationContext context, Authenticator authenticator, UserRegistrationStrategy userRegisterStrategy) {
+
+        return new AuthenticationServiceImpl(context, authenticator, userRegisterStrategy, authenticationMode);
     }
 
     @Override
@@ -97,6 +113,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/auth/register**").permitAll()
                 .antMatchers("/api/v1/auth/refresh**").permitAll()
                 .antMatchers("/api/v1/auth/method**").permitAll()
+                .antMatchers("/api/v1/auth/mode**").permitAll()
                 .antMatchers("/api/v1/auth/password-policies**").permitAll()
                 .antMatchers("/api/v1/user-management/professional-types**").permitAll()
                 .antMatchers("/api/v1/user-management/countries/**").permitAll()
