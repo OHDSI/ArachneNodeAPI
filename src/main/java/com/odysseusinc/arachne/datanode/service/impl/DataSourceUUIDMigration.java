@@ -105,13 +105,15 @@ public class DataSourceUUIDMigration {
 
     public void migrateDataSources() {
 
-        dataSourceRepository.findAllByCentralIdIsNull().forEach(ds -> {
-            CommonDataSourceDTO dto = centralClient.getDataSource(ds.getUuid()).getResult();
-            if (dto != null) {
-                ds.setCentralId(dto.getId());
-                dataSourceRepository.save(ds);
-            }
-        });
+        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            dataSourceRepository.findAllByCentralIdIsNull().forEach(ds -> {
+                CommonDataSourceDTO dto = centralClient.getDataSource(ds.getUuid()).getResult();
+                if (dto != null) {
+                    ds.setCentralId(dto.getId());
+                    dataSourceRepository.save(ds);
+                }
+            });
+        }
     }
 
     private RetryTemplate getRetryTemplate() {

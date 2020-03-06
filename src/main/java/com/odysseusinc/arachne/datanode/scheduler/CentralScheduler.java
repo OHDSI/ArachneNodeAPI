@@ -22,13 +22,13 @@
 
 package com.odysseusinc.arachne.datanode.scheduler;
 
+import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserRegistrationStrategy;
 import com.odysseusinc.arachne.datanode.service.UserService;
-import java.text.MessageFormat;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import org.apache.commons.lang3.StringUtils;
@@ -45,7 +45,6 @@ public class CentralScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(CentralScheduler.class);
     private static final int LINE_WIDTH = 80;
-    private static final String MODE_ERROR_MESSAGE = "Cannot switch mode from Standalone to Network - there are some {0} not linked to the Central.";
 
     private final DataNodeService dataNodeService;
     private final UserService userService;
@@ -77,12 +76,18 @@ public class CentralScheduler {
 
         List<User> users = userService.findStandaloneUsers();
         if (users.size() > 0) {
-            throw new BeanInitializationException(MessageFormat.format(MODE_ERROR_MESSAGE, "users"));
+            throw new BeanInitializationException("Cannot switch mode from Standalone to Network - there are some users not linked to the Central.");
         }
         List<DataSource> dataSources = dataSourceService.findStandaloneSources();
         if (dataSources.size() > 0) {
-            throw new BeanInitializationException(MessageFormat.format(MODE_ERROR_MESSAGE, "data sources"));
+            throw new BeanInitializationException("Cannot switch mode from Standalone to Network - there are some data sources not linked to the Central.");
         }
+
+        DataNode currentDataNode = dataNodeService.findCurrentDataNode().orElse(null);
+        if (currentDataNode != null && StringUtils.isEmpty(currentDataNode.getToken())) {
+            throw new BeanInitializationException("Cannot switch mode from Standalone to Network - Data node is not linked to the Central.");
+        }
+
     }
 
     private void warnUserRegistration() {

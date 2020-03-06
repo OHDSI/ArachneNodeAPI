@@ -3,6 +3,7 @@ package com.odysseusinc.arachne.datanode.service.messaging.prediction;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.datanode.dto.atlas.PredictionAnalysis;
 import com.odysseusinc.arachne.datanode.model.atlas.CommonEntity;
+import com.odysseusinc.arachne.datanode.service.AnalysisInfoBuilder;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_7;
 import com.odysseusinc.arachne.datanode.service.messaging.BaseAtlas2_7Mapper;
@@ -15,9 +16,9 @@ public class PredictionAtlas2_7Mapper extends BaseAtlas2_7Mapper<PredictionAnaly
 	private static final String PACKAGE_TMPL = "PredictionStudy%d";
 	private final Template predictionRunnerTemplate;
 
-	public PredictionAtlas2_7Mapper(AtlasService atlasService, Template predictionRunnerTemplate) {
+	public PredictionAtlas2_7Mapper(AtlasService atlasService, AnalysisInfoBuilder analysisInfoBuilder, Template predictionRunnerTemplate) {
 
-		super(atlasService);
+		super(atlasService, analysisInfoBuilder);
 		this.predictionRunnerTemplate = predictionRunnerTemplate;
 	}
 

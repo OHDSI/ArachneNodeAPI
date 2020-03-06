@@ -29,10 +29,10 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UserInfoToUserConverter implements Converter<UserInfo, User>{
+public class UserInfoToUserConverter implements Converter<UserInfo, User> {
 
     @Autowired
-    public UserInfoToUserConverter(GenericConversionService conversionService){
+    public UserInfoToUserConverter(GenericConversionService conversionService) {
 
         conversionService.addConverter(this);
     }
@@ -40,11 +40,13 @@ public class UserInfoToUserConverter implements Converter<UserInfo, User>{
     @Override
     public User convert(UserInfo source) {
 
+        org.ohdsi.authenticator.model.User authUser = source.getUser();
         User user = new User();
-        user.setUsername((String) source.getAdditionalInfo().getOrDefault("username", source.getUsername()));
-        user.setEmail((String) source.getAdditionalInfo().get("email"));
-        user.setFirstName((String) source.getAdditionalInfo().get("firstName"));
-        user.setLastName((String) source.getAdditionalInfo().get("lastName"));
+
+        user.setUsername(source.getUsername());
+        user.setEmail(authUser.getEmail());
+        user.setFirstName(authUser.getFirstName());
+        user.setLastName(authUser.getLastName());
         return user;
     }
 }

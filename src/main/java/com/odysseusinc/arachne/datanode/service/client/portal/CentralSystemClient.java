@@ -46,6 +46,8 @@ import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.web.multipart.MultipartFile;
 
 public interface CentralSystemClient {
@@ -64,6 +66,10 @@ public interface CentralSystemClient {
     @RequestLine("POST /api/v1/data-nodes/common-entity/{id}")
     @Headers("Content-Type: multipart/form-data")
     void sendCommonEntityResponse(@Param("id") String id, @Param("files") MultipartFile[] files);
+
+    @RequestLine("POST /api/v1/data-nodes/common-entity/{id}")
+    @Headers("Content-Type: multipart/form-data")
+    void sendCommonEntityResponseEx(@Param("id") String id, @Param("files") MultipartFile[] files, @Param("properties") Map<String,String> properties);
 
     @RequestLine("POST /api/v1/data-nodes/atlases")
     @Headers("Content-Type: application/json")

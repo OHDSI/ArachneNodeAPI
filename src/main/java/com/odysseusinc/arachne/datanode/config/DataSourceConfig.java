@@ -27,7 +27,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import javax.sql.DataSource;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
-import org.jasypt.hibernate4.encryptor.HibernatePBEEncryptorRegistry;
+import org.jasypt.hibernate5.encryptor.HibernatePBEEncryptorRegistry;
 import org.jasypt.util.password.PasswordEncryptor;
 import org.jasypt.util.password.StrongPasswordEncryptor;
 import org.springframework.beans.factory.annotation.Value;

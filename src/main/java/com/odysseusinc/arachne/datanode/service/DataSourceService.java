@@ -28,9 +28,11 @@ import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.datasource.AutoDetectedFields;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
+import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface DataSourceService {
     DataSource create(User owner, DataSource dataSource) throws NotExistException;
@@ -63,4 +65,8 @@ public interface DataSourceService {
     JsonResult unpublishAndDeleteOnCentral(Long dataSourceId);
 
     List<DataSource> findStandaloneSources();
+
+    boolean isDatasourceNameUnique(String name, Long dataSourceId);
+
+    void firstCheckCallbackProcess(Long id, String password, AnalysisResultDTO result, MultipartFile[] files);
 }
