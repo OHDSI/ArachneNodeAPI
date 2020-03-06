@@ -91,6 +91,7 @@ files:
   store:
     path: /var/arachne/files
 datanode:
+  checkDataSourceTimeout: 45000
   app:
     errorsTokenEnabled: false
   runMode: NETWORK
@@ -175,7 +176,7 @@ migration:
     timeout: 10000
 cohorts:
   result:
-    countEnabled: false
+    countEnabled: true
     summaryEnabled: false
     defaultTargetTable: cohort
 tmp:
@@ -192,6 +193,9 @@ submission:
   result:
     files:
       exclusions:
+security:
+  authentication:
+    mode: STANDARD
 authenticator:
   user:
     registrationStrategy: CREATE_IF_FIRST

@@ -1,12 +1,17 @@
 package com.odysseusinc.arachne.datanode.service.messaging;
 
+import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.jknack.handlebars.Template;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonCcShortDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonEntityDTO;
+import com.odysseusinc.arachne.commons.utils.AnalysisArchiveUtils;
 import com.odysseusinc.arachne.datanode.dto.atlas.CohortCharacterization;
+import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
+import com.odysseusinc.arachne.datanode.service.AnalysisInfoBuilder;
 import com.odysseusinc.arachne.datanode.service.AtlasRequestHandler;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.CommonEntityService;
@@ -19,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.assertj.core.api.exception.RuntimeIOException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
@@ -27,24 +31,37 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
+
 @Component
 public class CohortCharacterizationRequestHandler implements AtlasRequestHandler<CommonEntityDTO, List<MultipartFile>> {
 
 	private static final int PAGE_SIZE = 10000;
 	private static final String PACKAGE_NAME = "CohortCharacterization%d";
 	private static final String SKELETON_RESOURCE = "/cc/hydra/CohortCharacterization_v0.0.1.zip";
+
+	private final AnalysisInfoBuilder analysisInfoBuilder;
 	private final AtlasService atlasService;
-	private final GenericConversionService conversionService;
-	private final CommonEntityService commonEntityService;
-	private final Template runnerTemplate;
 	private final CentralSystemClient centralClient;
+	private final CommonEntityService commonEntityService;
+	private final GenericConversionService conversionService;
+	private final Template runnerTemplate;
 
-	public CohortCharacterizationRequestHandler(AtlasService atlasService,
-																							GenericConversionService conversionService,
-																							CommonEntityService commonEntityService,
-																							@Qualifier("cohortCharacterizationTemplate") Template runnerTemplate,
-																							CentralSystemClient centralClient) {
+	public CohortCharacterizationRequestHandler(AnalysisInfoBuilder analysisInfoBuilder,
+												AtlasService atlasService,
+												GenericConversionService conversionService,
+												CommonEntityService commonEntityService,
+												@Qualifier("cohortCharacterizationTemplate") Template runnerTemplate,
+												CentralSystemClient centralClient) {
 
+		this.analysisInfoBuilder = analysisInfoBuilder;
 		this.atlasService = atlasService;
 		this.conversionService = conversionService;
 		this.commonEntityService = commonEntityService;
@@ -75,12 +92,14 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 
 			try {
 				byte[] ccPackage = atlasService.hydrateAnalysis(analysis, packageName, SKELETON_RESOURCE);
-				String filename = packageName + ".zip";
+				String filename = AnalysisArchiveUtils.getArchiveFileName(getAnalysisType(), AnalysisArchiveUtils.getAnalysisName(analysis));
+				String description = analysisInfoBuilder.generateCCAnalysisDescription(analysis);
 				MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, ccPackage);
 				files.add(file);
 				files.add(getRunner(packageName, file.getName(), String.format("analysis_%d", localId), localId));
+				files.add(new MockMultipartFile("file", ANALYSIS_INFO_FILE_DESCRIPTION, MediaType.TEXT_PLAIN_VALUE, description.getBytes()));
 			} catch (IOException e) {
-				throw new RuntimeIOException("Failed to build analysis data", e);
+				throw new ArachneSystemRuntimeException("Failed to build analysis data", e);
 			}
 			return files;
 		}).orElse(null);

@@ -24,6 +24,8 @@ package com.odysseusinc.arachne.datanode.config;
 
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import org.mockito.Mockito;
+import org.ohdsi.authenticator.service.authentication.AccessTokenResolver;
+import org.ohdsi.authenticator.service.authentication.AuthenticationMode;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -38,5 +40,11 @@ public class CentralIntegrationServiceTestConfig {
     public CentralIntegrationService centralIntegrationService() {
 
         return Mockito.mock(CentralIntegrationService.class);
+    }
+
+    @Bean
+    public AccessTokenResolver accessTokenResolver() {
+
+        return new AccessTokenResolver("jwtTokenHeader", AuthenticationMode.STANDARD);
     }
 }

@@ -119,7 +119,7 @@ public interface Constants {
             String DELETE = "/api/v1/data-sources/{id}";
             String UPDATE = "/api/v1/data-sources/{id}";
             String CENTRAL_REGISTER = "/api/v1/data-sources/{id}/register-on-central";
-            String DS_MODEL_CHECK_RESULT = "/api/v1/data-sources/{id}/check/result/{password}";
+            String DS_MODEL_CHECK_FIRSTCHECK ="/api/v1/data-sources/{id}/check/result/{password}/firstcheck";
             String DS_MODEL_CHECK_UPDATE = "/api/v1/data-sources/{id}/check/update/{password}";
             String GET_BUSINESS = "/api/v1/data-sources/{id}/business";
             String UPDATE_BUSINESS = "/api/v1/data-sources/{id}/business";
@@ -200,6 +200,12 @@ public interface Constants {
         String p25_value = "p25_value";
         String p75_value = "p75_value";
         String p90_value = "p90_value";
+    }
+
+    interface DataSourceMessages {
+        String CANNOT_CREATE_DATASOURCE = "Unable to create data source on central.";
+        String CANNOT_UPDATE_DATASOURCE = "Unable to update data source on central.";
+        String DATASOURCE_NAME_UNIQUE = "Data source name is not unique";
     }
 
 }

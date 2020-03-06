@@ -22,7 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.exception;
 
-public class PermissionDeniedException extends Exception {
+public class PermissionDeniedException extends RuntimeException {
 
     public PermissionDeniedException() {
 
