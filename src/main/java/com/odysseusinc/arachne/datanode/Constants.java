@@ -31,6 +31,7 @@ public interface Constants {
     int PASSWORD_MIN_LENGTH = 6;
     int PASSWORD_MAX_LENGTH = 100;
     String DUMMY_PASSWORD = "password_was_set";
+    String DUMMY_KEYFILE = "Replace current keyfile";
 
     interface AppConf {
         String PROFILE_DEVELOPMENT = "dev";

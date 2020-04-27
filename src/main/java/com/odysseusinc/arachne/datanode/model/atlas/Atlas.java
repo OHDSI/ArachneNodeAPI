@@ -70,6 +70,13 @@ public class Atlas {
     @Type(type = "encryptedString")
     private String password;
 
+    @Column
+    @Type(type = "encryptedString")
+    private String keyfile;
+
+    @Column(name = "service_id")
+    private String serviceId;
+
     @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "origin", targetEntity = CommonEntity.class)
     private List<CommonEntity> entities;
 
@@ -191,5 +198,21 @@ public class Atlas {
 
     public void setEntities(List<CommonEntity> entities) {
         this.entities = entities;
+    }
+
+    public String getKeyfile() {
+        return keyfile;
+    }
+
+    public void setKeyfile(String keyfile) {
+        this.keyfile = keyfile;
+    }
+
+    public String getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(String serviceId) {
+        this.serviceId = serviceId;
     }
 }

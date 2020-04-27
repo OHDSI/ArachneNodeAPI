@@ -25,14 +25,25 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDetailedDTO;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthSchema;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+
 @Component
 public class AtlasDetailedDTOToAtlasConverter implements Converter<AtlasDetailedDTO, Atlas>, InitializingBean {
+
+    private static final Logger logger = LoggerFactory.getLogger(AtlasToAtlasDetailedDTOConverter.class);
 
     private GenericConversionService conversionService;
 
@@ -62,6 +73,9 @@ public class AtlasDetailedDTOToAtlasConverter implements Converter<AtlasDetailed
         result.setAuthType(AtlasAuthSchema.valueOf(source.getAuthType()));
         result.setUsername(source.getUsername());
         result.setPassword(source.getPassword());
+
+        result.setServiceId(source.getServiceId());
+        result.setKeyfile(source.getKeyfile());
 
         return result;
     }

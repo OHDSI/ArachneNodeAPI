@@ -22,10 +22,18 @@
 
 package com.odysseusinc.arachne.datanode.service.client.atlas;
 
+import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import org.ohdsi.authenticator.exception.AuthenticationException;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.util.Collections;
 import java.util.Objects;
 
 public class AtlasAuthRequestInterceptor implements RequestInterceptor {
@@ -36,13 +44,17 @@ public class AtlasAuthRequestInterceptor implements RequestInterceptor {
     private final AtlasAuthSchema authSchema;
     private final String username;
     private final String password;
+    private final String keyfile;
+    private final String serviceId;
 
-    public AtlasAuthRequestInterceptor(AtlasLoginClient loginClient, AtlasAuthSchema authSchema, String username, String password) {
+    public AtlasAuthRequestInterceptor(AtlasLoginClient loginClient, AtlasAuthentication auth) {
 
         this.loginClient = loginClient;
-        this.authSchema = authSchema;
-        this.username = username;
-        this.password = password;
+        this.authSchema = auth.getSchema();
+        this.username = auth.getUsername();
+        this.password = auth.getPassword();
+        this.keyfile = auth.getKeyfile();
+        this.serviceId = auth.getServiceId();
     }
 
     @Override
@@ -71,8 +83,24 @@ public class AtlasAuthRequestInterceptor implements RequestInterceptor {
                 case LDAP:
                     result = loginClient.loginLdap(username, password);
                     break;
+                case ACCESS_TOKEN:
+                    result = generateJWTToken(serviceId, keyfile);
+                    break;
             }
         }
         return result;
+    }
+
+    private String generateJWTToken(String serviceId, String keyfile) {
+
+        try(InputStream in = new ByteArrayInputStream(keyfile.getBytes())) {
+            GoogleCredentials credentials = ServiceAccountCredentials.fromStream(in)
+                    .createScoped(Collections.singletonList("https://www.googleapis.com/auth/userinfo.email"));
+            credentials.refreshIfExpired();
+            AccessToken token = credentials.getAccessToken();
+            return token.getTokenValue();
+        } catch (IOException e) {
+            throw new AuthenticationException(e.getMessage());
+        }
     }
 }
