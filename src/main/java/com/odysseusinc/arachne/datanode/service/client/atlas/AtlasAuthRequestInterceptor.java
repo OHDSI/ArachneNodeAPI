@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.datanode.service.client.atlas;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.odysseusinc.arachne.datanode.Constants;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import org.ohdsi.authenticator.exception.AuthenticationException;
@@ -91,11 +92,12 @@ public class AtlasAuthRequestInterceptor implements RequestInterceptor {
         return result;
     }
 
+    /* serviceId currently is not used to generate JWT but present for future releases of client library */
     private String generateJWTToken(String serviceId, String keyfile) {
 
         try(InputStream in = new ByteArrayInputStream(keyfile.getBytes())) {
             GoogleCredentials credentials = ServiceAccountCredentials.fromStream(in)
-                    .createScoped(Collections.singletonList("https://www.googleapis.com/auth/userinfo.email"));
+                    .createScoped(Collections.singletonList(Constants.GOOGLE_AUTH_SCOPE));
             credentials.refreshIfExpired();
             AccessToken token = credentials.getAccessToken();
             return token.getTokenValue();

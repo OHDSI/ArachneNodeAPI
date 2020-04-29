@@ -49,7 +49,6 @@ public abstract class BaseAtlasToAtlasDetailedDTOConverter<T extends AtlasDetail
             result.setKeyfile(source.getKeyfile());
         }
         result.setServiceId(source.getServiceId());
-        result.setKeyfile(source.getKeyfile());
 
         masqueradePassword(result);
 

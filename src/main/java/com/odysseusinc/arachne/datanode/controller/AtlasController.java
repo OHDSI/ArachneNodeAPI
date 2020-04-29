@@ -92,9 +92,11 @@ public class AtlasController {
 
     @ApiOperation("Create new Atlas")
     @RequestMapping(value = "/api/v1/atlases", method = POST)
-    public AtlasDetailedDTO save(@RequestBody AtlasDetailedDTO atlasDetailedDTO) {
+    public AtlasDetailedDTO save(@RequestPart("atlas") AtlasDetailedDTO atlasDetailedDTO,
+                                 @RequestPart(name = "keyfile", required = false) MultipartFile keyfile) throws IOException {
 
         Atlas atlas = conversionService.convert(atlasDetailedDTO, Atlas.class);
+        initKeyfile(atlas, keyfile);
         atlas = atlasService.save(atlas);
         return conversionService.convert(atlas, AtlasDetailedDTO.class);
     }
@@ -110,13 +112,17 @@ public class AtlasController {
 
         DataNodeUtils.requireNetworkMode(dataNodeService);
         Atlas atlas = conversionService.convert(atlasDetailedDTO, Atlas.class);
+        initKeyfile(atlas, keyfile);
+        atlas = atlasService.update(id, atlas);
+        return conversionService.convert(atlas, AtlasDetailedDTO.class);
+    }
+
+    private void initKeyfile(Atlas atlas, @RequestPart(name = "keyfile", required = false) MultipartFile keyfile) throws IOException {
         if (Objects.nonNull(keyfile)) {
             try (InputStream in = keyfile.getInputStream()) {
                 atlas.setKeyfile(IOUtils.toString(in, StandardCharsets.UTF_8));
             }
         }
-        atlas = atlasService.update(id, atlas);
-        return conversionService.convert(atlas, AtlasDetailedDTO.class);
     }
 
     @ApiOperation("Delete Atlas entity")
