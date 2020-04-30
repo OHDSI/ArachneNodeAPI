@@ -25,5 +25,6 @@ package com.odysseusinc.arachne.datanode.service.client.atlas;
 public enum AtlasAuthSchema {
     NONE,
     DATABASE,
-    LDAP
+    LDAP,
+    ACCESS_TOKEN
 }

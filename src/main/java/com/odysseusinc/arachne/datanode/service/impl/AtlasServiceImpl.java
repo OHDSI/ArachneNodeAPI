@@ -22,14 +22,12 @@
 
 package com.odysseusinc.arachne.datanode.service.impl;
 
-import static com.odysseusinc.arachne.datanode.Constants.Atlas.ATLAS_2_7_VERSION;
-import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
+import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.dto.serialize.PageModule;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
@@ -40,14 +38,7 @@ import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
-import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthRequestInterceptor;
-import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasAuthSchema;
-import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
-import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_5;
-import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_7;
-import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasInfoClient;
-import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasLoginClient;
-import com.odysseusinc.arachne.datanode.service.client.atlas.TokenDecoder;
+import com.odysseusinc.arachne.datanode.service.client.atlas.*;
 import com.odysseusinc.arachne.datanode.service.client.decoders.ByteArrayDecoder;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.service.events.atlas.AtlasDeletedEvent;
@@ -58,18 +49,6 @@ import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.ohdsi.hydra.Hydra;
 import org.slf4j.Logger;
@@ -83,6 +62,18 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static com.odysseusinc.arachne.datanode.Constants.Atlas.ATLAS_2_7_VERSION;
+import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
+import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyValue;
 
 @Service
 public class AtlasServiceImpl implements AtlasService {
@@ -202,6 +193,14 @@ public class AtlasServiceImpl implements AtlasService {
 
         if (isNotDummyPassword(atlas.getPassword())) {
             existing.setPassword(atlas.getPassword());
+        }
+
+        if (Objects.nonNull(atlas.getServiceId())) {
+            existing.setServiceId(atlas.getServiceId());
+        }
+
+        if (isNotDummyValue(atlas.getKeyfile(), Constants.DUMMY_KEYFILE)) {
+            existing.setKeyfile(atlas.getKeyfile());
         }
 
         Atlas updated = atlasRepository.saveAndFlush(existing);
@@ -354,8 +353,19 @@ public class AtlasServiceImpl implements AtlasService {
                 .decoder(new ByteArrayDecoder(new JacksonDecoder(MODULES)))
                 .logger(new Slf4jLogger(AtlasClient.class))
                 .logLevel(feign.Logger.Level.FULL)
-                .requestInterceptor(new AtlasAuthRequestInterceptor(buildAtlasLoginClient(atlas.getUrl(), httpClient), atlas.getAuthType(), atlas.getUsername(), atlas.getPassword()))
+                .requestInterceptor(new AtlasAuthRequestInterceptor(buildAtlasLoginClient(atlas.getUrl(), httpClient), buildAuthentication(atlas)))
                 .target(getAtlasClientClass(atlas), atlas.getUrl());
+    }
+
+    private AtlasAuthentication buildAuthentication(Atlas atlas) {
+
+        AtlasAuthentication result = new AtlasAuthentication();
+        result.setSchema(atlas.getAuthType());
+        result.setUsername(atlas.getUsername());
+        result.setPassword(atlas.getPassword());
+        result.setKeyfile(atlas.getKeyfile());
+        result.setServiceId(atlas.getServiceId());
+        return result;
     }
 
     private <T extends AtlasClient> Class<T> getAtlasClientClass(Atlas atlas) {
