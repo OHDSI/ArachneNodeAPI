@@ -117,7 +117,7 @@ public class AtlasController {
         return conversionService.convert(atlas, AtlasDetailedDTO.class);
     }
 
-    private void initKeyfile(Atlas atlas, @RequestPart(name = "keyfile", required = false) MultipartFile keyfile) throws IOException {
+    private void initKeyfile(Atlas atlas, MultipartFile keyfile) throws IOException {
         if (Objects.nonNull(keyfile)) {
             try (InputStream in = keyfile.getInputStream()) {
                 atlas.setKeyfile(IOUtils.toString(in, StandardCharsets.UTF_8));
