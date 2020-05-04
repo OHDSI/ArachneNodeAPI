@@ -223,3 +223,12 @@ authenticator:
           firstName: result.firstname
           middleName: result.middlename
           lastName: result.lastname
+          proxy:
+            enabled: ${proxy.enabled}
+            host: ${proxy.enabledForEngine}
+            port: ${proxy.host}
+            authEnabled: ${proxy.auth.enabled}
+            username: ${proxy.auth.username}
+            password: ${proxy.auth.password}
+
+
