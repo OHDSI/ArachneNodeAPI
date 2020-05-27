@@ -28,6 +28,8 @@ public class AtlasDetailedDTO extends AtlasDTO {
     private String authType;
     private String username;
     private String password;
+    private String keyfile;
+    private String serviceId;
 
     public String getUrl() {
 
@@ -67,5 +69,21 @@ public class AtlasDetailedDTO extends AtlasDTO {
     public void setPassword(String password) {
 
         this.password = password;
+    }
+
+    public String getKeyfile() {
+        return keyfile;
+    }
+
+    public void setKeyfile(String keyfile) {
+        this.keyfile = keyfile;
+    }
+
+    public String getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(String serviceId) {
+        this.serviceId = serviceId;
     }
 }

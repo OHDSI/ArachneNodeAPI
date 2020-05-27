@@ -34,6 +34,7 @@ import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.util.DataNodeUtils;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.io.IOUtils;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,10 +42,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 @RestController
 public class AtlasController {
@@ -86,24 +92,37 @@ public class AtlasController {
 
     @ApiOperation("Create new Atlas")
     @RequestMapping(value = "/api/v1/atlases", method = POST)
-    public AtlasDetailedDTO save(@RequestBody AtlasDetailedDTO atlasDetailedDTO) {
+    public AtlasDetailedDTO save(@RequestPart("atlas") AtlasDetailedDTO atlasDetailedDTO,
+                                 @RequestPart(name = "keyfile", required = false) MultipartFile keyfile) throws IOException {
 
         Atlas atlas = conversionService.convert(atlasDetailedDTO, Atlas.class);
+        initKeyfile(atlas, keyfile);
         atlas = atlasService.save(atlas);
         return conversionService.convert(atlas, AtlasDetailedDTO.class);
     }
 
     @ApiOperation("Update Atlas entity")
-    @RequestMapping(value = "/api/v1/atlases/{id}", method = PUT)
+    @RequestMapping(value = "/api/v1/atlases/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            method = PUT)
     public AtlasDetailedDTO update(
             @PathVariable("id") Long id,
-            @RequestBody AtlasDetailedDTO atlasDetailedDTO
-    ) {
+            @RequestPart(name = "atlas") AtlasDetailedDTO atlasDetailedDTO,
+            @RequestPart(name = "keyfile", required = false) MultipartFile keyfile
+    ) throws IOException {
 
         DataNodeUtils.requireNetworkMode(dataNodeService);
         Atlas atlas = conversionService.convert(atlasDetailedDTO, Atlas.class);
+        initKeyfile(atlas, keyfile);
         atlas = atlasService.update(id, atlas);
         return conversionService.convert(atlas, AtlasDetailedDTO.class);
+    }
+
+    private void initKeyfile(Atlas atlas, MultipartFile keyfile) throws IOException {
+        if (Objects.nonNull(keyfile)) {
+            try (InputStream in = keyfile.getInputStream()) {
+                atlas.setKeyfile(IOUtils.toString(in, StandardCharsets.UTF_8));
+            }
+        }
     }
 
     @ApiOperation("Delete Atlas entity")
