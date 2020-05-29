@@ -28,6 +28,8 @@ import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDetailedDTO;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import org.springframework.core.convert.support.GenericConversionService;
 
+import java.util.Objects;
+
 public abstract class BaseAtlasToAtlasDetailedDTOConverter<T extends AtlasDetailedDTO> extends BaseAtlasToAtlasDTOConverter<T> {
 
     public BaseAtlasToAtlasDetailedDTOConverter(GenericConversionService conversionService) {
@@ -43,6 +45,10 @@ public abstract class BaseAtlasToAtlasDetailedDTOConverter<T extends AtlasDetail
         result.setAuthType(source.getAuthType().name());
         result.setUsername(source.getUsername());
         result.setPassword(source.getPassword());
+        if (Objects.nonNull(source.getKeyfile())) {
+            result.setKeyfile(source.getKeyfile());
+        }
+        result.setServiceId(source.getServiceId());
 
         masqueradePassword(result);
 

@@ -1,0 +1,1 @@
+ALTER TABLE atlases ADD keyfile VARCHAR, ADD service_id VARCHAR;

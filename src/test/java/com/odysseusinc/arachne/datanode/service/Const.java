@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018 Odysseus Data Services, inc.
+ * Copyright 2019 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,16 +15,15 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexander Saltykov, Vitaly Koulakov, Anton Gackovka, Alexandr Ryabokon, Mikhail Mironov
- * Created: Nov 8, 2017
+ * Authors: Pavel Grafkin, Vitaly Koulakov, Anastasiia Klochkova, Sergej Suvorov, Anton Stepanov
+ * Created: Oct 16, 2019
  *
  */
 
-package com.odysseusinc.arachne.datanode.service.client.atlas;
+package com.odysseusinc.arachne.datanode.service;
 
-public enum AtlasAuthSchema {
-    NONE,
-    DATABASE,
-    LDAP,
-    ACCESS_TOKEN
+public interface Const {
+
+    String TOKEN = "123456";
+    String USER = "admin@example.com";
 }
