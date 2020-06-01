@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.controller;
 
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
 import static com.odysseusinc.arachne.datanode.util.RestUtils.requireNetworkMode;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
@@ -36,6 +37,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonStateProvinceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
+import com.odysseusinc.arachne.datanode.dto.user.RemindPasswordDTO;
 import com.odysseusinc.arachne.datanode.dto.user.UserInfoDTO;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.BadRequestException;
@@ -63,6 +65,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -249,5 +252,14 @@ public class AuthController {
 
         requireNetworkMode(dataNodeService.getDataNodeMode());
         return integrationService.getPasswordInfo();
+    }
+
+    @ApiOperation("Remind Password")
+    @PostMapping(value = "/api/v1/auth/remind-password")
+    public JsonResult remindPassword(@RequestBody RemindPasswordDTO remindPasswordDTO) {
+
+        requireNetworkMode(dataNodeService.getDataNodeMode());
+        integrationService.remindPassword(remindPasswordDTO);
+        return new JsonResult(NO_ERROR);
     }
 }

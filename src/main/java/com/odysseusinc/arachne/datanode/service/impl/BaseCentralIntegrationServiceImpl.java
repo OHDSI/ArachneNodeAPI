@@ -41,6 +41,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.commons.types.SuggestionTarget;
+import com.odysseusinc.arachne.datanode.dto.user.RemindPasswordDTO;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
@@ -66,7 +67,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.transaction.annotation.Transactional;
 
 public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, DTO extends CommonDataSourceDTO> implements BaseCentralIntegrationService<DS, DTO>, InitializingBean {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CentralIntegrationServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(BaseCentralIntegrationServiceImpl.class);
     protected final GenericConversionService conversionService;
     protected final CentralUtil centralUtil;
     protected CentralClient centralClient;
@@ -259,6 +260,13 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
         List<CommonUserDTO> linkedUsers = centralSystemClient.relinkUsers(dataNode.getCentralId(), commonLinkUserToDataNodes)
                 .getResult();
         return linkedUsers.stream().map(user -> conversionService.convert(user, User.class)).collect(Collectors.toList());
+    }
+
+    @Override
+    public void remindPassword(RemindPasswordDTO remindPasswordDTO) {
+
+        log.debug("remind password for: {}", remindPasswordDTO.getEmail());
+        centralClient.remindPassword(remindPasswordDTO);
     }
 
 }
