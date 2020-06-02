@@ -256,7 +256,7 @@ public class AuthController {
 
     @ApiOperation("Remind Password")
     @PostMapping(value = "/api/v1/auth/remind-password")
-    public JsonResult remindPassword(@RequestBody RemindPasswordDTO remindPasswordDTO) {
+    public JsonResult remindPassword(@Valid @RequestBody RemindPasswordDTO remindPasswordDTO) {
 
         requireNetworkMode(dataNodeService.getDataNodeMode());
         integrationService.remindPassword(remindPasswordDTO);
