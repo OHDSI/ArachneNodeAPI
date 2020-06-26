@@ -69,8 +69,9 @@ spring:
             required: true
   http:
     multipart:
-      max-file-size: 256MB
-      max-request-size: 256MB
+
+      max-file-size 1024MB
+      max-request-size: 1024MB
   mvc:
     view:
       prefix: /
