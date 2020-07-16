@@ -30,7 +30,7 @@ import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.dto.serialize.PageModule;
-import com.odysseusinc.arachne.datanode.exception.AuthException;
+import com.odysseusinc.arachne.datanode.exception.AtlasAuthException;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
@@ -333,15 +333,15 @@ public class AtlasServiceImpl implements AtlasService {
                         atlasToken = atlasLoginClient.loginLdap(login, password);
                         break;
                     case NONE:
-                        throw new AuthException("Atlas auth error");
+                        throw new AtlasAuthException("Atlas auth error");
                 }
             } catch (IllegalArgumentException e) {
-                throw new AuthException("Unsupported authentication type");
+                throw new AtlasAuthException("Unsupported authentication type");
             } catch (Exception e) {
-                throw new AuthException("Atlas auth error");
+                throw new AtlasAuthException("Atlas auth error");
             }
         }
-        return Optional.ofNullable(atlasToken).orElseThrow(() -> new AuthException("Atlas token is null"));
+        return Optional.ofNullable(atlasToken).orElseThrow(() -> new AtlasAuthException("Atlas token is null"));
     }
 
     private <T extends AtlasClient> T buildAtlasClient(Atlas atlas) {
