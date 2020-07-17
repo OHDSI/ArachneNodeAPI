@@ -44,6 +44,7 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.ohdsi.authenticator.exception.AuthenticationException;
+import org.ohdsi.authenticator.exception.BadCredentialsAuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -118,6 +119,11 @@ public class ExceptionHandlingAdvice extends BaseController {
     public ResponseEntity<JsonResult> exceptionHandler(AuthException ex) {
 
         return authExceptionHandler(ex);
+    }
+
+    @ExceptionHandler(BadCredentialsAuthenticationException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(BadCredentialsAuthenticationException ex) {
+        return getErrorResponse(UNAUTHORIZED, ex);
     }
 
     @ExceptionHandler(AuthenticationException.class)
