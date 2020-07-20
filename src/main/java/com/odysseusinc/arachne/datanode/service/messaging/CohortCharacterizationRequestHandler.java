@@ -31,21 +31,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
-
 @Component
 public class CohortCharacterizationRequestHandler implements AtlasRequestHandler<CommonEntityDTO, List<MultipartFile>> {
 
 	private static final int PAGE_SIZE = 10000;
 	private static final String PACKAGE_NAME = "CohortCharacterization%d";
-	private static final String SKELETON_RESOURCE = "/cc/hydra/CohortCharacterization_v0.0.1.zip";
+	private static final String SKELETON_RESOURCE = "/cc/hydra/CohortCharacterization_v1.1.0.zip";
 
 	private final AnalysisInfoBuilder analysisInfoBuilder;
 	private final AtlasService atlasService;
