@@ -23,32 +23,21 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
-import com.odysseusinc.arachne.datanode.dto.serialize.PageModule;
-import com.odysseusinc.arachne.datanode.exception.AtlasAuthException;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
-import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
 import com.odysseusinc.arachne.datanode.service.client.atlas.*;
-import com.odysseusinc.arachne.datanode.service.client.decoders.ByteArrayDecoder;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.service.events.atlas.AtlasDeletedEvent;
 import com.odysseusinc.arachne.datanode.service.events.atlas.AtlasUpdatedEvent;
-import feign.Client;
-import feign.Feign;
-import feign.form.FormEncoder;
-import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonEncoder;
-import feign.slf4j.Slf4jLogger;
 import org.apache.commons.lang3.StringUtils;
 import org.ohdsi.hydra.Hydra;
 import org.slf4j.Logger;
@@ -58,8 +47,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,39 +58,36 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.odysseusinc.arachne.datanode.Constants.Atlas.ATLAS_2_7_VERSION;
 import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
 import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyValue;
 
 @Service
 public class AtlasServiceImpl implements AtlasService {
 
-    private static final String ATLAS_LOWER_VERSION = "2.2.0";
-    private Logger log = LoggerFactory.getLogger(AtlasServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AtlasServiceImpl.class);
 
+    private final AtlasClientServiceImpl atlasClientService;
     private final GenericConversionService conversionService;
-    private final ArachneHttpClientBuilder arachneHttpClientBuilder;
     private final AtlasRepository atlasRepository;
     private final CentralSystemClient centralSystemClient;
     private final DataNodeService dataNodeService;
     private final ApplicationEventPublisher eventPublisher;
-    private HttpHeaders headers;
 
     private Map<Atlas, ? extends AtlasClient> atlasClientPool = new ConcurrentHashMap<>();
-    private static final List<Module> MODULES = Collections.singletonList(new PageModule());
 
     @Autowired
-    public AtlasServiceImpl(GenericConversionService genericConversionService,
+    public AtlasServiceImpl(AtlasClientServiceImpl atlasClientService,
+                            GenericConversionService genericConversionService,
                             AtlasRepository atlasRepository,
                             CentralSystemClient centralSystemClient,
-                            ArachneHttpClientBuilder arachneHttpClientBuilder,
                             DataNodeService dataNodeService,
                             ApplicationEventPublisher eventPublisher) {
+
+        this.atlasClientService = atlasClientService;
 
         this.conversionService = genericConversionService;
         this.atlasRepository = atlasRepository;
         this.centralSystemClient = centralSystemClient;
-        this.arachneHttpClientBuilder = arachneHttpClientBuilder;
         this.dataNodeService = dataNodeService;
         this.eventPublisher = eventPublisher;
     }
@@ -129,20 +113,13 @@ public class AtlasServiceImpl implements AtlasService {
     @Override
     public String checkConnection(Atlas atlas) {
 
-        headers = new HttpHeaders();
-        headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_FORM_URLENCODED_VALUE));
-
         String atlasVersion = checkVersion(atlas);
-
-        if (!Objects.equals(AtlasAuthSchema.NONE, atlas.getAuthType())) {
-            String atlasToken = authToAtlas(atlas.getUrl(), atlas.getAuthType(), atlas.getUsername(), atlas.getPassword());
-            headers.add(AtlasAuthRequestInterceptor.AUTHORIZATION_HEADER, AtlasAuthRequestInterceptor.BEARER_PREFIX + atlasToken);
+        if (atlasVersion == null) {
+            throw new ServiceNotAvailableException("Atlas version is null");
         }
 
-        getCohortDefinitionCount(atlas);
-
-        return Optional.ofNullable(atlasVersion).orElseThrow(
-                () -> new ServiceNotAvailableException("Atlas version is null"));
+        atlasPingWithAuthenticationRequest(atlas);
+        return atlasVersion;
     }
 
     @Override
@@ -157,7 +134,7 @@ public class AtlasServiceImpl implements AtlasService {
         atlas.setCentralId(updatedDTO.getCentralId());
 
         Atlas updated = save(atlas);
-        atlasClientPool.replace(updated, buildAtlasClient(updated));
+        atlasClientPool.replace(updated, atlasClientService.buildAtlasClient(updated));
         return updated;
     }
 
@@ -209,7 +186,7 @@ public class AtlasServiceImpl implements AtlasService {
             eventPublisher.publishEvent(new AtlasUpdatedEvent(this, updated));
         }
 
-        atlasClientPool.replace(updated, buildAtlasClient(updated));
+        atlasClientPool.replace(updated, atlasClientService.buildAtlasClient(updated));
         return updated;
     }
 
@@ -244,7 +221,7 @@ public class AtlasServiceImpl implements AtlasService {
                         list.forEach(entry -> entry.setOrigin(atlas));
                         return list;
                     } catch (Exception ex) {
-                        log.error("Cannot fetch data from Atlas with id = " + atlas.getId(), ex);
+                        LOGGER.error("Cannot fetch data from Atlas with id = " + atlas.getId(), ex);
                         return new ArrayList<R>();
                     }
                 })
@@ -262,7 +239,7 @@ public class AtlasServiceImpl implements AtlasService {
     @Override
     public <R> R executeInfo(Atlas atlas, Function<AtlasInfoClient, R> sendAtlasRequest) {
 
-        AtlasInfoClient infoClient = buildAtlasInfoClient(atlas);
+        AtlasInfoClient infoClient = atlasClientService.buildAtlasInfoClient(atlas);
         return sendAtlasRequest.apply(infoClient);
     }
 
@@ -298,105 +275,28 @@ public class AtlasServiceImpl implements AtlasService {
                 atlasShortDTO = centralSystemClient.updateAtlasInfo(atlasShortDTO);
             }
         } catch (Exception e) {
-            log.warn("Failed to sync Atlas {} with Central, {}", atlas.getName(), e.getMessage());
+            LOGGER.warn("Failed to sync Atlas {} with Central, {}", atlas.getName(), e.getMessage());
         }
         return atlasShortDTO;
     }
 
     private <T extends AtlasClient> T getOrCreate(Atlas atlas) {
 
-        return (T)atlasClientPool.computeIfAbsent(atlas, this::buildAtlasClient);
+        return (T)atlasClientPool.computeIfAbsent(atlas, this.atlasClientService::buildAtlasClient);
     }
 
     private String checkVersion(Atlas atlas) {
 
         AtlasClient.Info info;
         try {
-            info = buildAtlasInfoClient(atlas).getInfo();
+            info = atlasClientService.buildAtlasInfoClient(atlas).getInfo();
         } catch (Exception e) {
             throw new ServiceNotAvailableException("Incorrect Atlas address");
         }
         return info != null ? info.version : null;
     }
 
-    private String authToAtlas(String url, AtlasAuthSchema authSchema, String login, String password) {
-
-        String atlasToken = null;
-        AtlasLoginClient atlasLoginClient = buildAtlasLoginClient(url, arachneHttpClientBuilder.build());
-        if (Objects.nonNull(authSchema)) {
-            try {
-                switch (authSchema) {
-                    case DATABASE:
-                        atlasToken = atlasLoginClient.loginDatabase(login, password);
-                        break;
-                    case LDAP:
-                        atlasToken = atlasLoginClient.loginLdap(login, password);
-                        break;
-                    case NONE:
-                        throw new AtlasAuthException("Atlas auth error");
-                }
-            } catch (IllegalArgumentException e) {
-                throw new AtlasAuthException("Unsupported authentication type");
-            } catch (Exception e) {
-                throw new AtlasAuthException("Atlas auth error");
-            }
-        }
-        return Optional.ofNullable(atlasToken).orElseThrow(() -> new AtlasAuthException("Atlas token is null"));
-    }
-
-    private <T extends AtlasClient> T buildAtlasClient(Atlas atlas) {
-
-        Client httpClient  = arachneHttpClientBuilder.build();
-        return Feign.builder()
-                .client(httpClient)
-                .encoder(new JacksonEncoder())
-                .decoder(new ByteArrayDecoder(new JacksonDecoder(MODULES)))
-                .logger(new Slf4jLogger(AtlasClient.class))
-                .logLevel(feign.Logger.Level.FULL)
-                .requestInterceptor(new AtlasAuthRequestInterceptor(buildAtlasLoginClient(atlas.getUrl(), httpClient), buildAuthentication(atlas)))
-                .target(getAtlasClientClass(atlas), atlas.getUrl());
-    }
-
-    private AtlasAuthentication buildAuthentication(Atlas atlas) {
-
-        AtlasAuthentication result = new AtlasAuthentication();
-        result.setSchema(atlas.getAuthType());
-        result.setUsername(atlas.getUsername());
-        result.setPassword(atlas.getPassword());
-        result.setKeyfile(atlas.getKeyfile());
-        result.setServiceId(atlas.getServiceId());
-        return result;
-    }
-
-    private <T extends AtlasClient> Class<T> getAtlasClientClass(Atlas atlas) {
-
-        String version = Objects.nonNull(atlas) && Objects.nonNull(atlas.getVersion()) ? atlas.getVersion() : ATLAS_LOWER_VERSION;
-        return ATLAS_2_7_VERSION.isLesserOrEqualsThan(version) ? (Class<T>) AtlasClient2_7.class : (Class<T>) AtlasClient2_5.class;
-    }
-
-    private static AtlasLoginClient buildAtlasLoginClient(String url, Client httpClient) {
-
-        return Feign.builder()
-                .client(httpClient)
-                .encoder(new FormEncoder(new JacksonEncoder()))
-                .decoder(new TokenDecoder())
-                .logger(new Slf4jLogger(AtlasLoginClient.class))
-                .target(AtlasLoginClient.class, url);
-    }
-
-    private AtlasInfoClient buildAtlasInfoClient(Atlas atlas) {
-
-        Client httpClient = arachneHttpClientBuilder.build();
-        return Feign.builder()
-                .client(httpClient)
-                .encoder(new JacksonEncoder())
-                .decoder(new JacksonDecoder())
-                .logger(new Slf4jLogger(AtlasInfoClient.class))
-                .logLevel(feign.Logger.Level.BASIC)
-                .target(AtlasInfoClient.class, atlas.getUrl());
-    }
-
-    private void getCohortDefinitionCount(Atlas atlas) {
+    private void atlasPingWithAuthenticationRequest(Atlas atlas) {
 
         try {
             getOrCreate(atlas).getCohortDefinitions();
