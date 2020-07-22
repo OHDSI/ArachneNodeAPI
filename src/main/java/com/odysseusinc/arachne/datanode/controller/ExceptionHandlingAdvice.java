@@ -121,6 +121,12 @@ public class ExceptionHandlingAdvice extends BaseController {
         return authExceptionHandler(ex);
     }
 
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(org.springframework.security.core.AuthenticationException ex) {
+
+        return authExceptionHandler(ex);
+    }
+
     @ExceptionHandler(BadCredentialsAuthenticationException.class)
     public ResponseEntity<JsonResult> exceptionHandler(BadCredentialsAuthenticationException ex) {
         return getErrorResponse(UNAUTHORIZED, ex);
