@@ -28,6 +28,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.AtlasShortDTO;
 import com.odysseusinc.arachne.commons.utils.CommonFileUtils;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
+import com.odysseusinc.arachne.datanode.exception.AtlasAuthException;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
@@ -115,7 +116,7 @@ public class AtlasServiceImpl implements AtlasService {
 
         String atlasVersion = checkVersion(atlas);
         if (atlasVersion == null) {
-            throw new ServiceNotAvailableException("Atlas version is null");
+            throw new AtlasAuthException("Atlas version is null");
         }
 
         atlasPingWithAuthenticationRequest(atlas);
@@ -297,11 +298,6 @@ public class AtlasServiceImpl implements AtlasService {
     }
 
     private void atlasPingWithAuthenticationRequest(Atlas atlas) {
-
-        try {
-            getOrCreate(atlas).getCohortDefinitions();
-        } catch (Exception e) {
-            throw new ServiceNotAvailableException("Failed to get Cohort Definitions");
-        }
+        getOrCreate(atlas).getCohortDefinitions();
     }
 }
