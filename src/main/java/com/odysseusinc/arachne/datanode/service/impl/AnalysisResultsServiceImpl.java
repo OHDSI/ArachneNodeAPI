@@ -23,7 +23,6 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import com.odysseusinc.arachne.datanode.Constants;
-import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFile;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileType;
@@ -79,24 +78,19 @@ public class AnalysisResultsServiceImpl implements AnalysisResultsService {
     @Override
     public Analysis saveResults(Analysis analysis, File resultDir) {
 
-        List<AnalysisFile> collect = Arrays.stream(resultDir.listFiles())
+        List<AnalysisFile> resultFiles = Arrays.stream(resultDir.listFiles())
                 .map(file -> new AnalysisFile(file.getAbsolutePath(), AnalysisFileType.ANALYSYS_RESULT, analysis))
                 .collect(Collectors.toList());
-        analysisFileRepository.save(collect);
-
-        try {
-            return updateAnalysisWithResultsData(analysis, resultDir);
-        } catch (NotExistException e) {
-            LOGGER.warn(ANALYSIS_IS_NOT_EXISTS_LOG, analysis.getId());
-            return null;
-        }
+        analysisFileRepository.save(resultFiles);
+        return updateAnalysisWithResultsData(analysis, resultDir);
     }
 
-    private Analysis updateAnalysisWithResultsData(Analysis analysis, File resultDir) throws NotExistException {
+    private Analysis updateAnalysisWithResultsData(Analysis analysis, File resultDir) {
 
         Analysis exists = analysisRepository.findOne(analysis.getId());
         if (exists == null) {
-            throw new NotExistException(Analysis.class);
+            LOGGER.warn(ANALYSIS_IS_NOT_EXISTS_LOG, analysis.getId());
+            return null;
         }
         File analysisFolder = new File(exists.getAnalysisFolder());
         try {
