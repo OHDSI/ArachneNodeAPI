@@ -37,15 +37,9 @@ public interface AnalysisService {
 
     Integer invalidateAllUnfinishedAnalyses(final User user);
 
-    List<AnalysisFile> getAnalysisResults(Analysis analysis);
-
-    List<AnalysisFile> getAnalysisResults(Analysis analysis, AnalysisFileStatus status);
-
     Optional<Analysis> findAnalysis(Long id);
 
     void sendToEngine(Analysis analysis);
-
-    Analysis saveResults(Analysis analysis, File resultDir);
 
     Analysis persist(Analysis analysis);
 

@@ -24,7 +24,6 @@ package com.odysseusinc.arachne.datanode.service.impl;
 
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
-import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFile;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileStatus;
@@ -55,7 +54,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,13 +64,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-import static com.odysseusinc.arachne.datanode.Constants.Analysis.ERROR_REPORT_FILENAME;
-import static com.odysseusinc.arachne.datanode.Constants.AnalysisMessages.ANALYSIS_IS_NOT_EXISTS_LOG;
-import static org.apache.commons.lang3.StringUtils.endsWithIgnoreCase;
 
 public abstract class BaseAnalysisServiceImpl implements AnalysisService {
 
@@ -90,8 +81,8 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
     protected final AnalysisPreprocessorService preprocessorService;
     protected final AnalysisRepository analysisRepository;
     protected final AnalysisStateJournalRepository analysisStateJournalRepository;
-    protected final AnalysisFileRepository analysisFileRepository;
     private final ExecutionEngineIntegrationService engineIntegrationService;
+    private final AnalysisFileRepository analysisFileRepository;
     @Value("${datanode.arachneCentral.host}")
     protected String centralHost;
     @Value("${datanode.arachneCentral.port}")
@@ -109,17 +100,16 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
     public BaseAnalysisServiceImpl(GenericConversionService conversionService,
                                    AnalysisPreprocessorService preprocessorService,
                                    AnalysisRepository analysisRepository,
-                                   AnalysisStateJournalRepository analysisStateJournalRepository,
                                    AnalysisFileRepository analysisFileRepository,
+                                   AnalysisStateJournalRepository analysisStateJournalRepository,
                                    ExecutionEngineIntegrationService engineIntegrationService) {
 
-        this.preprocessorService = preprocessorService;
-
-        this.engineIntegrationService = engineIntegrationService;
-        this.conversionService = conversionService;
         this.analysisRepository = analysisRepository;
-        this.analysisStateJournalRepository = analysisStateJournalRepository;
         this.analysisFileRepository = analysisFileRepository;
+        this.analysisStateJournalRepository = analysisStateJournalRepository;
+        this.conversionService = conversionService;
+        this.engineIntegrationService = engineIntegrationService;
+        this.preprocessorService = preprocessorService;
     }
 
     @Override
@@ -179,71 +169,6 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
 
         AnalysisStateEntry analysisStateEntry = new AnalysisStateEntry(new Date(), state, reason, analysis);
         analysisStateJournalRepository.save(analysisStateEntry);
-    }
-
-    public Analysis saveResults(Analysis analysis, File resultDir) {
-
-        List<AnalysisFile> collect = Arrays.stream(resultDir.listFiles())
-                .map(file -> new AnalysisFile(file.getAbsolutePath(), AnalysisFileType.ANALYSYS_RESULT, analysis))
-                .collect(Collectors.toList());
-        analysisFileRepository.save(collect);
-
-        Analysis updated = null;
-        try {
-            updated = update(analysis, resultDir);
-        } catch (NotExistException e) {
-            LOGGER.warn(ANALYSIS_IS_NOT_EXISTS_LOG, analysis.getId());
-        }
-
-        return updated;
-    }
-
-    private AnalysisResultStatusDTO reEvaluateAnalysisStatus(AnalysisResultStatusDTO originalStatus, File resultDir){
-
-        if(AnalysisResultStatusDTO.EXECUTED == originalStatus && checkZipArchiveForErrorFile(resultDir.listFiles((dir, name) -> name.endsWith(".zip")))){
-            LOGGER.warn("Unexpected errorReport file found. Changing analysis status to FAILED for {}", resultDir);
-            return AnalysisResultStatusDTO.FAILED;
-        }
-        return originalStatus;
-    }
-
-    private boolean checkZipArchiveForErrorFile(File[] listFiles) {
-
-        return Stream.of(listFiles)
-                .map(this::scanZipForErrorFilename)
-                .reduce(Boolean::logicalOr)
-                .orElse(false);
-    }
-
-    private boolean scanZipForErrorFilename(File zipFile) {
-
-        try (ZipFile archive = new ZipFile(zipFile)) {
-            return archive.stream()
-                    .map(ZipEntry::getName)
-                    .anyMatch(name -> endsWithIgnoreCase(name, ERROR_REPORT_FILENAME));
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
-    }
-
-    private Analysis update(Analysis analysis, File resultDir) throws NotExistException {
-
-        Analysis exists = analysisRepository.findOne(analysis.getId());
-        if (exists == null) {
-            throw new NotExistException(Analysis.class);
-        }
-        File analysisFolder = new File(exists.getAnalysisFolder());
-        try {
-            FileUtils.deleteDirectory(analysisFolder);
-        } catch (IOException e) {
-            LOGGER.warn(Constants.AnalysisMessages.CANT_REMOVE_ANALYSIS_DIR_LOG);
-        }
-        final AnalysisResultStatusDTO updatedAnalysisStatus = reEvaluateAnalysisStatus(analysis.getStatus(), resultDir);
-        exists.setAnalysisFolder(analysis.getAnalysisFolder());
-        exists.setStatus(updatedAnalysisStatus);
-        exists.setStdout(analysis.getStdout());
-        exists.getStateHistory().addAll(analysis.getStateHistory());
-        return analysisRepository.save(exists);
     }
 
     @Transactional
@@ -324,25 +249,6 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTime();
-    }
-
-    @Override
-    @Transactional
-    public List<AnalysisFile> getAnalysisResults(Analysis analysis) {
-
-        return analysisFileRepository.findAllByAnalysisIdAndType(
-                analysis.getId(),
-                AnalysisFileType.ANALYSYS_RESULT);
-    }
-
-    @Override
-    @Transactional
-    public List<AnalysisFile> getAnalysisResults(Analysis analysis, AnalysisFileStatus status) {
-
-        return analysisFileRepository.findAllByAnalysisIdAndTypeAndStatus(
-                analysis.getId(),
-                AnalysisFileType.ANALYSYS_RESULT,
-                status);
     }
 
     @Override

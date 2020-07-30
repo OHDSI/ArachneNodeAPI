@@ -24,6 +24,7 @@ package com.odysseusinc.arachne.datanode.controller.analysis;
 
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
+import com.odysseusinc.arachne.datanode.service.AnalysisResultsService;
 import com.odysseusinc.arachne.datanode.util.AnalysisUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisExecutionStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
@@ -35,9 +36,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,21 +48,22 @@ public abstract class BaseCallbackAnalysisController {
 
     protected final GenericConversionService conversionService;
     protected final AnalysisService analysisService;
+    private final AnalysisResultsService analysisResultsService;
 
     @Value("${files.store.path}")
     private String filesStorePath;
 
     @Autowired
     public BaseCallbackAnalysisController(GenericConversionService conversionService,
-                                          AnalysisService analysisService) {
+                                          AnalysisService analysisService,
+                                          AnalysisResultsService analysisResultsService) {
 
         this.conversionService = conversionService;
         this.analysisService = analysisService;
+        this.analysisResultsService = analysisResultsService;
     }
 
-    @RequestMapping(value = UPDATE_URI,
-            method = RequestMethod.POST,
-            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @PostMapping(value = UPDATE_URI, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public void updateSubmission(@PathVariable Long id,
                                  @PathVariable String password,
                                  @RequestBody AnalysisExecutionStatusDTO status
@@ -82,9 +83,7 @@ public abstract class BaseCallbackAnalysisController {
         return analysisService.updateStatus(id, stdout, password);
     }
 
-    @RequestMapping(value = RESULT_URI,
-            method = RequestMethod.POST,
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = RESULT_URI, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public void analysisResult(@PathVariable Long id,
                                @PathVariable String password,
                                @RequestPart("analysisResult") AnalysisResultDTO result,
@@ -102,9 +101,7 @@ public abstract class BaseCallbackAnalysisController {
     protected Analysis doSaveResults(AnalysisResultDTO result, File resultDir) {
 
         Analysis analysis = conversionService.convert(result, Analysis.class);
-        analysis.setAnalysisFolder(resultDir.getAbsolutePath());
-
-        return analysisService.saveResults(analysis, resultDir);
+        return analysisResultsService.saveResults(analysis, resultDir);
     }
 
 }
