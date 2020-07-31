@@ -536,6 +536,10 @@
                 <directory>src/test/resources</directory>
                 <filtering>true</filtering>
             </testResource>
+            <testResource>
+                <directory>src/test/resources-binary</directory>
+                <filtering>false</filtering>
+            </testResource>
         </testResources>
         <finalName>datanode</finalName>
     </build>

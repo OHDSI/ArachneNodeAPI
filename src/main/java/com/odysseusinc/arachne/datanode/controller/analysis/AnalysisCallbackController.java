@@ -22,6 +22,7 @@
 
 package com.odysseusinc.arachne.datanode.controller.analysis;
 
+import com.odysseusinc.arachne.datanode.service.AnalysisResultsService;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,8 +31,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class AnalysisCallbackController extends BaseCallbackAnalysisController {
 
     public AnalysisCallbackController(GenericConversionService conversionService,
-                                      AnalysisService analysisService) {
+                                      AnalysisService analysisService,
+                                      AnalysisResultsService analysisResultsService) {
 
-        super(conversionService, analysisService);
+        super(conversionService, analysisService, analysisResultsService);
     }
 }

@@ -34,6 +34,7 @@ import com.odysseusinc.arachne.datanode.model.analysis.AnalysisAuthor;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFile;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisOrigin;
 import com.odysseusinc.arachne.datanode.model.user.User;
+import com.odysseusinc.arachne.datanode.service.AnalysisResultsService;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import java.io.FileInputStream;
@@ -51,6 +52,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -72,15 +74,18 @@ public class AnalysisController {
     private static final Logger logger = LoggerFactory.getLogger(AnalysisController.class);
     private static final String ERROR_MESSAGE = "Failed to save analysis files";
     private final AnalysisService analysisService;
+    private final AnalysisResultsService analysisResultsService;
     private final UserService userService;
 
     private final GenericConversionService conversionService;
 
 	public AnalysisController(AnalysisService analysisService,
+                              AnalysisResultsService analysisResultsService,
                               UserService userService,
                               GenericConversionService conversionService) {
 
 		this.analysisService = analysisService;
+		this.analysisResultsService = analysisResultsService;
         this.userService = userService;
         this.conversionService = conversionService;
     }
@@ -121,7 +126,7 @@ public class AnalysisController {
 
 	    Analysis analysis = analysisService.findAnalysis(analysisId)
                 .orElseThrow(() -> new NotExistException(Analysis.class));
-	    List<AnalysisFile> resultFiles = analysisService.getAnalysisResults(analysis);
+	    List<AnalysisFile> resultFiles = analysisResultsService.getAnalysisResults(analysis);
 	    Path stdoutDir = Files.createTempDirectory("node_analysis");
 	    Path stdoutFile = stdoutDir.resolve("stdout.txt");
 	    try(Writer writer = new FileWriter(stdoutFile.toFile())) {

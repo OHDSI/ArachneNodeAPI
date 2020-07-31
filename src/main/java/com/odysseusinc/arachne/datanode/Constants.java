@@ -161,6 +161,7 @@ public interface Constants {
     }
 
     interface Analysis {
+        String ERROR_REPORT_FILENAME = "errorReport.txt";
         String SUBMISSION_ARCHIVE_SUBDIR = "archive";
     }
 

@@ -35,15 +35,15 @@ public class AnalysisServiceImpl extends BaseAnalysisServiceImpl {
 	public AnalysisServiceImpl(GenericConversionService conversionService,
 														 AnalysisPreprocessorService preprocessorService,
 														 AnalysisRepository analysisRepository,
-														 AnalysisStateJournalRepository analysisStateJournalRepository,
 														 AnalysisFileRepository analysisFileRepository,
+														 AnalysisStateJournalRepository analysisStateJournalRepository,
 														 ExecutionEngineIntegrationService engineIntegrationService) {
 
 		super(conversionService,
                 preprocessorService,
 				analysisRepository,
-				analysisStateJournalRepository,
 				analysisFileRepository,
+				analysisStateJournalRepository,
 				engineIntegrationService);
 	}
 }
