@@ -30,6 +30,7 @@ import com.odysseusinc.arachne.datanode.repository.AnalysisFileRepository;
 import com.odysseusinc.arachne.datanode.repository.AnalysisRepository;
 import com.odysseusinc.arachne.datanode.service.AnalysisResultsService;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
+import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,6 @@ import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -92,12 +92,7 @@ public class AnalysisResultsServiceImpl implements AnalysisResultsService {
             LOGGER.warn(ANALYSIS_IS_NOT_EXISTS_LOG, analysis.getId());
             return null;
         }
-        File analysisFolder = new File(exists.getAnalysisFolder());
-        try {
-            FileUtils.deleteDirectory(analysisFolder);
-        } catch (IOException e) {
-            LOGGER.warn(Constants.AnalysisMessages.CANT_REMOVE_ANALYSIS_DIR_LOG);
-        }
+        removeAnalysisFolder(exists);
         final AnalysisResultStatusDTO updatedAnalysisStatus = reEvaluateAnalysisStatus(analysis.getStatus(), resultDir);
         exists.setAnalysisFolder(resultDir.getAbsolutePath());
         exists.setStatus(updatedAnalysisStatus);
@@ -106,11 +101,28 @@ public class AnalysisResultsServiceImpl implements AnalysisResultsService {
         return analysisRepository.save(exists);
     }
 
+    private void removeAnalysisFolder(Analysis exists) {
+
+        File analysisFolder = new File(exists.getAnalysisFolder());
+        try {
+            FileUtils.deleteDirectory(analysisFolder);
+        } catch (IOException e) {
+            LOGGER.warn(Constants.AnalysisMessages.CANT_REMOVE_ANALYSIS_DIR_LOG);
+        }
+    }
+
     private AnalysisResultStatusDTO reEvaluateAnalysisStatus(AnalysisResultStatusDTO originalStatus, File resultDir) {
 
-        if (AnalysisResultStatusDTO.EXECUTED == originalStatus && checkZipArchiveForErrorFile(resultDir.listFiles((dir, name) -> name.endsWith(".zip")))) {
-            LOGGER.warn("Unexpected errorReport file found. Changing analysis status to FAILED for {}", resultDir);
-            return AnalysisResultStatusDTO.FAILED;
+        if (AnalysisResultStatusDTO.EXECUTED == originalStatus) {
+            if (resultDir == null ) {
+                LOGGER.error("Result directory cannot be null");
+                return AnalysisResultStatusDTO.FAILED;
+            }
+            File[] zipFiles = resultDir.listFiles((dir, name) -> name.endsWith(".zip"));
+            if (checkZipArchiveForErrorFile(zipFiles)) {
+                LOGGER.warn("Unexpected errorReport file found. Changing analysis status to FAILED for {}", resultDir);
+                return AnalysisResultStatusDTO.FAILED;
+            }
         }
         return originalStatus;
     }
