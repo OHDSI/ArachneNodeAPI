@@ -80,8 +80,6 @@ public class AuthenticationTokenFilter extends GenericFilterBean {
         }
         if (log.isDebugEnabled()) {
             log.debug("Authentication failed", ex);
-        } else {
-            log.error("Authentication failed: {}, requested: {} {}", ex.getMessage(), httpRequest.getMethod(), httpRequest.getRequestURI());
         }
     }
 
