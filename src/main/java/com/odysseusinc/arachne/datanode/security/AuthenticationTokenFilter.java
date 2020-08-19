@@ -64,7 +64,7 @@ public class AuthenticationTokenFilter extends GenericFilterBean {
 
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         String accessToken = httpRequest.getHeader(accessTokenResolver.getTokenHeaderName());
-        if (StringUtils.isNotEmpty(accessToken)){
+        if (StringUtils.isNotEmpty(accessToken)) {
             try {
                 authenticationService.authenticate(accessToken, httpRequest);
             } catch (AuthenticationException | AuthException | org.ohdsi.authenticator.exception.AuthenticationException ex) {
@@ -75,12 +75,11 @@ public class AuthenticationTokenFilter extends GenericFilterBean {
     }
 
     private void logAuthenticationException(HttpServletRequest httpRequest, RuntimeException ex) {
+
         if (HttpMethod.OPTIONS.matches(httpRequest.getMethod())) {
             return;
         }
-        if (log.isDebugEnabled()) {
-            log.debug("Authentication failed", ex);
-        }
+        log.debug("Authentication failed", ex);
     }
 
 }
