@@ -45,7 +45,7 @@ public class CohortCharacterizationRequestHandler implements AtlasRequestHandler
 
 	private static final int PAGE_SIZE = 10000;
 	private static final String PACKAGE_NAME = "CohortCharacterization%d";
-	private static final String SKELETON_RESOURCE = "/cc/hydra/CohortCharacterization_v0.0.1.zip";
+	private static final String SKELETON_RESOURCE = "/cc/hydra/CohortCharacterization_v1.1.0.zip";
 
 	private final AnalysisInfoBuilder analysisInfoBuilder;
 	private final AtlasService atlasService;
