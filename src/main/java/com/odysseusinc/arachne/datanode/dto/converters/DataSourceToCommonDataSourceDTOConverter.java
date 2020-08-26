@@ -57,7 +57,6 @@ public class DataSourceToCommonDataSourceDTOConverter implements Converter<DataS
         }
 
         CommonDataSourceDTO commonDataSourceDTO = new CommonDataSourceDTO();
-        commonDataSourceDTO.setId(dataSource.getId());
         commonDataSourceDTO.setName(dataSource.getName());
         commonDataSourceDTO.setUuid(dataSource.getUuid());
         return commonDataSourceDTO;
