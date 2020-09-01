@@ -25,8 +25,6 @@ package com.odysseusinc.arachne.datanode.controller;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.SYSTEM_ERROR;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.UNAUTHORIZED;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
-import static com.odysseusinc.arachne.commons.utils.ErrorMessages.BAD_CREDENTIALS;
-import static com.odysseusinc.arachne.commons.utils.ErrorMessages.USER_NOT_REGISTERED;
 import static java.util.Arrays.asList;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
@@ -45,6 +43,8 @@ import java.sql.SQLException;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.ohdsi.authenticator.exception.AuthenticationException;
+import org.ohdsi.authenticator.exception.BadCredentialsAuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -118,12 +118,35 @@ public class ExceptionHandlingAdvice extends BaseController {
     @ExceptionHandler(AuthException.class)
     public ResponseEntity<JsonResult> exceptionHandler(AuthException ex) {
 
+        return authExceptionHandler(ex);
+    }
+
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(org.springframework.security.core.AuthenticationException ex) {
+
+        return authExceptionHandler(ex);
+    }
+
+    @ExceptionHandler(BadCredentialsAuthenticationException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(BadCredentialsAuthenticationException ex) {
+        return getErrorResponse(UNAUTHORIZED, ex);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<JsonResult> exceptionHandler(AuthenticationException ex) {
+
+        return authExceptionHandler(ex);
+    }
+
+    public ResponseEntity<JsonResult> authExceptionHandler(Exception ex) {
+
         JsonResult result = new JsonResult(UNAUTHORIZED);
         result.setErrorMessage(ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .body(result);
     }
+
 
     private ResponseEntity<JsonResult> getErrorResponse(JsonResult.ErrorCode errorCode, Exception ex) {
 
@@ -138,10 +161,8 @@ public class ExceptionHandlingAdvice extends BaseController {
 
         if (errorsTokenEnabled) {
             final String errorToken = generateErrorToken();
-            LOGGER.error(message + " token: " + errorToken, ex);
             result.setErrorMessage(String.format(ERROR_MESSAGE_WITH_TOKEN, errorToken));
-        } else if (asList(BAD_CREDENTIALS.getMessage().toLowerCase(), USER_NOT_REGISTERED.getMessage().toLowerCase()).contains(message.toLowerCase())) {
-            LOGGER.error(message);
+            LOGGER.error("{}. error-token: {}", message, errorToken, ex);
         } else {
             LOGGER.error(message, ex);
         }

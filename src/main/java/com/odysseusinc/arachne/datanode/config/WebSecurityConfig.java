@@ -119,6 +119,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/user-management/countries/**").permitAll()
                 .antMatchers("/api/v1/user-management/state-province/**").permitAll()
                 .antMatchers("/api/v1/auth/registration**").permitAll()
+                .antMatchers("/api/v1/auth/remind-password/**").permitAll()
                 .antMatchers("/configuration/**").permitAll()
                 .antMatchers("/api/v1/submissions/**").permitAll()
                 .antMatchers("/admin-settings/**").permitAll()

@@ -60,8 +60,6 @@ public class DataSourceServiceImplTest {
     @Mock
     private DataNodeService dataNodeService;
     @Mock
-    private GenericConversionService conversionService;
-    @Mock
     private ApplicationEventPublisher eventPublisher;
     @Mock
     private BaseCentralIntegrationService<DataSource, CommonDataSourceDTO> integrationService;
@@ -93,7 +91,7 @@ public class DataSourceServiceImplTest {
 
         when(jmsTemplate.getDestinationResolver()).thenReturn(destinationResolver);
         dataSourceService = spy(new DataSourceServiceImpl(
-                dataSourceRepository, dataNodeService, integrationService, conversionService, eventPublisher, centralClient, jmsTemplate, dataSourceHelper, engineIntegrationService, 4000L
+                dataSourceRepository, dataNodeService, integrationService, eventPublisher, centralClient, jmsTemplate, dataSourceHelper, engineIntegrationService, 4000L
         ));
         result = new AnalysisResultDTO();
         result.setStatus(AnalysisResultStatusDTO.EXECUTED);
