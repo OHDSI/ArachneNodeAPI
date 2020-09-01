@@ -24,7 +24,6 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceBusinessDTO;
-import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -55,7 +54,6 @@ public class DataSourceBusinessDTOToCommonDataSourceDTOConverter implements Conv
         commonDataSourceDTO.setCdmVersion(source.getCdmVersion());
         commonDataSourceDTO.setId(source.getId());
         commonDataSourceDTO.setName(source.getName());
-        commonDataSourceDTO.setUuid(source.getUuid());
         return commonDataSourceDTO;
     }
 }

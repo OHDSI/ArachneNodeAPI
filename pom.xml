@@ -6,7 +6,7 @@
 
     <artifactId>datanode</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.16.0-QA</version>
+    <version>1.16.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
 
@@ -309,7 +309,7 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.30</version>
+            <version>8.0.16</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.microsoft.sqlserver/sqljdbc4 -->
         <dependency>
@@ -332,7 +332,7 @@
         <dependency>
             <groupId>org.ohdsi</groupId>
             <artifactId>authenticator</artifactId>
-            <version>0.0.3-SNAPSHOT</version>
+            <version>0.0.3-QA</version>
         </dependency>
         <dependency>
             <groupId>com.google.auth</groupId>
@@ -535,6 +535,10 @@
             <testResource>
                 <directory>src/test/resources</directory>
                 <filtering>true</filtering>
+            </testResource>
+            <testResource>
+                <directory>src/test/resources-binary</directory>
+                <filtering>false</filtering>
             </testResource>
         </testResources>
         <finalName>datanode</finalName>

@@ -96,7 +96,6 @@ public class DataSourceServiceImpl implements DataSourceService {
     private final DataSourceRepository dataSourceRepository;
     private final DataNodeService dataNodeService;
     private final Map<String, String> dsSortPath = new HashMap<>();
-    protected final GenericConversionService conversionService;
     protected final ApplicationEventPublisher eventPublisher;
     protected final BaseCentralIntegrationService<DataSource, CommonDataSourceDTO> integrationService;
     protected final CentralClient centralClient;
@@ -111,7 +110,6 @@ public class DataSourceServiceImpl implements DataSourceService {
     public DataSourceServiceImpl(DataSourceRepository dataSourceRepository,
                                  DataNodeService dataNodeService,
                                  BaseCentralIntegrationService<DataSource, CommonDataSourceDTO> integrationService,
-                                 GenericConversionService conversionService,
                                  ApplicationEventPublisher eventPublisher,
                                  CentralClient centralClient,
                                  JmsTemplate jmsTemplate,
@@ -122,7 +120,6 @@ public class DataSourceServiceImpl implements DataSourceService {
         this.dataSourceRepository = dataSourceRepository;
         this.dataNodeService = dataNodeService;
         this.integrationService = integrationService;
-        this.conversionService = conversionService;
         this.eventPublisher = eventPublisher;
         this.centralClient = centralClient;
         this.jmsTemplate = jmsTemplate;
@@ -162,9 +159,7 @@ public class DataSourceServiceImpl implements DataSourceService {
 
         AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
         if (NETWORK == dataNodeService.getDataNodeMode()) {
-            CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
-            commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
-            commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
+            CommonDataSourceDTO commonDataSourceDTO = buildCommonDataSourceDTO(dataSource, autoDetectedFields);
 
             commonDataSourceDTO.setDbmsType(dataSource.getType());
 
@@ -178,6 +173,15 @@ public class DataSourceServiceImpl implements DataSourceService {
             checkNotNull(centralDTO.getId(), "central id of datasource is null");
             dataSourceRepository.save(dataSource);
         }
+    }
+
+    private CommonDataSourceDTO buildCommonDataSourceDTO(DataSource dataSource, AutoDetectedFields autoDetectedFields) {
+
+        CommonDataSourceDTO commonDataSourceDTO = new CommonDataSourceDTO();
+        commonDataSourceDTO.setName(dataSource.getName());
+        commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
+        commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
+        return commonDataSourceDTO;
     }
 
     @Override
@@ -325,10 +329,7 @@ public class DataSourceServiceImpl implements DataSourceService {
         AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
         if (Objects.nonNull(dataSource.getCentralId())) {
             dataSourceRepository.save(dataSource);
-
-            CommonDataSourceDTO commonDataSourceDTO = conversionService.convert(dataSource, CommonDataSourceDTO.class);
-            commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
-            commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
+            CommonDataSourceDTO commonDataSourceDTO = buildCommonDataSourceDTO(dataSource, autoDetectedFields);
             if (NETWORK == dataNodeService.getDataNodeMode()) {
                 integrationService.sendDataSourceUpdateRequest(
                         user,

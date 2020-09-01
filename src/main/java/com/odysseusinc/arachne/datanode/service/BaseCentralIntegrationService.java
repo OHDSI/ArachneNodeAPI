@@ -32,7 +32,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonStateProvinceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
-import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
+import com.odysseusinc.arachne.datanode.dto.user.RemindPasswordDTO;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
@@ -77,4 +77,6 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
     List<User> relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users);
 
     JsonResult<List<CommonStateProvinceDTO>> getStateProvinces(String countryId, String query, Integer limit, String includeId);
+
+    void remindPassword(RemindPasswordDTO remindPassword);
 }

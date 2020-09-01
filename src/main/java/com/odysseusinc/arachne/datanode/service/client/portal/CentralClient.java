@@ -33,6 +33,7 @@ import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.LOGOUT;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.PASSWORD_POLICIES;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.PROFESSIONAL_TYPES;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.REGISTRATION;
+import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.REMIND_PASSWORD;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.STATES_PROVINCES;
 import static com.odysseusinc.arachne.datanode.Constants.CentralApi.User.SUGGEST;
 
@@ -50,6 +51,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.commons.types.SuggestionTarget;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.dto.user.CentralRegisterUserDTO;
+import com.odysseusinc.arachne.datanode.dto.user.RemindPasswordDTO;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -117,4 +119,9 @@ public interface CentralClient {
     @RequestLine("PUT " + UPDATE)
     @Headers("Content-Type: " + MediaType.APPLICATION_JSON_UTF8_VALUE)
     <T extends CommonDataSourceDTO> JsonResult<T> updateDataSource(@Param("id") Long dataSourceId, T dataSource);
+
+
+    @RequestLine("POST " + REMIND_PASSWORD)
+    @Headers("Content-Type: " + MediaType.APPLICATION_JSON_UTF8_VALUE)
+    void remindPassword(RemindPasswordDTO userDTO);
 }
