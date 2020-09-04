@@ -1,0 +1,17 @@
+{
+  "name": "[COVID19 v1] Characterization of all target cohorts for characterization study",
+  "cohorts": [
+    {
+      "id": 624,
+      "name": "[COVID ID1 v1] Persons hospitalized with COVID-19 narrow w/ prior observation"
+    },
+    {
+      "id": 625,
+      "name": "simple name"
+    },
+    {
+      "id": 626,
+      "no_name": ""
+    }
+  ]
+}
