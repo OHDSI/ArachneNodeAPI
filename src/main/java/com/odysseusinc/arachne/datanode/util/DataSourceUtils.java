@@ -65,7 +65,12 @@ public class DataSourceUtils<T> {
 
     public static boolean isNotDummyPassword(String dbPassword) {
 
-        return Objects.nonNull(dbPassword) && !Objects.equals(dbPassword, Constants.DUMMY_PASSWORD);
+        return isNotDummyValue(dbPassword, Constants.DUMMY_PASSWORD);
+    }
+
+    public static boolean isNotDummyValue(String value, String dummy) {
+
+        return Objects.nonNull(value) && !Objects.equals(value, dummy);
     }
 
     public static <T> DataSourceUtils<T> withDataSource(DataSource dataSource) {
@@ -82,11 +87,17 @@ public class DataSourceUtils<T> {
     public static void masqueradePassword(AtlasDetailedDTO atlasDetailedDTO) {
 
         atlasDetailedDTO.setPassword(getMasqueradedPassword(atlasDetailedDTO.getPassword()));
+        atlasDetailedDTO.setKeyfile(getMasqueradedValue(atlasDetailedDTO.getKeyfile(), Constants.DUMMY_KEYFILE));
     }
 
     private static String getMasqueradedPassword(String password) {
 
-        return StringUtils.isEmpty(password) ? "" : Constants.DUMMY_PASSWORD;
+        return getMasqueradedValue(password, Constants.DUMMY_PASSWORD);
+    }
+
+    private static String getMasqueradedValue(String value, String dummy) {
+
+        return StringUtils.isEmpty(value) ? "" : dummy;
     }
 
     public DataSourceUtils<T> ifTableNotExists(String schema, String tableName, Function<String, RuntimeException> handler) throws SQLException {

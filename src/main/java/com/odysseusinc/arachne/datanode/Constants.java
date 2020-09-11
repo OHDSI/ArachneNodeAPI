@@ -31,6 +31,8 @@ public interface Constants {
     int PASSWORD_MIN_LENGTH = 6;
     int PASSWORD_MAX_LENGTH = 100;
     String DUMMY_PASSWORD = "password_was_set";
+    String DUMMY_KEYFILE = "Replace current keyfile";
+    String GOOGLE_AUTH_SCOPE = "https://www.googleapis.com/auth/userinfo.email";
 
     interface AppConf {
         String PROFILE_DEVELOPMENT = "dev";
@@ -65,9 +67,9 @@ public interface Constants {
             String PROFESSIONAL_TYPES = "/api/v1/user-management/professional-types";
             String COUNTRIES = "/api/v1/user-management/countries/search";
             String STATES_PROVINCES = "/api/v1/user-management/state-province/search";
-            String REGISTER_USER = "/api/v1/auth/registration";
             String LOGOUT = "/api/v1/auth/logout";
             String REGISTRATION = "/api/v1/auth/registration";
+            String REMIND_PASSWORD = "/api/v1/auth/remind-password";
             String SUGGEST = "/api/v1/user-management/users/suggest";
             String GET_USER = "/api/v1/user-management/users/byusername/{id}";
             String LINK_TO_NODE = "/api/v1/user-management/datanodes/{datanodeId}/users";
@@ -159,6 +161,7 @@ public interface Constants {
     }
 
     interface Analysis {
+        String ERROR_REPORT_FILENAME = "errorReport.txt";
         String SUBMISSION_ARCHIVE_SUBDIR = "archive";
     }
 
