@@ -31,7 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
 import java.util.Objects;
 
-public class NameDeserializer extends JsonDeserializer<String> {
+public class UserNameDeserializer extends JsonDeserializer<String> {
 
     private static final String NAME_FIELD = "name";
 

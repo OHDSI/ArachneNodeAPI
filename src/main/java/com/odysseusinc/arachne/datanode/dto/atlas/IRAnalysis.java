@@ -24,18 +24,18 @@ package com.odysseusinc.arachne.datanode.dto.atlas;
 
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.odysseusinc.arachne.datanode.dto.serialize.NameDeserializer;
+import com.odysseusinc.arachne.datanode.dto.serialize.UserNameDeserializer;
 import com.odysseusinc.arachne.datanode.dto.serialize.MultiFormatDateDeserializer;
 import java.util.Date;
 
 public class IRAnalysis extends BaseAtlasEntity {
     private Integer id;
     private String description;
-    @JsonDeserialize(using = NameDeserializer.class)
+    @JsonDeserialize(using = UserNameDeserializer.class)
     private String createdBy;
     @JsonDeserialize(using = MultiFormatDateDeserializer.class)
     private Date createdDate;
-    @JsonDeserialize(using = NameDeserializer.class)
+    @JsonDeserialize(using = UserNameDeserializer.class)
     private String modifiedBy;
     @JsonDeserialize(using = MultiFormatDateDeserializer.class)
     private Date modifiedDate;

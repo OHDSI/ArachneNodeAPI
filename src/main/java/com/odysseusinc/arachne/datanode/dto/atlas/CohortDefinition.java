@@ -23,7 +23,7 @@
 package com.odysseusinc.arachne.datanode.dto.atlas;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.odysseusinc.arachne.datanode.dto.serialize.NameDeserializer;
+import com.odysseusinc.arachne.datanode.dto.serialize.UserNameDeserializer;
 import com.odysseusinc.arachne.datanode.dto.serialize.ExpressionDeserializer;
 import com.odysseusinc.arachne.datanode.dto.serialize.MultiFormatDateDeserializer;
 import java.util.Date;
@@ -32,7 +32,7 @@ public class CohortDefinition extends BaseAtlasEntity {
     private Long id;
     private String description;
     private ExpressionType expressionType;
-    @JsonDeserialize(using = NameDeserializer.class)
+    @JsonDeserialize(using = UserNameDeserializer.class)
     private String createdBy;
     @JsonDeserialize(using = MultiFormatDateDeserializer.class)
     private Date createdDate;
