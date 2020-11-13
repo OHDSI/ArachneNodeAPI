@@ -44,7 +44,6 @@ tryCatch({
                 databaseId = gsub("[^-a-zA-Z0-9\\(\\)]", "_", dataSourceName),
                 synthesizePositiveControls = TRUE,
                 runAnalyses = TRUE,
-                runDiagnostics = TRUE,
                 packageResults = TRUE,
                 maxCores = maxCores,
                 minCellCount = 5)
