@@ -36,6 +36,7 @@ public class CohortDefinition extends BaseAtlasEntity {
     private String createdBy;
     @JsonDeserialize(using = MultiFormatDateDeserializer.class)
     private Date createdDate;
+    @JsonDeserialize(using = UserNameDeserializer.class)
     private String modifiedBy;
     @JsonDeserialize(using = MultiFormatDateDeserializer.class)
     private Date modifiedDate;

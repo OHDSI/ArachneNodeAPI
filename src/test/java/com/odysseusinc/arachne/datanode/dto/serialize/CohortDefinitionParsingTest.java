@@ -34,6 +34,7 @@ public class CohortDefinitionParsingTest {
         CohortDefinition cohortDefinition = objectMapper.readValue(atlas28CohortDefinitionURL, CohortDefinition.class);
 
         assertThat(cohortDefinition.getCreatedBy()).isEqualTo("odysseus.test2");
+        assertThat(cohortDefinition.getModifiedBy()).isEqualTo("odysseus.test3");
     }
 
     @Test
@@ -43,5 +44,6 @@ public class CohortDefinitionParsingTest {
         CohortDefinition cohortDefinition = objectMapper.readValue(atlas28CohortDefinitionURL, CohortDefinition.class);
 
         assertThat(cohortDefinition.getCreatedBy()).isEqualTo("odysseus.test");
+        assertThat(cohortDefinition.getModifiedBy()).isEqualTo("odysseus.test3");
     }
 }
