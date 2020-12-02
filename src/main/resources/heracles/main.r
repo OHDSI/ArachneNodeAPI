@@ -1,3 +1,7 @@
+library(jsonlite)
+library(dplyr)
+library(DatabaseConnector)
+library(SqlRender)
 source("run_heracles_analysis.r")
 
 workDir <- getwd()
@@ -10,8 +14,6 @@ pw <- Sys.getenv("DBMS_PASSWORD")
 cdmDatabaseSchema <- Sys.getenv("DBMS_SCHEMA")  # may be null if not defined in datasource's metadata
 resultsDatabaseSchema <- Sys.getenv("RESULT_SCHEMA")  # may be null if not defined in datasource's metadata
 
-library(DatabaseConnector)
-library(SqlRender)
 
 
 if ("impala" == dbms) {
