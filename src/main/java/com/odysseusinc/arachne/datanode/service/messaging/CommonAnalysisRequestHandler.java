@@ -75,7 +75,11 @@ public abstract class CommonAnalysisRequestHandler extends BaseRequestHandler {
             EntityMapper<BaseAtlasEntity, CommonEntity, AtlasClient> entityMapper = getEntityMapper(atlas);
             return atlasService.execute(atlas, client -> entityMapper
                     .getEntityList(client).stream()
-                    .peek(en -> en.setOrigin(atlas)));
+                    .map(en -> {
+                                en.setOrigin(atlas);
+                                return en;
+                            }
+                    ));
 
         } catch (Exception ex) {
             log.debug("Cannot retrieve entries from the Atlas: {}", atlas.getId());
