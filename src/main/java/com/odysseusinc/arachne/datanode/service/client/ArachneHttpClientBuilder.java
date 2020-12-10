@@ -5,7 +5,6 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.TimeUnit;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -36,13 +35,6 @@ public class ArachneHttpClientBuilder {
     private String proxyUsername;
     @Value("${proxy.auth.password}")
     private String proxyPassword;
-
-    @Value("${datanode.httpClient.connectTimeout}")
-    private Integer connectTimeout;
-    @Value("${datanode.httpClient.writeTimeout}")
-    private Integer writeTimeout;
-    @Value("${datanode.httpClient.readTimeout}")
-    private Integer readTimeout;
 
     @Value("${server.ssl.strictMode}")
     private Boolean sslStrictMode;
@@ -91,11 +83,7 @@ public class ArachneHttpClientBuilder {
 
     protected OkHttpClient buildOkHttpClient(boolean proxyEnabled) {
 
-        OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                .connectTimeout(connectTimeout, TimeUnit.SECONDS)
-                .writeTimeout(writeTimeout, TimeUnit.SECONDS)
-                .readTimeout(readTimeout, TimeUnit.SECONDS);
-
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
         if (proxyEnabled) {
 
             builder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort)));
