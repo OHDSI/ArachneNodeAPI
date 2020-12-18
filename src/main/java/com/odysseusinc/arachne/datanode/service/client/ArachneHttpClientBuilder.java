@@ -13,6 +13,7 @@ import javax.net.ssl.X509TrustManager;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
+import okhttp3.internal.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -105,7 +106,10 @@ public class ArachneHttpClientBuilder {
         if (!sslStrictMode) {
             try {
                 SSLSocketFactory sslSocketFactory = getTrustAllSSLSocketFactory();
-                builder.sslSocketFactory(sslSocketFactory);
+
+                // We cannot use Platform.get() method, since `private static Platform findPlatform()` has bug and determinate Oracle version wrong. Instead we use new Platform() for Oracle/Open JDK 8
+                final X509TrustManager trustManager = new Platform().trustManager(sslSocketFactory);
+                builder.sslSocketFactory(sslSocketFactory, trustManager);
                 HttpsURLConnection.setDefaultSSLSocketFactory(sslSocketFactory);
                 builder.hostnameVerifier((hostname, session) -> true);
             } catch (KeyManagementException | NoSuchAlgorithmException ex) {

@@ -38,6 +38,7 @@
         <json.version>20170516</json.version>
         <feign.version>10.11</feign.version>
         <assertj.version>3.18.1</assertj.version>
+        <bcprov-jdk15on.version>1.67</bcprov-jdk15on.version>
     </properties>
 
     <dependencyManagement>
@@ -146,6 +147,13 @@
             <artifactId>modelmapper-spring</artifactId>
             <version>1.1.2</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>${bcprov-jdk15on.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.github.docker-java</groupId>
             <artifactId>docker-java</artifactId>
