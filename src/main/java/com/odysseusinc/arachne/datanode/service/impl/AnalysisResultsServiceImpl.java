@@ -30,7 +30,6 @@ import com.odysseusinc.arachne.datanode.repository.AnalysisFileRepository;
 import com.odysseusinc.arachne.datanode.repository.AnalysisRepository;
 import com.odysseusinc.arachne.datanode.service.AnalysisResultsService;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
-import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +43,11 @@ import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import static com.odysseusinc.arachne.datanode.Constants.Analysis.ERROR_REPORTR_FILENAME;
 import static com.odysseusinc.arachne.datanode.Constants.Analysis.ERROR_REPORT_FILENAME;
 import static com.odysseusinc.arachne.datanode.Constants.AnalysisMessages.ANALYSIS_IS_NOT_EXISTS_LOG;
 import static org.apache.commons.lang3.StringUtils.endsWithIgnoreCase;
@@ -130,17 +131,17 @@ public class AnalysisResultsServiceImpl implements AnalysisResultsService {
     private boolean checkZipArchiveForErrorFile(File[] listFiles) {
 
         return Stream.of(listFiles)
-                .map(this::scanZipForErrorFilename)
+                .map(this::scanZipForErrorFilenames)
                 .reduce(Boolean::logicalOr)
                 .orElse(false);
     }
 
-    private boolean scanZipForErrorFilename(File zipFile) {
+    private boolean scanZipForErrorFilenames(File zipFile) {
 
         try (ZipFile archive = new ZipFile(zipFile)) {
             return archive.stream()
                     .map(ZipEntry::getName)
-                    .anyMatch(name -> endsWithIgnoreCase(name, ERROR_REPORT_FILENAME));
+                    .anyMatch(name -> endsWithIgnoreCase(name, ERROR_REPORT_FILENAME) || endsWithIgnoreCase(name, ERROR_REPORTR_FILENAME));
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
