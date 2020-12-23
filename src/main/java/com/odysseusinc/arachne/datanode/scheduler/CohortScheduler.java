@@ -61,7 +61,6 @@ public class CohortScheduler {
 
     private final DataNodeService dataNodeService;
     private final AtlasService atlasService;
-    private final CentralSystemClient centralClient;
     private final TaskScheduler scheduler;
     private final CohortService cohortService;
 
@@ -73,20 +72,18 @@ public class CohortScheduler {
     @Autowired
     public CohortScheduler(DataNodeService dataNodeService,
                            AtlasService atlasService,
-                           CentralSystemClient centralClient,
                            TaskScheduler scheduler,
                            CohortService cohortService) {
 
         this.dataNodeService = dataNodeService;
         this.atlasService = atlasService;
-        this.centralClient = centralClient;
         this.scheduler = scheduler;
         this.cohortService = cohortService;
     }
 
     private final Set<ScheduledFuture> cohortTask = new HashSet<>();
 
-    @Scheduled(fixedRateString = "${atlas.scheduler.checkInterval}")
+    @Scheduled(fixedDelayString = "${atlas.scheduler.checkInterval}")
     public void checkAtlas() {
 
         Boolean canImport = false;
@@ -102,7 +99,7 @@ public class CohortScheduler {
                 try {
                     final AtlasClient.Info info = atlasService.executeInfo(atlas, AtlasInfoClient::getInfo);
                     version = info.version;
-                } catch (FeignException e) {
+                } catch (Exception e) {
                     LOGGER.debug(ATLAS_NOT_INSTALLED_LOG, e.getMessage());
                 }
 

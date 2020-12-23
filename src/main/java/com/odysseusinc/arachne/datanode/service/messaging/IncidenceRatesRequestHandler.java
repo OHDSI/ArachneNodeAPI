@@ -66,7 +66,7 @@ public class IncidenceRatesRequestHandler extends BaseRequestHandler implements 
     public static final String IR_BUILD_ERROR = "Failed to build IR data";
     public static final String ID_PROPERTY_SUFFIX = "Ids";
     private static final String PACKAGE_NAME = "IncidenceRate%d";
-    private static final String SKELETON_RESOURCE = "/ir/hydra/IncidenceRate_v0.0.1.zip";
+    private static final String SKELETON_RESOURCE = "/ir/hydra/IncidenceRate_v0.0.2.zip";
     private final GenericConversionService conversionService;
     private final CentralSystemClient centralClient;
     private final CommonEntityService commonEntityService;

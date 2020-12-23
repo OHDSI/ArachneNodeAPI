@@ -30,40 +30,67 @@ import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.SqlRenderService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.web.multipart.MultipartFile;
+import java.util.stream.Stream;
 
 public abstract class CommonAnalysisRequestHandler extends BaseRequestHandler {
 
-	protected final Template legacyRunnerTemplate;
-	protected final Template runnerTemplate;
-	protected final CentralSystemClient centralClient;
+    private static final Logger log = LoggerFactory.getLogger(CommonAnalysisRequestHandler.class);
 
-	public CommonAnalysisRequestHandler(SqlRenderService sqlRenderService,
-																			AtlasService atlasService,
-																			Template runnerTemplate,
-																			Template legacyRunnerTemplate,
-																			CentralSystemClient centralClient) {
+    protected final Template legacyRunnerTemplate;
+    protected final Template runnerTemplate;
+    protected final CentralSystemClient centralClient;
 
-		super(sqlRenderService, atlasService);
-		this.runnerTemplate = runnerTemplate;
-		this.legacyRunnerTemplate = legacyRunnerTemplate;
-		this.centralClient = centralClient;
-	}
+    public CommonAnalysisRequestHandler(SqlRenderService sqlRenderService,
+                                        AtlasService atlasService,
+                                        Template runnerTemplate,
+                                        Template legacyRunnerTemplate,
+                                        CentralSystemClient centralClient) {
 
-	protected List<BaseAtlasEntity> getEntities(List<Atlas> atlasList) {
+        super(sqlRenderService, atlasService);
+        this.runnerTemplate = runnerTemplate;
+        this.legacyRunnerTemplate = legacyRunnerTemplate;
+        this.centralClient = centralClient;
+    }
 
-		return atlasList.stream()
-						.flatMap(atlas -> atlasService.execute(atlas, client ->  getEntityMapper(atlas)
-										.getEntityList(client).stream().peek(en -> en.setOrigin(atlas))))
-						.collect(Collectors.toList());
-	}
+    protected List<BaseAtlasEntity> getEntities(List<Atlas> atlasList) {
 
-	protected abstract  <T extends BaseAtlasEntity, C extends AtlasClient> EntityMapper<T, CommonEntity, C> getEntityMapper(Atlas atlas);
+        List<Atlas> connectedAtlas = atlasList.stream()
+                .filter(atlas -> StringUtils.isNotBlank(atlas.getVersion())).collect(Collectors.toList());
 
-	public void sendResponse(List<MultipartFile> response, String id) {
+        return connectedAtlas.parallelStream()
+                .flatMap(this::fetchAtlasInstanceEntries)
+                .collect(Collectors.toList());
+    }
 
-			centralClient.sendCommonEntityResponse(id, response.toArray(new MultipartFile[0]));
-	}
+    private Stream<BaseAtlasEntity> fetchAtlasInstanceEntries(Atlas atlas) {
+
+        try {
+            EntityMapper<BaseAtlasEntity, CommonEntity, AtlasClient> entityMapper = getEntityMapper(atlas);
+            return atlasService.execute(atlas, client -> entityMapper
+                    .getEntityList(client).stream()
+                    .map(en -> {
+                                en.setOrigin(atlas);
+                                return en;
+                            }
+                    ));
+
+        } catch (Exception ex) {
+            log.debug("Cannot retrieve entries from the Atlas: {}", atlas.getId());
+            return Stream.empty();
+        }
+    }
+
+    protected abstract <T extends BaseAtlasEntity, C extends AtlasClient> EntityMapper<T, CommonEntity, C> getEntityMapper(Atlas atlas);
+
+    public void sendResponse(List<MultipartFile> response, String id) {
+
+        centralClient.sendCommonEntityResponse(id, response.toArray(new MultipartFile[0]));
+    }
 }
