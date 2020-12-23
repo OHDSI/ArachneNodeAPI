@@ -6,7 +6,7 @@
 
     <artifactId>datanode</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.16.2-QA</version>
+    <version>1.17.0-QA</version>
     <packaging>jar</packaging>
 
 
@@ -28,7 +28,7 @@
         <jjwt.version>0.10.5</jjwt.version>
         <postgresql.version>42.2.1</postgresql.version>
         <flywayVersion>4.2.0</flywayVersion>
-        <javaDockerVersion>3.0.14</javaDockerVersion>
+        <javaDockerVersion>3.2.6</javaDockerVersion>
         <springRetryVersion>1.2.4.RELEASE</springRetryVersion>
         <hikaricp.version>2.6.3</hikaricp.version>
         <build.number>${BUILD_NUMBER}</build.number>
@@ -36,8 +36,9 @@
         <dockerImagePrefix>hub.arachnenetwork.com</dockerImagePrefix>
         <!-- Overrides SpringBoot defaults to conform Hydra -->
         <json.version>20170516</json.version>
-        <feign.version>10.2.3</feign.version>
-        <assertj.version>3.13.2</assertj.version>
+        <feign.version>10.11</feign.version>
+        <assertj.version>3.18.1</assertj.version>
+        <bcprov-jdk15on.version>1.67</bcprov-jdk15on.version>
     </properties>
 
     <dependencyManagement>
@@ -142,25 +143,21 @@
             <version>2.7</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.8.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.modelmapper.extensions</groupId>
             <artifactId>modelmapper-spring</artifactId>
             <version>1.1.2</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>${bcprov-jdk15on.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.github.docker-java</groupId>
             <artifactId>docker-java</artifactId>
             <version>${javaDockerVersion}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
@@ -241,12 +238,12 @@
         <dependency>
             <groupId>org.ohdsi</groupId>
             <artifactId>circe</artifactId>
-            <version>1.8.0-SNAPSHOT</version>
+            <version>1.9.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.ohdsi</groupId>
             <artifactId>hydra</artifactId>
-            <version>0.0.4-SNAPSHOT</version>
+            <version>0.0.11</version>
         </dependency>
         <!--
                 <dependency>
@@ -304,7 +301,7 @@
         <dependency>
             <groupId>com.amazon.redshift</groupId>
             <artifactId>redshift-jdbc42</artifactId>
-            <version>1.2.1.1001</version>
+            <version>1.2.43.1067</version>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
@@ -661,7 +658,7 @@
         </repository>
         <repository>
             <id>redshift</id>
-            <url>http://redshift-maven-repository.s3-website-us-east-1.amazonaws.com/release</url>
+            <url>https://s3.amazonaws.com/redshift-maven-repository/release</url>
         </repository>
     </repositories>
 

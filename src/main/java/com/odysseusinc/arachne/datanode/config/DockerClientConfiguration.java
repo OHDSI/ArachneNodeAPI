@@ -23,11 +23,9 @@
 package com.odysseusinc.arachne.datanode.config;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.DockerCmdExecFactory;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
-import com.github.dockerjava.jaxrs.JerseyDockerCmdExecFactory;
 import com.odysseusinc.arachne.datanode.config.properties.DockerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

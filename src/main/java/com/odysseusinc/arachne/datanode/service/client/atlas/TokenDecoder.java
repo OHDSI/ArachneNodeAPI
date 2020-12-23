@@ -26,11 +26,12 @@ import feign.FeignException;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import org.springframework.http.HttpStatus;
+
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Objects;
-import org.springframework.http.HttpStatus;
 
 public class TokenDecoder implements Decoder {
 
@@ -39,8 +40,8 @@ public class TokenDecoder implements Decoder {
     @Override
     public Object decode(Response response, Type type) throws IOException, DecodeException, FeignException {
 
-        if (response.status() == HttpStatus.UNAUTHORIZED.value()){
-            throw new DecodeException(HttpStatus.UNAUTHORIZED.value(), "Authentication failed");
+        if (response.status() == HttpStatus.UNAUTHORIZED.value()) {
+            throw new DecodeException(response.status(), "Authentication failed", response.request());
         } else if (response.status() == HttpStatus.NOT_FOUND.value()) {
             return null;
         }

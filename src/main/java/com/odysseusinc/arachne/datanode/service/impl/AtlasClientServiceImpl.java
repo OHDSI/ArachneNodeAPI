@@ -18,6 +18,7 @@ import com.odysseusinc.arachne.datanode.service.client.atlas.TokenDecoder;
 import com.odysseusinc.arachne.datanode.service.client.decoders.ByteArrayDecoder;
 import feign.Client;
 import feign.Feign;
+import feign.Retryer;
 import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
@@ -73,6 +74,7 @@ public class AtlasClientServiceImpl implements AtlasClientService {
         Client httpClient = arachneHttpClientBuilder.build();
         return Feign.builder()
                 .client(httpClient)
+                .retryer(Retryer.NEVER_RETRY)
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder())
                 .logger(new Slf4jLogger(AtlasInfoClient.class))

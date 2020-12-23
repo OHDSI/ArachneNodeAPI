@@ -43,6 +43,8 @@ tryCatch({
                 packageResults = T,
                 minCellCount = 5,
                 cdmVersion = 5)
+
+        populateShinyApp( outputDirectory = file.path(getwd(), 'ShinyApp'), resultDirectory = outputFolder)
 }, finally = {
         remove.packages('{{packageName}}')
 })
