@@ -14,6 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class EstimationAtlas2_7Mapper extends BaseAtlas2_7Mapper<EstimationAnalysis> implements EntityMapper<EstimationAnalysis, CommonEntity, AtlasClient2_7> {
 
 	private static final String PACKAGE_TMPL = "EstimationStudy%s";
+	private static final String SKELETON_RESOURCE = "/estimation/skeleton/ComparativeEffectStudy_v0.0.1.zip";
+
 	private Template estimationRunnerTemplate;
 
 	public EstimationAtlas2_7Mapper(AtlasService atlasService, Template estimationRunnerTemplate, AnalysisInfoBuilder analysisInfoBuilder) {
@@ -26,6 +28,12 @@ public class EstimationAtlas2_7Mapper extends BaseAtlas2_7Mapper<EstimationAnaly
 	protected String getPackageName(CommonEntity entity) {
 
 		return String.format(PACKAGE_TMPL, entity.getLocalId());
+	}
+
+	@Override
+	protected String getSkeletonResource(CommonEntity entity) {
+
+		return SKELETON_RESOURCE;
 	}
 
 	@Override
