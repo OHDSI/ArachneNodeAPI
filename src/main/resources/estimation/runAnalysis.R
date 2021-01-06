@@ -4,7 +4,13 @@ options(devtools.install.args = "--no-multiarch")
 setwd("./")
 tryCatch({
     unzip('{{packageFile}}', exdir = file.path(".", "{{analysisDir}}"))
-    install.packages(file.path(".", "{{analysisDir}}"), repos = NULL, type = "source", INSTALL_opts=c("--no-multiarch"))
+    callr::rcmd("build", c("{{analysisDir}}", c("--no-build-vignettes")), echo = TRUE, show = TRUE)
+    pkg_file <- list.files(path = ".", pattern = "\\.tar\\.gz")[1]
+    tryCatch({
+      install.packages(pkg_file, repos = NULL, type="source", INSTALL_opts=c("--no-multiarch"))
+    }, finally = {
+      file.remove(pkg_file)
+    })
 }, finally = {
     unlink('{{analysisDir}}', recursive = TRUE, force = TRUE)
 })
