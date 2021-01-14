@@ -58,7 +58,7 @@ public class EstimationRequestHandler extends CommonAnalysisRequestHandler imple
     protected final AtlasService atlasService;
     protected final CentralSystemClient centralClient;
     protected final CommonEntityService commonEntityService;
-    protected final Template runnerTemplate;
+    protected final Template legacyEstimationRunnerTemplate;
     protected final CohortExpressionQueryBuilder queryBuilder;
     protected final SqlRenderService sqlRenderService;
     protected final Template estimationRunnerTemplate;
@@ -81,7 +81,7 @@ public class EstimationRequestHandler extends CommonAnalysisRequestHandler imple
         this.analysisInfoBuilder = analysisInfoBuilder;
         this.centralClient = centralClient;
         this.commonEntityService = commonEntityService;
-        this.runnerTemplate = legacyRunnerTemplate;
+        this.legacyEstimationRunnerTemplate = legacyRunnerTemplate;
         this.queryBuilder = queryBuilder;
         this.sqlRenderService = sqlRenderService;
         this.estimationRunnerTemplate = estimationRunnerTemplate;
@@ -111,7 +111,7 @@ public class EstimationRequestHandler extends CommonAnalysisRequestHandler imple
     protected <T extends BaseAtlasEntity, C extends AtlasClient> EntityMapper<T, CommonEntity, C> getEntityMapper(Atlas atlas) {
 
         if (Constants.Atlas.ATLAS_2_7_VERSION.isLesserOrEqualsThan(atlas.getVersion())) {
-            return (EntityMapper<T, CommonEntity, C>) new EstimationAtlas2_7Mapper(atlasService, runnerTemplate, analysisInfoBuilder);
+            return (EntityMapper<T, CommonEntity, C>) new EstimationAtlas2_7Mapper(atlasService, estimationRunnerTemplate, analysisInfoBuilder);
         } else {
             return (EntityMapper<T, CommonEntity, C>) new EstimationAtlas2_5Mapper(sqlRenderService, atlasService, queryBuilder, legacyRunnerTemplate);
         }

@@ -1,11 +1,11 @@
 # ArachneNodeAPI
 Arachne Data Node is a component that facilitates connection and communication between local databases and Arachne Central
 
-## Instalation
+## Installation
 ### Prerequisites
 For building and run the Data Node please install following applications:
 - [Apache Maven 3](https://maven.apache.org/download.cgi)
-- [JDK up to 8u241](https://www.oracle.com/java/technologies/javase/javase8u211-later-archive-downloads.html)
+- [JDK8](https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html)
 - [Postgres DBMS 9.6+](https://www.postgresql.org/download/)
 
 ## Running with Authenticator in a standalone mode
