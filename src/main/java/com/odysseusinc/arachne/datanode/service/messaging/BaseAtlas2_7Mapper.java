@@ -13,21 +13,20 @@ import com.odysseusinc.arachne.datanode.service.AnalysisInfoBuilder;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient2_7;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import org.ohdsi.hydra.Hydra;
+
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import static com.odysseusinc.arachne.commons.utils.CommonFileUtils.ANALYSIS_INFO_FILE_DESCRIPTION;
 
 public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements EntityMapper<T, CommonEntity, AtlasClient2_7> {
 
@@ -60,12 +59,13 @@ public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements E
 	protected <T extends AtlasClient> List<MultipartFile> doMapping(CommonEntity entity, Function<T, JsonNode> requestFunc) {
 		final Integer localId = entity.getLocalId();
 		final String packageName = getPackageName(entity);
+		final String skeletonResource = getSkeletonResource(entity);
 		JsonNode analysis = atlasService.execute(entity.getOrigin(), requestFunc);
 		((ObjectNode)analysis).put("packageName", packageName);
 		try {
 			List<MultipartFile> files = new ArrayList<>();
 			String filename = AnalysisArchiveUtils.getArchiveFileName(entity.getAnalysisType(), AnalysisArchiveUtils.getAnalysisName(analysis));
-			byte[] data = hydrate(analysis);
+			byte[] data =atlasService.hydrateAnalysis(analysis, packageName, skeletonResource);
 			String description = analysisInfoBuilder.generatePredictionAnalysisDescription(analysis);
 			MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, data);
 			files.add(file);
@@ -77,14 +77,8 @@ public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements E
 		}
 	}
 
-	protected byte[] hydrate(JsonNode analysis) throws IOException {
+	protected String getSkeletonResource(CommonEntity entity){
 
-		Hydra hydra = new Hydra(analysis.toString());
-		byte[] data;
-		try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-			hydra.hydrate(out);
-			data = out.toByteArray();
-		}
-		return data;
+		return StringUtils.EMPTY;
 	}
 }
