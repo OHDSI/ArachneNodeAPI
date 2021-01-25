@@ -46,7 +46,6 @@ import com.github.dockerjava.api.command.WaitContainerResultCallback;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.AuthConfig;
 import com.github.dockerjava.api.model.Bind;
-import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DockerClientConfig;
@@ -609,12 +608,9 @@ public class AchillesServiceImpl implements AchillesService {
 
         ResultCallback.Adapter adapter = new ResultCallback.Adapter() {
             @Override
-            public void onNext(Object object) {
-                if (object instanceof Frame) {
-                    Frame item = (Frame) object;
-                    logEntries.add(item.toString());
-                    LOGGER.debug("{}", item);
-                }
+            public void onNext(Object item) {
+                logEntries.add(item.toString());
+                LOGGER.debug("{}", item);
             }
         };
 
@@ -624,12 +620,7 @@ public class AchillesServiceImpl implements AchillesService {
                 .withFollowStream(true)
                 .withTailAll()
                 .exec(adapter);
-        Integer statusCode = callback.awaitStatusCode();
-        try {
-            adapter.awaitCompletion(3, TimeUnit.SECONDS);
-        } catch (InterruptedException ignored) {
-        }
-        return statusCode;
+        return callback.awaitStatusCode();
     }
 
     private CreateContainerResponse buildContainer(DockerClient dockerClient, DataSource dataSource, Path workDir, String imageName) {
