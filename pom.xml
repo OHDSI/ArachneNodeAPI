@@ -34,7 +34,7 @@
         <build.number>${BUILD_NUMBER}</build.number>
         <build.id>${BUILD_TIMESTAMP}</build.id>
         <dockerImagePrefix>hub.arachnenetwork.com</dockerImagePrefix>
-        <jackson.version>2.10.5</jackson.version>
+        <jackson.version>2.10.5.20201202</jackson.version>
         <!-- Overrides SpringBoot defaults to conform Hydra -->
         <json.version>20170516</json.version>
         <feign.version>10.11</feign.version>
