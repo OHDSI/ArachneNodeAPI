@@ -48,10 +48,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -259,7 +259,7 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
     }
 
     @Override
-    public void saveAnalysisFiles(Analysis analysis, List<MultipartFile> files) throws IOException, ZipException {
+    public void saveAnalysisFiles(Analysis analysis, List<MultipartFile> files) throws IOException {
 
         final File analysisDir = new File(analysis.getAnalysisFolder());
         final File zipDir = Paths.get(analysisDir.getPath(), Constants.Analysis.SUBMISSION_ARCHIVE_SUBDIR).toFile();
