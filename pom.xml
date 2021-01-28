@@ -25,8 +25,8 @@
         <start-class>com.odysseusinc.arachne.datanode.WebApplicationStarter</start-class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
-        <jjwt.version>0.10.5</jjwt.version>
-        <postgresql.version>42.2.1</postgresql.version>
+        <jjwt.version>0.10.8</jjwt.version>
+        <postgresql.version>42.2.15</postgresql.version>
         <flywayVersion>4.2.0</flywayVersion>
         <javaDockerVersion>3.2.7</javaDockerVersion>
         <springRetryVersion>1.2.4.RELEASE</springRetryVersion>
@@ -34,6 +34,7 @@
         <build.number>${BUILD_NUMBER}</build.number>
         <build.id>${BUILD_TIMESTAMP}</build.id>
         <dockerImagePrefix>hub.arachnenetwork.com</dockerImagePrefix>
+        <jackson.version>2.10.5</jackson.version>
         <!-- Overrides SpringBoot defaults to conform Hydra -->
         <json.version>20170516</json.version>
         <feign.version>10.11</feign.version>
