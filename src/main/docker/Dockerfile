@@ -1,5 +1,5 @@
-FROM hub.arachnenetwork.com/datanode_env:1.0.1
-MAINTAINER alexandr.ryabokon@odysseusinc.com
+FROM hub.odysseusinc.com/datanode_env:1.1.0
+MAINTAINER alexandr.cumarav@odysseusinc.com
 USER root
 VOLUME /tmp
 ADD datanode-exec.jar /datanode.jar

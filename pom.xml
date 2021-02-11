@@ -33,7 +33,7 @@
         <hikaricp.version>2.6.3</hikaricp.version>
         <build.number>${BUILD_NUMBER}</build.number>
         <build.id>${BUILD_TIMESTAMP}</build.id>
-        <dockerImagePrefix>hub.arachnenetwork.com</dockerImagePrefix>
+        <dockerImagePrefix>hub.odysseusinc.com</dockerImagePrefix>
         <jackson.version>2.10.5.20201202</jackson.version>
         <!-- Overrides SpringBoot defaults to conform Hydra -->
         <json.version>20170516</json.version>
@@ -465,8 +465,8 @@
                             <include>${project.build.finalName}-exec.${project.packaging}</include>
                         </resource>
                     </resources>
-                    <serverId>arachne-hub</serverId>
-                    <registryUrl>https://hub.arachnenetwork.com/v2/</registryUrl>
+                    <serverId>odysseus-hub</serverId>
+                    <registryUrl>https://hub.odysseusinc.com/v2/</registryUrl>
                 </configuration>
                 <executions>
                     <execution>
