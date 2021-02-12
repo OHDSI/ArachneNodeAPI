@@ -465,7 +465,7 @@
                             <include>${project.build.finalName}-exec.${project.packaging}</include>
                         </resource>
                     </resources>
-                    <serverId>odysseus-hub</serverId>
+                    <serverId>>hub.odysseusinc.com</serverId>
                     <registryUrl>https://hub.odysseusinc.com/v2/</registryUrl>
                 </configuration>
                 <executions>
