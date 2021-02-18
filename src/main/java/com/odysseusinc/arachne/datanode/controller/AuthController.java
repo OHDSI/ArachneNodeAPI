@@ -116,7 +116,7 @@ public class AuthController {
     @Deprecated
     public JsonResult<CommonAuthMethodDTO> authMethod() {
 
-        if (dataNodeService.getDataNodeMode() == FunctionalMode.NETWORK) {
+        if (dataNodeService.isNetworkMode()) {
             return integrationService.getAuthMethod();
         }
         throw new BadRequestException();

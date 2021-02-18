@@ -37,8 +37,10 @@ public interface DataNodeService {
 
     DataNode create(User user, DataNode dataNode) throws AlreadyExistsException;
 
-    void updateHealthStatus(Long id, CommonHealthStatus healthStatus, String healthStatusDescription);
-
     FunctionalMode getDataNodeMode();
+
+    boolean isNetworkMode();
+
+    void updateHealthStatus(Long id, CommonHealthStatus healthStatus, String healthStatusDescription);
 
 }

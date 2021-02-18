@@ -23,17 +23,16 @@
 package com.odysseusinc.arachne.datanode.util;
 
 import com.odysseusinc.arachne.datanode.exception.BadRequestException;
-import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
-import java.util.Objects;
 
 public class DataNodeUtils {
 
-    private DataNodeUtils() {}
+    private DataNodeUtils() {
+    }
 
     public static void requireNetworkMode(DataNodeService dataNodeService) {
 
-        if (!Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+        if (!dataNodeService.isNetworkMode()) {
             throw new BadRequestException("DataNode not in NETWORK mode");
         }
     }

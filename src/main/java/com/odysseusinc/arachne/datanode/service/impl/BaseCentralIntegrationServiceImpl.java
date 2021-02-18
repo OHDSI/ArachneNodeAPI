@@ -98,7 +98,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     @Override
     public JsonResult<CommonAuthMethodDTO> getAuthMethod() {
 
-        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+        if (dataNodeService.isNetworkMode()) {
             return centralClient.getAuthMethod();
         } else {
             return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
