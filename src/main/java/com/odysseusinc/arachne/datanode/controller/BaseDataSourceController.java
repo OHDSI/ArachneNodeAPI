@@ -193,9 +193,8 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         List<DataSourceDTO> dtos = dataSourceService.findAllNotDeleted(sortBy, sortAsc).stream()
                 .map(dataSource -> conversionService.convert(dataSource, DataSourceDTO.class))
                 .collect(Collectors.toList());
-        FunctionalMode mode = dataNodeService.getDataNodeMode();
 
-        if (!CollectionUtils.isEmpty(dtos) && Objects.equals(mode, FunctionalMode.NETWORK)) {
+        if (!CollectionUtils.isEmpty(dtos) && dataNodeService.isNetworkMode()) {
             dtos = setFieldsFromCentral(getUser(principal), dtos);
         }
         result.setResult(dtos);
@@ -250,7 +249,7 @@ public abstract class BaseDataSourceController<DS extends DataSource, BusinessDT
         JsonResult<DataSourceDTO> result = new JsonResult<>(NO_ERROR);
         DataSource dataSource = dataSourceService.getById(id);
         DataSourceDTO resultDTO = conversionService.convert(dataSource, DataSourceDTO.class);
-        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+        if (dataNodeService.isNetworkMode()) {
             resultDTO = setFieldsFromCentral(getUser(principal), Collections.singletonList(resultDTO)).get(0);
         }
         result.setResult(resultDTO);

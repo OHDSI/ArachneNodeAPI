@@ -30,7 +30,6 @@ import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
-import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.Role;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.RoleRepository;
@@ -42,7 +41,6 @@ import com.odysseusinc.arachne.datanode.service.events.user.UserDeletedEvent;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -87,7 +85,7 @@ public class UserServiceImpl implements UserService {
 
         user.setEnabled(true);
         user.getRoles().add(getAdminRole());
-        if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+        if (dataNodeService.isNetworkMode()) {
             dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
                 centralIntegrationService.linkUserToDataNodeOnCentral(dataNode, user);
                 user.setSync(true);
@@ -207,7 +205,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void unlinkUserOnCentral(User user) {
 
-        if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
+        if (dataNodeService.isNetworkMode()) {
             dataNodeService.findCurrentDataNode().ifPresent(dataNode ->
                     centralIntegrationService.unlinkUserToDataNodeOnCentral(dataNode, user)
             );
@@ -218,23 +216,18 @@ public class UserServiceImpl implements UserService {
     public User addUserFromCentral(User loggedUser, String username) {
 
         LOG.info(ADDING_USER_FROM_CENTRAL_LOG, username);
-        JsonResult<CommonUserDTO> jsonResult =
-                centralIntegrationService.getUserFromCentral(loggedUser, username);
-        CommonUserDTO userDTO = jsonResult.getResult();
+        JsonResult<CommonUserDTO> jsonResult = centralIntegrationService.getUserFromCentral(loggedUser, username);
+        CommonUserDTO centralUserDTO = jsonResult.getResult();
         User savedUser = null;
-        if (userDTO != null) {
-            final Optional<User> localUser = userRepository.findOneByUsername(userDTO.getUsername());
+        if (centralUserDTO != null) {
+            final Optional<User> localUser = userRepository.findOneByUsername(centralUserDTO.getUsername());
             if (!localUser.isPresent()) {
-                final User user = conversionService.convert(userDTO, User.class);
+                final User user = conversionService.convert(centralUserDTO, User.class);
                 user.getRoles().add(getAdminRole());
-                dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
-                        centralIntegrationService.linkUserToDataNodeOnCentral(
-                                dataNode,
-                                user
-                        );
-                        user.setSync(true);
-                    }
-                );
+                if (dataNodeService.findCurrentDataNode().isPresent()) {
+                    centralIntegrationService.linkUserToDataNodeOnCentral(dataNodeService.findCurrentDataNode().get(), user);
+                    user.setSync(true);
+                }
                 savedUser = userRepository.save(user);
             }
         }
@@ -253,7 +246,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> suggestNotAdmin(User user, final String query, Integer limit) {
 
-        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+        if (dataNodeService.isNetworkMode()) {
             final Set<String> adminsEmails = userRepository
                     .findAll(new Sort(Sort.Direction.ASC, "email")).stream()
                     .map(User::getUsername)

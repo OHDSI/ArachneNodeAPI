@@ -31,7 +31,6 @@ import com.odysseusinc.arachne.datanode.dto.atlas.BaseAtlasEntity;
 import com.odysseusinc.arachne.datanode.exception.AtlasAuthException;
 import com.odysseusinc.arachne.datanode.exception.ServiceNotAvailableException;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
-import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
@@ -272,7 +271,7 @@ public class AtlasServiceImpl implements AtlasService {
 
         AtlasShortDTO atlasShortDTO = conversionService.convert(atlas, AtlasShortDTO.class);
         try {
-            if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+            if (dataNodeService.isNetworkMode()) {
                 atlasShortDTO = centralSystemClient.updateAtlasInfo(atlasShortDTO);
             }
         } catch (Exception e) {

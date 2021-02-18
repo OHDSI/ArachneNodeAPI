@@ -32,6 +32,8 @@ import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import java.util.List;
 import java.util.Optional;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -102,4 +104,9 @@ public class DataNodeServiceImpl implements DataNodeService {
         return mode;
     }
 
+    @Override
+    public boolean isNetworkMode() {
+
+        return FunctionalMode.NETWORK == mode;
+    }
 }
