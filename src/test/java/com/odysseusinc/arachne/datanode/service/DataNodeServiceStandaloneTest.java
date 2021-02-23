@@ -37,6 +37,8 @@ import com.github.springtestdbunit.annotation.DbUnitConfiguration;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import javax.ws.rs.NotFoundException;
+
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -79,5 +81,11 @@ public class DataNodeServiceStandaloneTest {
         assertThat(created.getId(), greaterThan(0L));
         assertThat(created.getToken(), nullValue());
         assertThat(created.getCentralId(), nullValue());
+    }
+
+    @Test
+    public void shouldNotBeInNetworkMode(){
+
+        Assertions.assertThat(dataNodeService.isNetworkMode()).isFalse();
     }
 }

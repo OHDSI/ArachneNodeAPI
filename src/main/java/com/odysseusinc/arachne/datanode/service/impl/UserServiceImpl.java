@@ -278,6 +278,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> findStandaloneUsers() {
 
-        return userRepository.findBySync(false);
+        return userRepository.findBySyncAndEnabledIsTrue(false);
     }
 }
