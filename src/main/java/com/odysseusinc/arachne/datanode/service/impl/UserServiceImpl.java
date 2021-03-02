@@ -108,7 +108,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findByUsername(String login) {
 
-        return userRepository.findOneByUsername(login);
+        return userRepository.findOneByUsernameIgnoreCase(login);
     }
 
     @Override
@@ -126,7 +126,7 @@ public class UserServiceImpl implements UserService {
     protected void toggleUser(String login, Boolean enabled) {
 
         dataNodeService.findCurrentDataNode().ifPresent(dataNode -> {
-            User user = userRepository.findOneByUsername(login).orElseThrow(IllegalArgumentException::new);
+            User user = userRepository.findOneByUsernameIgnoreCase(login).orElseThrow(IllegalArgumentException::new);
             user.setEnabled(enabled);
             userRepository.save(user);
         });
@@ -135,7 +135,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(String login) {
 
-        userRepository.findOneByUsername(login).ifPresent(u -> {
+        userRepository.findOneByUsernameIgnoreCase(login).ifPresent(u -> {
             userRepository.delete(u);
             LOG.debug("Deleted User: {}", u);
         });
@@ -145,7 +145,7 @@ public class UserServiceImpl implements UserService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
         return userRepository
-                .findOneByUsernameAndEnabled(username, true)
+                .findOneByUsernameIgnoreCaseAndEnabled(username, true)
                 .map(user ->
                         new org.springframework.security.core.userdetails.User(
                                 user.getUsername(), "",
@@ -220,7 +220,7 @@ public class UserServiceImpl implements UserService {
         CommonUserDTO centralUserDTO = jsonResult.getResult();
         User savedUser = null;
         if (centralUserDTO != null) {
-            final Optional<User> localUser = userRepository.findOneByUsername(centralUserDTO.getUsername());
+            final Optional<User> localUser = userRepository.findOneByUsernameIgnoreCase(centralUserDTO.getUsername());
             if (!localUser.isPresent()) {
                 final User user = conversionService.convert(centralUserDTO, User.class);
                 user.getRoles().add(getAdminRole());

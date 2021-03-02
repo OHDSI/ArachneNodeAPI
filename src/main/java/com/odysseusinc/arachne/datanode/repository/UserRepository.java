@@ -31,11 +31,11 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<User> findOneByUsernameAndEnabled(String username, boolean enabled);
+    Optional<User> findOneByUsernameIgnoreCaseAndEnabled(String username, boolean enabled);
 
     List<User> findAll(Sort sort);
 
-    Optional<User> findOneByUsername(String username);
+    Optional<User> findOneByUsernameIgnoreCase(String username);
 
     List<User> findBySyncAndEnabledIsTrue(boolean isSync);
 }
