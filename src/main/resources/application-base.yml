@@ -52,21 +52,6 @@ spring:
     driver-class-name: org.postgresql.Driver
     connection-test-query: select 1
     max-active: 400
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: odysseusinc.notifier
-    password:
-    properties:
-      mail:
-#        debug=true
-        smtp:
-          auth: true
-#          socks.host=
-#          socks.port=
-          starttls:
-            enable: true
-            required: true
   http:
     multipart:
       max-file-size: 1024MB
