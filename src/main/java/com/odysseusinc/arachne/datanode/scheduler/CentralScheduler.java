@@ -24,7 +24,7 @@ package com.odysseusinc.arachne.datanode.scheduler;
 
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.datanode.model.user.User;
+import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserRegistrationStrategy;
@@ -51,14 +51,17 @@ public class CentralScheduler {
     private final DataSourceService dataSourceService;
     @Value("${authenticator.user.registrationStrategy}")
     private String userRegistrationStrategy;
+    private final CentralIntegrationService centralIntegrationService;
 
     public CentralScheduler(DataNodeService dataNodeService,
                             UserService userService,
-                            DataSourceService dataSourceService) {
+                            DataSourceService dataSourceService,
+                            CentralIntegrationService centralIntegrationService) {
 
         this.dataNodeService = dataNodeService;
         this.userService = userService;
         this.dataSourceService = dataSourceService;
+        this.centralIntegrationService = centralIntegrationService;
     }
 
     @PostConstruct
@@ -74,20 +77,18 @@ public class CentralScheduler {
 
     private void checkModeSwitching() {
 
-        List<User> users = userService.findStandaloneUsers();
-        if (users.size() > 0) {
-            throw new BeanInitializationException("Cannot switch mode from Standalone to Network - there are some users not linked to the Central.");
+        DataNode currentDataNode = dataNodeService.findCurrentDataNode().orElse(null);
+        if (currentDataNode != null  && !userService.findStandaloneUsers().isEmpty()) {
+            centralIntegrationService.relinkUsersToDataNodeOnCentral(currentDataNode, userService.findStandaloneUsers());
         }
         List<DataSource> dataSources = dataSourceService.findStandaloneSources();
         if (dataSources.size() > 0) {
             throw new BeanInitializationException("Cannot switch mode from Standalone to Network - there are some data sources not linked to the Central.");
         }
 
-        DataNode currentDataNode = dataNodeService.findCurrentDataNode().orElse(null);
         if (currentDataNode != null && StringUtils.isEmpty(currentDataNode.getToken())) {
             throw new BeanInitializationException("Cannot switch mode from Standalone to Network - Data node is not linked to the Central.");
         }
-
     }
 
     private void warnUserRegistration() {

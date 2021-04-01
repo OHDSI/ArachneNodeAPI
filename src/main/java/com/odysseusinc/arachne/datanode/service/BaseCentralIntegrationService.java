@@ -74,7 +74,7 @@ public interface BaseCentralIntegrationService<DS extends DataSource, DTO extend
 
     void unlinkUserToDataNodeOnCentral(DataNode dataNode, User user);
 
-    List<User> relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users);
+    void relinkUsersToDataNodeOnCentral(DataNode dataNode, List<User> users);
 
     JsonResult<List<CommonStateProvinceDTO>> getStateProvinces(String countryId, String query, Integer limit, String includeId);
 

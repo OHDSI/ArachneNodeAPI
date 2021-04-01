@@ -23,7 +23,6 @@
 package com.odysseusinc.arachne.datanode.model.datanode.validation;
 
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
-import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import java.util.Objects;
 import javax.validation.ConstraintValidator;
@@ -43,7 +42,7 @@ public class DataNodeTokenValidator implements ConstraintValidator<NonEmptyToken
     @Override
     public boolean isValid(DataNode dataNode, ConstraintValidatorContext context) {
 
-        if (FunctionalMode.NETWORK == dataNodeService.getDataNodeMode()) {
+        if (dataNodeService.isNetworkMode()) {
             boolean valid = Objects.nonNull(dataNode) && StringUtils.isNotBlank(dataNode.getToken());
             if (!valid) {
                 context.disableDefaultConstraintViolation();

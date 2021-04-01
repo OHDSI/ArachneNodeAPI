@@ -36,10 +36,14 @@ import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.github.springtestdbunit.annotation.DbUnitConfiguration;
 import com.odysseusinc.arachne.datanode.TestApplication;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import javax.validation.ConstraintViolationException;
 import javax.ws.rs.NotFoundException;
+
+import com.odysseusinc.arachne.datanode.service.impl.DataNodeServiceImpl;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.AdditionalAnswers;
@@ -107,6 +111,12 @@ public class DataNodeServiceNetworkTest {
         assertThat(created.getId(), greaterThan(0L));
         assertThat(created.getToken(), equalTo(Const.TOKEN));
         assertThat(created.getCentralId(), equalTo(1L));
+    }
+
+    @Test
+    public void shouldBeInNetworkMode(){
+
+        Assertions.assertThat(dataNodeService.isNetworkMode()).isTrue();
     }
 
 }

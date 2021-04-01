@@ -22,12 +22,6 @@
 
 package com.odysseusinc.arachne.datanode.service.impl;
 
-import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
-import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
-import static com.odysseusinc.arachne.datanode.Constants.DataSourceMessages.CANNOT_CREATE_DATASOURCE;
-import static com.odysseusinc.arachne.datanode.Constants.DataSourceMessages.CANNOT_UPDATE_DATASOURCE;
-import static org.apache.commons.lang.StringUtils.isBlank;
-
 import com.google.common.base.Functions;
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAuthMethodDTO;
@@ -44,7 +38,6 @@ import com.odysseusinc.arachne.commons.types.SuggestionTarget;
 import com.odysseusinc.arachne.datanode.dto.user.RemindPasswordDTO;
 import com.odysseusinc.arachne.datanode.exception.IntegrationValidationException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
-import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
@@ -52,19 +45,24 @@ import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.util.CentralUtil;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.VALIDATION_ERROR;
+import static com.odysseusinc.arachne.datanode.Constants.DataSourceMessages.CANNOT_CREATE_DATASOURCE;
+import static com.odysseusinc.arachne.datanode.Constants.DataSourceMessages.CANNOT_UPDATE_DATASOURCE;
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, DTO extends CommonDataSourceDTO> implements BaseCentralIntegrationService<DS, DTO>, InitializingBean {
     private static final Logger log = LoggerFactory.getLogger(BaseCentralIntegrationServiceImpl.class);
@@ -98,7 +96,7 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     @Override
     public JsonResult<CommonAuthMethodDTO> getAuthMethod() {
 
-        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+        if (dataNodeService.isNetworkMode()) {
             return centralClient.getAuthMethod();
         } else {
             return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
@@ -245,21 +243,23 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
     @Override
     public void unlinkUserToDataNodeOnCentral(DataNode dataNode, User user) {
 
-        final CommonLinkUserToDataNodeDTO commonLinkUserToDataNode
-                = conversionService.convert(user, CommonLinkUserToDataNodeDTO.class);
+        final CommonLinkUserToDataNodeDTO commonLinkUserToDataNode = conversionService.convert(user, CommonLinkUserToDataNodeDTO.class);
         centralSystemClient.unlinkUser(dataNode.getCentralId(), commonLinkUserToDataNode);
     }
 
     @Override
-    @Transactional
-    public List<User> relinkAllUsersToDataNodeOnCentral(DataNode dataNode, List<User> users) {
+    public void relinkUsersToDataNodeOnCentral(DataNode dataNode, List<User> unlinkedUsers) {
 
-        final List<CommonLinkUserToDataNodeDTO> commonLinkUserToDataNodes = users.stream()
-                .map(user -> conversionService.convert(user, CommonLinkUserToDataNodeDTO.class))
-                .collect(Collectors.toList());
-        List<CommonUserDTO> linkedUsers = centralSystemClient.relinkUsers(dataNode.getCentralId(), commonLinkUserToDataNodes)
-                .getResult();
-        return linkedUsers.stream().map(user -> conversionService.convert(user, User.class)).collect(Collectors.toList());
+        for (User unlinkedUser : unlinkedUsers) {
+            try {
+                linkUserToDataNodeOnCentral(dataNode, unlinkedUser);
+                unlinkedUser.setSync(true);
+                log.info("linking user {} to the Central", unlinkedUser.getUsername());
+            } catch (Exception ex) {
+                log.warn("Cannot link user to the Central {}, disabling the account", unlinkedUser.getUsername());
+                unlinkedUser.setEnabled(false);
+            }
+        }
     }
 
     @Override
@@ -268,5 +268,4 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
         log.debug("remind password for: {}", remindPasswordDTO.getEmail());
         centralClient.remindPassword(remindPasswordDTO);
     }
-
 }
