@@ -6,7 +6,7 @@
 
     <artifactId>datanode</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.17.0</version>
+    <version>1.17.1</version>
     <packaging>jar</packaging>
 
 
@@ -25,15 +25,16 @@
         <start-class>com.odysseusinc.arachne.datanode.WebApplicationStarter</start-class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
-        <jjwt.version>0.10.5</jjwt.version>
-        <postgresql.version>42.2.1</postgresql.version>
+        <jjwt.version>0.10.8</jjwt.version>
+        <postgresql.version>42.2.15</postgresql.version>
         <flywayVersion>4.2.0</flywayVersion>
-        <javaDockerVersion>3.2.6</javaDockerVersion>
+        <javaDockerVersion>3.2.7</javaDockerVersion>
         <springRetryVersion>1.2.4.RELEASE</springRetryVersion>
         <hikaricp.version>2.6.3</hikaricp.version>
         <build.number>${BUILD_NUMBER}</build.number>
         <build.id>${BUILD_TIMESTAMP}</build.id>
-        <dockerImagePrefix>hub.arachnenetwork.com</dockerImagePrefix>
+        <dockerImagePrefix>hub.odysseusinc.com</dockerImagePrefix>
+        <jackson.version>2.10.5.20201202</jackson.version>
         <!-- Overrides SpringBoot defaults to conform Hydra -->
         <json.version>20170516</json.version>
         <feign.version>10.11</feign.version>
@@ -102,10 +103,6 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-mail</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <exclusions>
                 <exclusion>
@@ -159,11 +156,10 @@
             <artifactId>docker-java</artifactId>
             <version>${javaDockerVersion}</version>
         </dependency>
-
         <dependency>
-            <groupId>org.springframework.statemachine</groupId>
-            <artifactId>spring-statemachine-core</artifactId>
-            <version>1.1.1.RELEASE</version>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-transport-httpclient5</artifactId>
+            <version>${javaDockerVersion}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
@@ -465,8 +461,8 @@
                             <include>${project.build.finalName}-exec.${project.packaging}</include>
                         </resource>
                     </resources>
-                    <serverId>arachne-hub</serverId>
-                    <registryUrl>https://hub.arachnenetwork.com/v2/</registryUrl>
+                    <serverId>hub.odysseusinc.com</serverId>
+                    <registryUrl>https://hub.odysseusinc.com/v2/</registryUrl>
                 </configuration>
                 <executions>
                     <execution>

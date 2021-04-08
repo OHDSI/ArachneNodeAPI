@@ -105,7 +105,7 @@ public class DataSourceUUIDMigration {
 
     public void migrateDataSources() {
 
-        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+        if (dataNodeService.isNetworkMode()) {
             dataSourceRepository.findAllByCentralIdIsNull().forEach(ds -> {
                 CommonDataSourceDTO dto = centralClient.getDataSource(ds.getUuid()).getResult();
                 if (dto != null) {

@@ -258,12 +258,11 @@ public class CohortServiceImpl implements CohortService {
 
     private boolean checkFunctionalMode() {
 
-        FunctionalMode mode = dataNodeService.getDataNodeMode();
-        boolean result = Objects.equals(mode, FunctionalMode.NETWORK);
-        if (!result && LOGGER.isDebugEnabled()) {
-            LOGGER.debug("DataNode is in \"{}\" mode, aborting request", mode);
+        boolean isNetworkMode = dataNodeService.isNetworkMode();
+        if (!isNetworkMode && LOGGER.isDebugEnabled()) {
+            LOGGER.debug("DataNode is in \"{}\" mode, aborting request", dataNodeService.getDataNodeMode());
         }
-        return result;
+        return isNetworkMode;
     }
 
     public static class TranslateOptions {

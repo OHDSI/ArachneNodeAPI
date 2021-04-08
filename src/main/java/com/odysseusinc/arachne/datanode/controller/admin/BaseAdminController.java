@@ -23,7 +23,6 @@
 package com.odysseusinc.arachne.datanode.controller.admin;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
-import com.odysseusinc.arachne.commons.utils.UserIdUtils;
 import com.odysseusinc.arachne.datanode.Constants;
 import com.odysseusinc.arachne.datanode.controller.BaseController;
 import com.odysseusinc.arachne.datanode.dto.submission.SubmissionDTO;
@@ -33,24 +32,23 @@ import com.odysseusinc.arachne.datanode.exception.BadRequestException;
 import com.odysseusinc.arachne.datanode.exception.PermissionDeniedException;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
-import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.repository.AnalysisRepository;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
-import com.odysseusinc.arachne.datanode.service.events.user.UserDeletedEvent;
 import io.swagger.annotations.ApiOperation;
+
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.Page;
@@ -58,9 +56,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 public abstract class BaseAdminController extends BaseController {
@@ -94,7 +93,7 @@ public abstract class BaseAdminController extends BaseController {
     }
 
     @ApiOperation(value = "Get all admins", hidden = true)
-    @RequestMapping(value = "/api/v1/admin/admins", method = RequestMethod.GET)
+    @GetMapping("/api/v1/admin/admins")
     public JsonResult<List<UserDTO>> getAdmins(
             @RequestParam(name = "sortBy", required = false) String sortBy,
             @RequestParam(name = "sortAsc", required = false) Boolean sortAsc
@@ -111,7 +110,7 @@ public abstract class BaseAdminController extends BaseController {
     }
 
     @ApiOperation("Suggests user according to query to add admin")
-    @RequestMapping(value = "/api/v1/admin/admins/suggest", method = RequestMethod.GET)
+    @GetMapping("/api/v1/admin/admins/suggest")
     public JsonResult<List<UserDTO>> suggestAdmins(
             Principal principal,
             @RequestParam("query") String query,
@@ -132,7 +131,7 @@ public abstract class BaseAdminController extends BaseController {
     }
 
     @ApiOperation("Remove admin")
-    @RequestMapping(value = "/api/v1/admin/admins/{username:.+}", method = RequestMethod.DELETE)
+    @DeleteMapping("/api/v1/admin/admins/{username:.+}")
     public JsonResult removeAdmin(@PathVariable String username) {
 
         userService.findByUsername(username).ifPresent(user -> userService.remove(user.getId()));
@@ -140,17 +139,17 @@ public abstract class BaseAdminController extends BaseController {
     }
 
     @ApiOperation("Add admin from central")
-    @RequestMapping(value = "/api/v1/admin/admins/{username:.+}", method = RequestMethod.POST)
+    @PostMapping("/api/v1/admin/admins/{username:.+}")
     public JsonResult addAdminFromCentral(
             Principal principal,
             @PathVariable String username) {
 
         JsonResult<UserDTO> result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-        if (Objects.equals(dataNodeService.getDataNodeMode(), FunctionalMode.NETWORK)) {
+        if (dataNodeService.isNetworkMode()) {
             userService
                     .findByUsername(principal.getName())
-                    .ifPresent(loginedUser -> {
-                        final User user = userService.addUserFromCentral(loginedUser, username);
+                    .ifPresent(currentUser -> {
+                        final User user = userService.addUserFromCentral(currentUser, username);
                         result.setResult(conversionService.convert(user, UserDTO.class));
                     });
         } else {
@@ -160,7 +159,7 @@ public abstract class BaseAdminController extends BaseController {
     }
 
     @ApiOperation("Check Atlas Connection")
-    @RequestMapping(value = "/api/v1/admin/atlases/{id}/connection", method = RequestMethod.POST)
+    @PostMapping("/api/v1/admin/atlases/{id}/connection")
     public JsonResult checkAtlasConnection(@PathVariable("id") Long id) {
 
         JsonResult result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
@@ -171,7 +170,7 @@ public abstract class BaseAdminController extends BaseController {
     }
 
     @ApiOperation(value = "Invalidate all unfinished analyses")
-    @RequestMapping(value = Constants.Api.Analysis.INVALIDATE_ALL_UNFINISHED, method = RequestMethod.POST)
+    @PostMapping(Constants.Api.Analysis.INVALIDATE_ALL_UNFINISHED)
     public Integer invalidateAllUnfinishedAnalyses(final Principal principal) throws PermissionDeniedException {
 
         if (principal == null) {
@@ -182,7 +181,7 @@ public abstract class BaseAdminController extends BaseController {
     }
 
     @ApiOperation(value = "list submissions")
-    @RequestMapping(value = "/api/v1/admin/submissions", method = RequestMethod.GET)
+    @GetMapping("/api/v1/admin/submissions")
     public Page<SubmissionDTO> list(@PageableDefault(value = DEFAULT_PAGE_SIZE, sort = "id",
             direction = Sort.Direction.DESC) Pageable pageable) {
 
@@ -195,7 +194,7 @@ public abstract class BaseAdminController extends BaseController {
         Page<Analysis> analyses;
         if (isFinishedSort(pageable)) {
             analyses = analysisRepository.findAllPagedOrderByFinished(p);
-        } else  if (isSubmittedSort(pageable)) {
+        } else if (isSubmittedSort(pageable)) {
             analyses = analysisRepository.findAllPagedOrderBySubmitted(p);
         } else if (isStatusSort(pageable)) {
             analyses = analysisRepository.findAllPagedOrderByState(p);

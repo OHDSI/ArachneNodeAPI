@@ -26,7 +26,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
 import static com.odysseusinc.arachne.commons.service.messaging.MessagingUtils.getResponseQueueName;
 import static com.odysseusinc.arachne.datanode.Constants.Api.DataSource.DS_MODEL_CHECK_FIRSTCHECK;
-import static com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode.NETWORK;
 import static com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode.STANDALONE;
 import static com.odysseusinc.arachne.datanode.service.messaging.MessagingUtils.DataSource.getBaseQueue;
 import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
@@ -158,7 +157,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     public void createOnCentral(User owner, DataSource dataSource) {
 
         AutoDetectedFields autoDetectedFields = autoDetectFields(dataSource);
-        if (NETWORK == dataNodeService.getDataNodeMode()) {
+        if (dataNodeService.isNetworkMode()) {
             CommonDataSourceDTO commonDataSourceDTO = buildCommonDataSourceDTO(dataSource, autoDetectedFields);
 
             commonDataSourceDTO.setDbmsType(dataSource.getType());
@@ -330,7 +329,7 @@ public class DataSourceServiceImpl implements DataSourceService {
         if (Objects.nonNull(dataSource.getCentralId())) {
             dataSourceRepository.save(dataSource);
             CommonDataSourceDTO commonDataSourceDTO = buildCommonDataSourceDTO(dataSource, autoDetectedFields);
-            if (NETWORK == dataNodeService.getDataNodeMode()) {
+            if (dataNodeService.isNetworkMode()) {
                 integrationService.sendDataSourceUpdateRequest(
                         user,
                         dataSource.getCentralId(),

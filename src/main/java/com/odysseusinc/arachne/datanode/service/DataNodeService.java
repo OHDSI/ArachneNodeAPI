@@ -27,6 +27,7 @@ import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
 import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.User;
+
 import java.util.Optional;
 
 public interface DataNodeService {
@@ -37,8 +38,9 @@ public interface DataNodeService {
 
     DataNode create(User user, DataNode dataNode) throws AlreadyExistsException;
 
-    void updateHealthStatus(Long id, CommonHealthStatus healthStatus, String healthStatusDescription);
-
     FunctionalMode getDataNodeMode();
 
+    boolean isNetworkMode();
+
+    void updateHealthStatus(Long id, CommonHealthStatus healthStatus, String healthStatusDescription);
 }

@@ -1,3 +1,5 @@
+package com.odysseusinc.arachne.datanode.config;
+
 /*
  *
  * Copyright 2018 Odysseus Data Services, inc.
@@ -20,11 +22,7 @@
  *
  */
 
-package com.odysseusinc.arachne.datanode.config;
-
-import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
-import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.odysseusinc.arachne.datanode.config.properties.DockerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -33,21 +31,17 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(DockerProperties.class)
-public class DockerClientConfiguration {
-
+public class DockerConfig {
     @Bean
-    public DockerClient dockerClient(DockerProperties properties) {
+    public DockerClientConfig dockerClient(DockerProperties properties) {
 
-        DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
+        return DefaultDockerClientConfig.createDefaultConfigBuilder()
                 .withDockerHost(properties.getHost())
                 .withDockerTlsVerify(properties.isTlsVerify())
                 .withDockerCertPath(properties.getCertPath())
                 .withRegistryUrl(properties.getRegistry().getHost())
                 .withRegistryUsername(properties.getRegistry().getUsername())
                 .withRegistryPassword(properties.getRegistry().getPassword())
-                .build();
-
-        return DockerClientBuilder.getInstance(config)
                 .build();
     }
 }
