@@ -112,14 +112,14 @@ docker:
   host: tcp://localhost:2375
   tls-verify: false
   registry:
-    host: hub.arachnenetwork.com
+    host: hub.odysseusinc.com
     username: user
     password:
 achilles:
-  image-name: hub.arachnenetwork.com/achilles:20190507
+  image-name: hub.odysseusinc.com/achilles:20190507
   network-mode: arachnenetwork
   auth-config:
-    registry-address: hub.arachnenetwork.com
+    registry-address: hub.odysseusinc.com
     username: user
     password:
   retry:
