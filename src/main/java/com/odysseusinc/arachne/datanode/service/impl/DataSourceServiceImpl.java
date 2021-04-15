@@ -22,15 +22,6 @@
 
 package com.odysseusinc.arachne.datanode.service.impl;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
-import static com.odysseusinc.arachne.commons.service.messaging.MessagingUtils.getResponseQueueName;
-import static com.odysseusinc.arachne.datanode.Constants.Api.DataSource.DS_MODEL_CHECK_FIRSTCHECK;
-import static com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode.STANDALONE;
-import static com.odysseusinc.arachne.datanode.service.messaging.MessagingUtils.DataSource.getBaseQueue;
-import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
-import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO.EXECUTED;
-
 import com.google.common.base.Preconditions;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonHealthStatus;
@@ -57,6 +48,22 @@ import com.odysseusinc.arachne.datanode.service.events.datasource.DataSourceUpda
 import com.odysseusinc.arachne.datanode.util.DataNodeUtils;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Sort;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.support.destination.DestinationResolver;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.PostConstruct;
+import javax.jms.ObjectMessage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -67,22 +74,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
-import javax.jms.ObjectMessage;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.ArrayUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.domain.Sort;
-import org.springframework.jms.core.JmsTemplate;
-import org.springframework.jms.support.destination.DestinationResolver;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
+import static com.odysseusinc.arachne.commons.service.messaging.MessagingUtils.getResponseQueueName;
+import static com.odysseusinc.arachne.datanode.Constants.Api.DataSource.DS_MODEL_CHECK_FIRSTCHECK;
+import static com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode.STANDALONE;
+import static com.odysseusinc.arachne.datanode.service.messaging.MessagingUtils.DataSource.getBaseQueue;
+import static com.odysseusinc.arachne.datanode.util.DataSourceUtils.isNotDummyPassword;
+import static com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO.EXECUTED;
 
 @Service
 @Transactional
@@ -199,7 +199,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     public void delete(Long id) {
 
         checkNotNull(id, "given data source surrogate id is blank ");
-        dataSourceRepository.delete(id);
+        dataSourceRepository.deleteById(id);
     }
 
     @Override
@@ -367,7 +367,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     protected final Sort getSort(String sortBy, Boolean sortAsc) {
 
         String defaultSort = "name";
-        return new Sort(
+        return Sort.by(
                 sortAsc == null || sortAsc ? Sort.Direction.ASC : Sort.Direction.DESC,
                 dsSortPath.getOrDefault(sortBy, defaultSort)
         );

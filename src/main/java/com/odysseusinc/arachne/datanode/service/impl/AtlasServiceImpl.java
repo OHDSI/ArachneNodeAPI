@@ -34,7 +34,8 @@ import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
 import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
-import com.odysseusinc.arachne.datanode.service.client.atlas.*;
+import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
+import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasInfoClient;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
 import com.odysseusinc.arachne.datanode.service.events.atlas.AtlasDeletedEvent;
 import com.odysseusinc.arachne.datanode.service.events.atlas.AtlasUpdatedEvent;
@@ -53,7 +54,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -107,7 +111,7 @@ public class AtlasServiceImpl implements AtlasService {
     @Override
     public Atlas getById(Long id) {
 
-        return atlasRepository.findOne(id);
+        return atlasRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Bad ID:" + id));
     }
 
     @Override
@@ -126,7 +130,7 @@ public class AtlasServiceImpl implements AtlasService {
     @Transactional(rollbackFor = Exception.class)
     public Atlas updateVersion(Long atlasId, String version) {
 
-        Atlas atlas = atlasRepository.findOne(atlasId);
+        Atlas atlas = atlasRepository.findById(atlasId).orElseThrow(() -> new IllegalArgumentException("Bad ID:" + atlasId));
         atlas.setVersion(version);
 
         AtlasShortDTO updatedDTO = updateOnCentral(atlas);
@@ -148,7 +152,7 @@ public class AtlasServiceImpl implements AtlasService {
     @Transactional(rollbackFor = Exception.class)
     public Atlas update(Long atlasId, Atlas atlas) {
 
-        Atlas existing = atlasRepository.findOne(atlasId);
+        Atlas existing = atlasRepository.findById(atlasId).orElseThrow(() -> new IllegalArgumentException("Bad ID:" + atlasId));
         boolean shouldSyncWithCentral = false;
 
         if (atlas.getName() != null) {
@@ -194,8 +198,8 @@ public class AtlasServiceImpl implements AtlasService {
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long atlasId) {
 
-        Atlas atlas = atlasRepository.findOne(atlasId);
-        atlasRepository.delete(atlas.getId());
+        Atlas atlas = atlasRepository.findById(atlasId).orElseThrow(() -> new IllegalArgumentException("Bad ID:" + atlasId));
+        atlasRepository.deleteById(atlas.getId());
 
         eventPublisher.publishEvent(new AtlasDeletedEvent(this, atlas));
 

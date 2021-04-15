@@ -22,21 +22,6 @@
 
 package com.odysseusinc.arachne.datanode.service.impl;
 
-import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_CDM_SCHEMA;
-import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_CDM_VERSION;
-import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_DB_URI;
-import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_NUM_THREADS;
-import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_RES_SCHEMA;
-import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_SOURCE;
-import static com.odysseusinc.arachne.datanode.Constants.Achilles.ACHILLES_VOCAB_SCHEMA;
-import static com.odysseusinc.arachne.datanode.Constants.CDM.CONCEPT_ID;
-import static com.odysseusinc.arachne.datanode.model.achilles.AchillesJobStatus.FAILED;
-import static com.odysseusinc.arachne.datanode.model.achilles.AchillesJobStatus.IN_PROGRESS;
-import static com.odysseusinc.arachne.datanode.model.achilles.AchillesJobStatus.SUCCESSFUL;
-import static com.odysseusinc.arachne.datanode.service.achilles.AchillesProcessors.resultSet;
-import static com.odysseusinc.arachne.datanode.util.datasource.QueryProcessors.statement;
-import static java.lang.String.valueOf;
-
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CopyArchiveFromContainerCmd;
@@ -90,7 +75,24 @@ import com.odysseusinc.arachne.datanode.util.datasource.ResultSetProcessor;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultTransformers;
 import com.odysseusinc.arachne.datanode.util.datasource.ResultWriters;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
+import net.lingala.zip4j.exception.ZipException;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.support.RetryTemplate;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -122,24 +124,13 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
 
-import net.lingala.zip4j.exception.ZipException;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.retry.RetryCallback;
-import org.springframework.retry.support.RetryTemplate;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import static com.odysseusinc.arachne.datanode.Constants.Achilles.*;
+import static com.odysseusinc.arachne.datanode.Constants.CDM.CONCEPT_ID;
+import static com.odysseusinc.arachne.datanode.model.achilles.AchillesJobStatus.*;
+import static com.odysseusinc.arachne.datanode.service.achilles.AchillesProcessors.resultSet;
+import static com.odysseusinc.arachne.datanode.util.datasource.QueryProcessors.statement;
+import static java.lang.String.valueOf;
 
 @Service
 public class AchillesServiceImpl implements AchillesService {
@@ -228,7 +219,7 @@ public class AchillesServiceImpl implements AchillesService {
                 .stream()
                 .peek(job -> job.setStatus(AchillesJobStatus.FAILED))
                 .collect(Collectors.toList());
-        achillesJobRepository.save(jobs);
+        achillesJobRepository.saveAll(jobs);
     }
 
     @Async

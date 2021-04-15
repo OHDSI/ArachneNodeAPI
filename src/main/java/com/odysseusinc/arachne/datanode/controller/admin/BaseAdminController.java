@@ -39,16 +39,6 @@ import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import io.swagger.annotations.ApiOperation;
-
-import java.security.Principal;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.Page;
@@ -61,6 +51,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public abstract class BaseAdminController extends BaseController {
 
@@ -221,7 +220,7 @@ public abstract class BaseAdminController extends BaseController {
                 properties.add(property);
             }
         }
-        result = new PageRequest(pageable.getPageNumber(), pageable.getPageSize(), direction,
+        result = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), direction,
                 properties.toArray(new String[properties.size()]));
 
         return result;

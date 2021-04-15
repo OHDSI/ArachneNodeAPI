@@ -40,7 +40,6 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
-import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,10 +115,10 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
     @Transactional
     public Integer invalidateAllUnfinishedAnalyses(final User user) {
 
-		List<Analysis> unfinished = analysisRepository.findAllByNotStateIn(finishedStates);
-		List<AnalysisStateEntry> entries = onAnalysesInvalidated(unfinished, user);
-		analysisStateJournalRepository.save(entries);
-		return unfinished.size();
+        List<Analysis> unfinished = analysisRepository.findAllByNotStateIn(finishedStates);
+        List<AnalysisStateEntry> entries = onAnalysesInvalidated(unfinished, user);
+        analysisStateJournalRepository.saveAll(entries);
+        return unfinished.size();
     }
 
     protected List<AnalysisStateEntry> onAnalysesInvalidated(List<Analysis> unfinished, final User user) {
@@ -174,7 +173,7 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
     @Transactional
     public Analysis persist(Analysis analysis) {
 
-        Analysis exists = Objects.nonNull(analysis.getId()) ? analysisRepository.findOne(analysis.getId()) : null;
+        Analysis exists = Objects.nonNull(analysis.getId()) ? analysisRepository.getOne(analysis.getId()) : null;
 		if (exists == null) {
 			LOGGER.debug("Analysis with id: '{}' is not exist. Saving...", analysis.getId());
 			return analysisRepository.save(analysis);
@@ -237,7 +236,7 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
                 entries.add(entry);
             });
         });
-        analysisStateJournalRepository.save(entries);
+        analysisStateJournalRepository.saveAll(entries);
     }
 
     private Date calculateDate(int interval) {

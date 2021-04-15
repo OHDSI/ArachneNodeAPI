@@ -22,11 +22,6 @@
 
 package com.odysseusinc.arachne.datanode.controller;
 
-import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
-import static org.springframework.web.bind.annotation.RequestMethod.PUT;
-
 import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDTO;
 import com.odysseusinc.arachne.datanode.dto.atlas.AtlasDetailedDTO;
 import com.odysseusinc.arachne.datanode.model.atlas.Atlas;
@@ -43,14 +38,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+
+import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 @RestController
 public class AtlasController {
@@ -77,7 +76,7 @@ public class AtlasController {
             }) Pageable pageable
     ) {
 
-        Pageable search = new PageRequest(pageable.getPageNumber() - 1, pageable.getPageSize(), pageable.getSort());
+        Pageable search = PageRequest.of(pageable.getPageNumber() - 1, pageable.getPageSize(), pageable.getSort());
         Page<Atlas> atlasPage = atlasService.findAll(search);
         return atlasPage.map(a -> conversionService.convert(a, AtlasDTO.class));
     }
