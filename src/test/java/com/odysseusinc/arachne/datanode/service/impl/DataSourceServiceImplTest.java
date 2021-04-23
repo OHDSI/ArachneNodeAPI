@@ -1,24 +1,5 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
-import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
-import com.odysseusinc.arachne.datanode.repository.DataSourceRepository;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonDataSourceDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonModelType;
 import com.odysseusinc.arachne.commons.types.CommonCDMVersionDTO;
@@ -31,9 +12,6 @@ import com.odysseusinc.arachne.datanode.service.ExecutionEngineIntegrationServic
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralClient;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Before;
@@ -42,13 +20,21 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DataSourceServiceImplTest {
@@ -73,9 +59,6 @@ public class DataSourceServiceImplTest {
     private ExecutionEngineIntegrationService engineIntegrationService;
     @Mock
     private DestinationResolver destinationResolver;
-
-    @Mock
-    private DataSource dataSource;
 
     private final Long dataSourceId = 1000L;
     private final String dataSourceName = "dataSourceName";
@@ -167,8 +150,6 @@ public class DataSourceServiceImplTest {
     @Test
     public void shouldReturnTrueIfDataSourceWithTheSameNameDoesNotExists() {
 
-        when(dataSourceRepository.countByName(any())).thenReturn(0);
-
         final boolean isUnique = dataSourceService.isDatasourceNameUnique("dataSourceName", dataSourceId);
 
         assertThat(isUnique).isTrue();
@@ -176,9 +157,6 @@ public class DataSourceServiceImplTest {
 
     @Test
     public void shouldReturnTrueIfDataSourceWithTheSameNameAndIdExists() {
-
-        when(dataSource.getId()).thenReturn(dataSourceId);
-        when(dataSourceRepository.countByName(dataSourceName)).thenReturn(1);
 
         final boolean isUnique = dataSourceService.isDatasourceNameUnique(dataSourceName, dataSourceId);
 
@@ -188,7 +166,6 @@ public class DataSourceServiceImplTest {
     @Test
     public void shouldReturnFalseIfDataSourceWithTheSameNameButAnotherIdExists() {
 
-        when(dataSource.getId()).thenReturn(dataSourceId);
         when(dataSourceRepository.countByIdNotAndName(33L, dataSourceName)).thenReturn(1);
 
         final boolean isUnique = dataSourceService.isDatasourceNameUnique(dataSourceName, 33L);

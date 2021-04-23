@@ -2,7 +2,7 @@ ssl:
   enabled: false
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5490/datanode
+    jdbc-url: jdbc:postgresql://localhost:5490/datanode
     username: ohdsi
     password: ENC(0Lpfvg9UPAyaaZpSIqwaDg==)
 datanode:

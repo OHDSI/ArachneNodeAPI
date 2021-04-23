@@ -22,12 +22,6 @@
 
 package com.odysseusinc.arachne.datanode.controller;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.github.springtestdbunit.DbUnitTestExecutionListener;
 import com.github.springtestdbunit.annotation.DatabaseOperation;
 import com.github.springtestdbunit.annotation.DatabaseSetup;
@@ -53,8 +47,11 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -98,7 +95,7 @@ public class AchillesControllerTest {
     public void statusTest() throws Exception {
 
         mvc.perform(get(API.achillesJobStatus(DATASOURCE_ID))
-            .accept(MediaType.APPLICATION_JSON_UTF8))
+                .accept(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.errorCode", is(0)))
                 .andExpect(jsonPath("$.result.status", is("SUCCESSFUL")));
@@ -109,7 +106,7 @@ public class AchillesControllerTest {
     public void history() throws Exception {
 
         mvc.perform(get(API.achillesJobHistory(DATASOURCE_ID))
-            .accept(MediaType.APPLICATION_JSON_UTF8))
+                .accept(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.errorCode", is(0)))
                 .andExpect(jsonPath("$.result.content").isArray())
@@ -122,12 +119,12 @@ public class AchillesControllerTest {
     //Should return test string as job log
     public void log() throws Exception {
 
-        AchillesJob job = achillesJobRepository.findOne(2L);
+        AchillesJob job = achillesJobRepository.findById(2L).orElseThrow(IllegalArgumentException::new);
         mvc.perform(get(API.achillesJobLog(DATASOURCE_ID, job.getStarted().getTime()))
-        .accept(MediaType.APPLICATION_JSON_UTF8))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.errorCode", is(0)))
-        .andExpect(jsonPath("$.result", is("test_string")));
+                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.errorCode", is(0)))
+                .andExpect(jsonPath("$.result", is("test_string")));
     }
 
 }

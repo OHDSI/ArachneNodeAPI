@@ -1,10 +1,5 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
-import static java.nio.file.Files.copy;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.google.common.io.Files;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFile;
@@ -13,10 +8,6 @@ import com.odysseusinc.arachne.datanode.repository.AnalysisFileRepository;
 import com.odysseusinc.arachne.datanode.repository.AnalysisRepository;
 import com.odysseusinc.arachne.datanode.service.Const;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,7 +15,18 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Optional;
+
+import static java.nio.file.Files.copy;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AnalysisResultsServiceImplTest {
@@ -70,7 +72,7 @@ public class AnalysisResultsServiceImplTest {
 
         analysisResultsService.saveResults(analysis, testWorkingDir);
 
-        verify(analysisFileRepository).save(captor.capture());
+        verify(analysisFileRepository).saveAll(captor.capture());
         final List<AnalysisFile> analysisFiles = captor.getValue();
         assertThat(analysisFiles.size()).isEqualTo(2);
         final AnalysisFile file = analysisFiles.get(1);
@@ -88,7 +90,7 @@ public class AnalysisResultsServiceImplTest {
         existingAnalysis.setAnalysisFolder(Files.createTempDir().getAbsolutePath());
 
 
-        when(analysisRepository.findOne(analysisId)).thenReturn(existingAnalysis);
+        when(analysisRepository.findById(analysisId)).thenReturn(Optional.of(existingAnalysis));
         when(analysisRepository.save(existingAnalysis)).thenReturn(existingAnalysis);
         final Analysis updatedAnalysis = analysisResultsService.saveResults(analysis, testWorkingDir);
 
@@ -105,7 +107,7 @@ public class AnalysisResultsServiceImplTest {
         existingAnalysis.setAnalysisFolder(Files.createTempDir().getAbsolutePath());
 
 
-        when(analysisRepository.findOne(analysisId)).thenReturn(existingAnalysis);
+        when(analysisRepository.findById(analysisId)).thenReturn(Optional.of(existingAnalysis));
         when(analysisRepository.save(existingAnalysis)).thenReturn(existingAnalysis);
         final Analysis updatedAnalysis = analysisResultsService.saveResults(analysis, testWorkingDir);
 
