@@ -37,6 +37,8 @@ import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.AnalysisResultsService;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.UserService;
+
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -46,13 +48,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Principal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -133,21 +139,32 @@ public class AnalysisController {
 	        IOUtils.write(analysis.getStdout(), writer);
         }
 
-        List<Path> files = Stream.concat(
-                resultFiles.stream()
-                .map(AnalysisFile::getLink)
-                .map(f -> Paths.get(f)),
-                Stream.of(stdoutFile))
-                .collect(Collectors.toList());
-        Path archive = Files.createTempFile("results", ".zip");
-        ZipUtils.zipFiles(archive, files);
+        // mergeSplitFiles doesn't work with existing file, so cannot do Files.createTempFile()
+        final File archive = new File(System.getProperty("java.io.tmpdir"), "results" + UUID.randomUUID() + ".zip");
+
+	    // find and merge split archive main file
+	    for (final AnalysisFile analysisFile: resultFiles) {
+	        try {
+                final ZipFile file = new ZipFile(analysisFile.getLink());
+                if (file.isSplitArchive()) {
+                    file.mergeSplitFiles(archive);
+                } else if (file.isValidZipFile()) { // in case of single archive file
+                    Files.copy(Paths.get(analysisFile.getLink()), Paths.get(archive.toURI()));
+                }
+            } catch (final ZipException ze) {
+	            //ignore: isSplitArchive() throws this, if the file is not zip
+            }
+        }
+
+	    // add stdout to archive
+        new ZipFile(archive).addFiles(Collections.singletonList(stdoutFile.toFile()));
 
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        response.setHeader("Content-disposition", "attachment; filename=" + archive.getFileName().toString());
-        try(InputStream in = new FileInputStream(archive.toFile())) {
+        response.setHeader("Content-disposition", "attachment; filename=" + archive.getName());
+        try(InputStream in = new FileInputStream(archive)) {
             IOUtils.copy(in, response.getOutputStream());
         } finally {
-            FileUtils.deleteQuietly(archive.toFile());
+            FileUtils.deleteQuietly(archive);
             FileUtils.deleteQuietly(stdoutDir.toFile());
         }
     }
