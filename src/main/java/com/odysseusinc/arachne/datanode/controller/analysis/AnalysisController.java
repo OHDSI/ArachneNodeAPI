@@ -139,17 +139,21 @@ public class AnalysisController {
 	        IOUtils.write(analysis.getStdout(), writer);
         }
 
-        // mergeSplitFiles doesn't work with existing file, so cannot do Files.createTempFile()
-        final File archive = new File(System.getProperty("java.io.tmpdir"), "results" + UUID.randomUUID() + ".zip");
+        final Path archive = Files.createTempFile("results", ".zip");
 
-	    // find and merge split archive main file
+
 	    for (final AnalysisFile analysisFile: resultFiles) {
 	        try {
                 final ZipFile file = new ZipFile(analysisFile.getLink());
                 if (file.isSplitArchive()) {
-                    file.mergeSplitFiles(archive);
+                    // repack split archive files.
+                    // unfortunately, ZipFile.mergeSplitFiles() creates a broken archive in some cases
+                    final Path tempdir = Files.createTempDirectory("results");
+                    file.extractAll(tempdir.toString());
+                    ZipUtils.zipDirectory(archive, tempdir);
+                    FileUtils.deleteQuietly(tempdir.toFile());
                 } else if (file.isValidZipFile()) { // in case of single archive file
-                    Files.copy(Paths.get(analysisFile.getLink()), Paths.get(archive.toURI()));
+                    Files.copy(Paths.get(analysisFile.getLink()), archive);
                 }
             } catch (final ZipException ze) {
 	            //ignore: isSplitArchive() throws this, if the file is not zip
@@ -157,14 +161,14 @@ public class AnalysisController {
         }
 
 	    // add stdout to archive
-        new ZipFile(archive).addFiles(Collections.singletonList(stdoutFile.toFile()));
+        new ZipFile(archive.toFile()).addFiles(Collections.singletonList(stdoutFile.toFile()));
 
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        response.setHeader("Content-disposition", "attachment; filename=" + archive.getName());
-        try(InputStream in = new FileInputStream(archive)) {
+        response.setHeader("Content-disposition", "attachment; filename=" + archive.toFile().getName());
+        try(InputStream in = new FileInputStream(archive.toFile())) {
             IOUtils.copy(in, response.getOutputStream());
         } finally {
-            FileUtils.deleteQuietly(archive);
+            FileUtils.deleteQuietly(archive.toFile());
             FileUtils.deleteQuietly(stdoutDir.toFile());
         }
     }
