@@ -38,7 +38,6 @@ import com.odysseusinc.arachne.datanode.service.AnalysisResultsService;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -47,11 +46,11 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletResponse;
@@ -85,25 +84,25 @@ public class AnalysisController {
 
     private final GenericConversionService conversionService;
 
-	public AnalysisController(AnalysisService analysisService,
+    public AnalysisController(AnalysisService analysisService,
                               AnalysisResultsService analysisResultsService,
                               UserService userService,
                               GenericConversionService conversionService) {
 
-		this.analysisService = analysisService;
-		this.analysisResultsService = analysisResultsService;
+        this.analysisService = analysisService;
+        this.analysisResultsService = analysisResultsService;
         this.userService = userService;
         this.conversionService = conversionService;
     }
 
-	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity executeAnalysis(
+    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity executeAnalysis(
             @RequestPart("file") List<MultipartFile> archive,
             @RequestPart("analysis") @Valid AnalysisRequestDTO analysisRequestDTO,
             Principal principal
-            ) throws PermissionDeniedException {
+    ) throws PermissionDeniedException {
 
-	    try {
+        try {
             Analysis analysis = conversionService.convert(analysisRequestDTO, Analysis.class);
 
             analysis.setOrigin(AnalysisOrigin.DIRECT_UPLOAD);
@@ -118,8 +117,8 @@ public class AnalysisController {
 
             return ResponseEntity.ok().build();
         } catch (IOException e) {
-	        logger.error(ERROR_MESSAGE, e);
-	        throw new IllegalOperationException(ERROR_MESSAGE);
+            logger.error(ERROR_MESSAGE, e);
+            throw new IllegalOperationException(ERROR_MESSAGE);
         }
     }
 
@@ -130,41 +129,39 @@ public class AnalysisController {
     )
     public void downloadResults(@PathVariable("id") Long analysisId, HttpServletResponse response) throws IOException {
 
-	    Analysis analysis = analysisService.findAnalysis(analysisId)
+        Analysis analysis = analysisService.findAnalysis(analysisId)
                 .orElseThrow(() -> new NotExistException(Analysis.class));
-	    List<AnalysisFile> resultFiles = analysisResultsService.getAnalysisResults(analysis);
-	    Path stdoutDir = Files.createTempDirectory("node_analysis");
-	    Path stdoutFile = stdoutDir.resolve("stdout.txt");
-	    try(Writer writer = new FileWriter(stdoutFile.toFile())) {
-	        IOUtils.write(analysis.getStdout(), writer);
+        List<AnalysisFile> resultFiles = analysisResultsService.getAnalysisResults(analysis);
+        Path stdoutDir = Files.createTempDirectory("node_analysis");
+        Path stdoutFile = stdoutDir.resolve("stdout.txt");
+        try(Writer writer = new FileWriter(stdoutFile.toFile())) {
+            IOUtils.write(analysis.getStdout(), writer);
         }
 
-        // mergeSplitFiles doesn't work with existing file, so cannot do Files.createTempFile()
-        final File archive = new File(System.getProperty("java.io.tmpdir"), "results" + UUID.randomUUID() + ".zip");
+        final Path archive = Files.createTempFile("results", ".zip");
 
-	    // find and merge split archive main file
-	    for (final AnalysisFile analysisFile: resultFiles) {
-	        try {
+        for (final AnalysisFile analysisFile: resultFiles) {
+            try {
                 final ZipFile file = new ZipFile(analysisFile.getLink());
                 if (file.isSplitArchive()) {
-                    file.mergeSplitFiles(archive);
+                    mergeSplitArchive(file, archive);
                 } else if (file.isValidZipFile()) { // in case of single archive file
-                    Files.copy(Paths.get(analysisFile.getLink()), Paths.get(archive.toURI()));
+                    Files.copy(Paths.get(analysisFile.getLink()), archive, StandardCopyOption.REPLACE_EXISTING);
                 }
             } catch (final ZipException ze) {
-	            //ignore: isSplitArchive() throws this, if the file is not zip
+                //ignore: isSplitArchive() throws this, if the file is not zip
             }
         }
 
-	    // add stdout to archive
-        new ZipFile(archive).addFiles(Collections.singletonList(stdoutFile.toFile()));
+        // add stdout to archive
+        new ZipFile(archive.toFile()).addFiles(Collections.singletonList(stdoutFile.toFile()));
 
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        response.setHeader("Content-disposition", "attachment; filename=" + archive.getName());
-        try(InputStream in = new FileInputStream(archive)) {
+        response.setHeader("Content-disposition", "attachment; filename=" + archive.toFile().getName());
+        try(InputStream in = new FileInputStream(archive.toFile())) {
             IOUtils.copy(in, response.getOutputStream());
         } finally {
-            FileUtils.deleteQuietly(archive);
+            FileUtils.deleteQuietly(archive.toFile());
             FileUtils.deleteQuietly(stdoutDir.toFile());
         }
     }
@@ -176,9 +173,20 @@ public class AnalysisController {
     )
     public List<OptionDTO> getTypes() {
 
-	    return Stream.of(CommonAnalysisType.values())
+        return Stream.of(CommonAnalysisType.values())
                 .map(type -> new OptionDTO(type.name(), type.getTitle()))
                 .collect(Collectors.toList());
     }
 
+    private void mergeSplitArchive(final ZipFile splitArchive, final Path to) throws IOException {
+        // repack split archive files.
+        // unfortunately, ZipFile.mergeSplitFiles() creates a broken archive in some cases
+        final Path tempdir = Files.createTempDirectory("results");
+        try {
+            splitArchive.extractAll(tempdir.toString());
+            ZipUtils.zipDirectory(to, tempdir);
+        } finally {
+            FileUtils.deleteQuietly(tempdir.toFile());
+        }
+    }
 }
