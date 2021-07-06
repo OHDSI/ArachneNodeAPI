@@ -180,6 +180,7 @@ public class DataSourceServiceImpl implements DataSourceService {
         commonDataSourceDTO.setName(dataSource.getName());
         commonDataSourceDTO.setModelType(autoDetectedFields.getCommonModelType());
         commonDataSourceDTO.setCdmVersion(autoDetectedFields.getCdmVersion());
+        commonDataSourceDTO.setAccessType(autoDetectedFields.getCommonAccessType());
         return commonDataSourceDTO;
     }
 
@@ -354,7 +355,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     public AutoDetectedFields autoDetectFields(DataSource dataSource) {
 
         CommonDataSourceDTO dataSourceDTO = checkDataSource(dataSource);
-        return new AutoDetectedFields(dataSourceDTO.getModelType(), dataSourceDTO.getCdmVersion());
+        return new AutoDetectedFields(dataSourceDTO.getModelType(), dataSourceDTO.getCdmVersion(), dataSourceDTO.getAccessType());
     }
 
     @Override
