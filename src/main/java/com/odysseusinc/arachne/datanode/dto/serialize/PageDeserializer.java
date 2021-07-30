@@ -10,12 +10,13 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.type.CollectionType;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PageDeserializer extends JsonDeserializer<Page<?>> implements ContextualDeserializer {
 
@@ -66,7 +67,7 @@ public class PageDeserializer extends JsonDeserializer<Page<?>> implements Conte
 			context.handleUnexpectedToken(handledType(), parser);
 		}
 
-		return new PageImpl<>(list, new PageRequest(pageNumber, pageSize), total);
+		return new PageImpl<>(list, PageRequest.of(pageNumber, pageSize), total);
 	}
 
 	@Override

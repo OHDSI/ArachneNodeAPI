@@ -1,15 +1,6 @@
 package com.odysseusinc.arachne.datanode.service.client;
 
 import feign.Client;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
@@ -18,6 +9,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 
 @Service
 public class ArachneHttpClientBuilder {
@@ -108,7 +110,17 @@ public class ArachneHttpClientBuilder {
                 SSLSocketFactory sslSocketFactory = getTrustAllSSLSocketFactory();
 
                 // We cannot use Platform.get() method, since `private static Platform findPlatform()` has bug and determinate Oracle version wrong. Instead we use new Platform() for Oracle/Open JDK 8
-                final X509TrustManager trustManager = new Platform().trustManager(sslSocketFactory);
+                final X509TrustManager trustManager;
+                try {
+                    Platform platform = new Platform();
+                    Class<? extends Platform> platformClass = platform.getClass();
+                    Method trustManagerMethod = platformClass.getDeclaredMethod("trustManager", SSLSocketFactory.class);
+                    trustManagerMethod.setAccessible(true);
+                    trustManager = (X509TrustManager) trustManagerMethod.invoke(platform, sslSocketFactory);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                //final X509TrustManager trustManager = platform.trustManager(sslSocketFactory);
                 builder.sslSocketFactory(sslSocketFactory, trustManager);
                 HttpsURLConnection.setDefaultSSLSocketFactory(sslSocketFactory);
                 builder.hostnameVerifier((hostname, session) -> true);

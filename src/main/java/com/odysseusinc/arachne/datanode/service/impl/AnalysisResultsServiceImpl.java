@@ -82,13 +82,13 @@ public class AnalysisResultsServiceImpl implements AnalysisResultsService {
         List<AnalysisFile> resultFiles = Arrays.stream(resultDir.listFiles())
                 .map(file -> new AnalysisFile(file.getAbsolutePath(), AnalysisFileType.ANALYSYS_RESULT, analysis))
                 .collect(Collectors.toList());
-        analysisFileRepository.save(resultFiles);
+        analysisFileRepository.saveAll(resultFiles);
         return updateAnalysisWithResultsData(analysis, resultDir);
     }
 
     private Analysis updateAnalysisWithResultsData(Analysis analysis, File resultDir) {
 
-        Analysis exists = analysisRepository.findOne(analysis.getId());
+        Analysis exists = analysisRepository.findById(analysis.getId()).orElse(null);
         if (exists == null) {
             LOGGER.warn(ANALYSIS_IS_NOT_EXISTS_LOG, analysis.getId());
             return null;

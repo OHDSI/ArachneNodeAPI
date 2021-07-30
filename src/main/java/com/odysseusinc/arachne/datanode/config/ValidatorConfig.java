@@ -22,22 +22,29 @@
 
 package com.odysseusinc.arachne.datanode.config;
 
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import org.hibernate.validator.HibernateValidator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.beanvalidation.SpringConstraintValidatorFactory;
 
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import java.util.Map;
+
 @Configuration
-public class ValidatorConfig {
+public class ValidatorConfig implements HibernatePropertiesCustomizer {
+
+    @Autowired
+    private ValidatorFactory validatorFactory;
 
     @Bean
     public ValidatorFactory validatorFactory(final AutowireCapableBeanFactory autowireCapableBeanFactory) {
 
-        return Validation.byProvider( HibernateValidator.class )
+        return Validation.byProvider(HibernateValidator.class)
                 .configure().constraintValidatorFactory(new SpringConstraintValidatorFactory(autowireCapableBeanFactory))
                 .buildValidatorFactory();
     }
@@ -46,5 +53,10 @@ public class ValidatorConfig {
     public Validator validator(ValidatorFactory validatorFactory) {
 
         return validatorFactory.getValidator();
+    }
+
+    @Override
+    public void customize(Map<String, Object> hibernateProperties) {
+        hibernateProperties.put("javax.persistence.validation.factory", validatorFactory);
     }
 }

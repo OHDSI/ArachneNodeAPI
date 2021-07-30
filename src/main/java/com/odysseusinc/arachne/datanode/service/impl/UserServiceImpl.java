@@ -22,8 +22,6 @@
 
 package com.odysseusinc.arachne.datanode.service.impl;
 
-import static com.odysseusinc.arachne.datanode.security.RolesConstants.ROLE_ADMIN;
-
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.exception.AlreadyExistsException;
@@ -38,12 +36,6 @@ import com.odysseusinc.arachne.datanode.service.BaseCentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import com.odysseusinc.arachne.datanode.service.events.user.UserDeletedEvent;
-import java.security.Principal;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +47,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.security.Principal;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static com.odysseusinc.arachne.datanode.security.RolesConstants.ROLE_ADMIN;
 
 @Service
 @Transactional
@@ -197,7 +198,7 @@ public class UserServiceImpl implements UserService {
 
         LOG.info(REMOVING_USER_LOG, id);
         final User user = get(id);
-        userRepository.delete(id);
+        userRepository.deleteById(id);
 
         eventPublisher.publishEvent(new UserDeletedEvent(this, user));
     }
@@ -248,7 +249,7 @@ public class UserServiceImpl implements UserService {
 
         if (dataNodeService.isNetworkMode()) {
             final Set<String> adminsEmails = userRepository
-                    .findAll(new Sort(Sort.Direction.ASC, "email")).stream()
+                    .findAll(Sort.by(Sort.Direction.ASC, "email")).stream()
                     .map(User::getUsername)
                     .collect(Collectors.toSet());
             final List<CommonUserDTO> result =
@@ -268,9 +269,9 @@ public class UserServiceImpl implements UserService {
         final Sort.Direction direction = sortAsc != null && sortAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
         final Sort sort;
         if (sortBy == null || sortBy.isEmpty() || sortBy.equals("name")) {
-            sort = new Sort(direction, "firstName", "lastName");
+            sort = Sort.by(direction, "firstName", "lastName");
         } else {
-            sort = new Sort(direction, sortBy);
+            sort = Sort.by(direction, sortBy);
         }
         return userRepository.findAll(sort);
     }

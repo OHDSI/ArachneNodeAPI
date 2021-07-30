@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018 Odysseus Data Services, inc.
+ * Copyright 2021 Odysseus Data Services, inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,16 +15,14 @@
  *
  * Company: Odysseus Data Services, Inc.
  * Product Owner/Architecture: Gregory Klebanov
- * Authors: Pavel Grafkin, Alexandr Ryabokon, Vitaly Koulakov, Anton Gackovka, Maria Pozhidaeva, Mikhail Mironov
- * Created: June 26, 2017
+ * Authors: Alexandr Cumarav
+ * Created: April 10, 2021
  *
  */
-
 package com.odysseusinc.arachne.datanode.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import javax.sql.DataSource;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.hibernate5.encryptor.HibernatePBEEncryptorRegistry;
@@ -36,6 +34,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
 
 @Configuration
 @ConfigurationProperties(prefix = "spring.datasource")
@@ -47,8 +47,8 @@ public class DataSourceConfig extends HikariConfig {
     private String driverClassName;
     @Value("${jasypt.encryptor.password}")
     private String password;
-    @Value("${jasypt.encryptor.database.algorithm}")
-    private String algorythm;
+    @Value("${jasypt.encryptor.algorithm}")
+    private String algorithm;
 
     @Primary
     @Bean
@@ -60,12 +60,13 @@ public class DataSourceConfig extends HikariConfig {
         return new HikariDataSource(this);
     }
 
-    public PasswordEncryptor defaultStringEncryptor(){
+    @PostConstruct
+    public PasswordEncryptor defaultStringEncryptor() {
 
         StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
         encryptor.setProvider(new BouncyCastleProvider());
         encryptor.setProviderName("BC");
-        encryptor.setAlgorithm(algorythm);
+        encryptor.setAlgorithm(algorithm);
         encryptor.setKeyObtentionIterations(1000);
         encryptor.setPassword(password);
         HibernatePBEEncryptorRegistry.getInstance()

@@ -16,13 +16,6 @@ logging:
     root: INFO
     org.springframework.web.servlet.PageNotFound: ERROR
 #  com.odysseusinc.arachne.datanode.service.AchillesService: DEBUG
-flyway:
-  datasource:
-    driverClassName: org.postgresql.Driver
-    url: ${spring.datasource.url}
-    username: ${spring.datasource.username}
-    password: ${spring.datasource.password}
-  out-of-order: true
 api:
   loginEnteryPoint: /api/v1/auth/login
   logoutEntryPoint: /api/v1/auth/logout
@@ -31,28 +24,35 @@ api:
 arachne:
   token:
     header: Arachne-Auth-Token
-
 spring:
+  flyway:
+    out-of-order: true
+    table: "schema_version"
+    ignore-missing-migrations: true
+    datasource:
+      driverClassName: org.postgresql.Driver
+      url: ${spring.datasource.url}
+      username: ${spring.datasource.username}
+      password: ${spring.datasource.password}
+    enabled: true
   jpa:
-    database: POSTGRESQL
-    show-sql: false
-    hibernate:
-      ddl-auto: none
-      connection:
-        CharSet: utf8
-        characterEncoding: utf8
-        useUnicode: true
     properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate.dialect: org.hibernate.dialect.PostgreSQL95Dialect
+      hibernate.temp.use_jdbc_metadata_defaults: false
   datasource:
     url: jdbc:postgresql://127.0.0.1:5433/datanode
+    driver-class-name: org.postgresql.Driver
+    platform: postgresql
     username: ohdsi
     password: ENC(0Lpfvg9UPAyaaZpSIqwaDg==)
-    driver-class-name: org.postgresql.Driver
     connection-test-query: select 1
     max-active: 400
-  http:
+    hikari:
+      idle-timeout: 10000
+      maximum-pool-size: 20
+      minimum-idle: 5
+      pool-name: ArachneDn-Pool
+  servlet:
     multipart:
       max-file-size: 1024MB
       max-request-size: 1024MB
@@ -112,14 +112,14 @@ docker:
   host: tcp://localhost:2375
   tls-verify: false
   registry:
-    host: hub.arachnenetwork.com
+    host: hub.odysseusinc.com
     username: user
     password:
 achilles:
-  image-name: hub.arachnenetwork.com/achilles:20190507
+  image-name: hub.odysseusinc.com/achilles:20190507
   network-mode: arachnenetwork
   auth-config:
-    registry-address: hub.arachnenetwork.com
+    registry-address: hub.odysseusinc.com
     username: user
     password:
   retry:
@@ -149,9 +149,8 @@ central:
 
 jasypt:
   encryptor:
-    password:
-    database:
-      algorithm: PBEWITHMD5ANDDES
+    algorithm: PBEWITHMD5ANDDES
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator
 migration:
   retry:
     timeout: 10000
@@ -211,3 +210,10 @@ authenticator:
           authEnabled: ${proxy.auth.enabled}
           username: ${proxy.auth.username}
           password: ${proxy.auth.password}
+management:
+  endpoint:
+    restart:
+      enabled: true
+  health:
+    ldap:
+      enabled: false
