@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.ulisesbocchio.jasyptspringboot.annotation.EnableEncryptableProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -37,13 +38,14 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @Configuration
-@ComponentScan(basePackages = {"com.odysseusinc.arachne.*", "org.ohdsi.authenticator.*"})
-@EnableAutoConfiguration
 @EnableAsync
 @EnableScheduling
 @EnableJpaRepositories(basePackages = {"com.odysseusinc.arachne.*"})
 @EntityScan(basePackages = {"com.odysseusinc.arachne.*"})
 @EnableAspectJAutoProxy
+@EnableEncryptableProperties
+@EnableAutoConfiguration
+@ComponentScan(basePackages = {"com.odysseusinc.arachne.*", "org.ohdsi.authenticator.*"})
 public class WebApplicationStarter {
 
     public static void main(String... argc) {
