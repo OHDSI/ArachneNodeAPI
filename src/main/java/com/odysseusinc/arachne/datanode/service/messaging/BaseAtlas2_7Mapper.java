@@ -59,13 +59,12 @@ public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements E
 	protected <T extends AtlasClient> List<MultipartFile> doMapping(CommonEntity entity, Function<T, JsonNode> requestFunc) {
 		final Integer localId = entity.getLocalId();
 		final String packageName = getPackageName(entity);
-		final String skeletonResource = getSkeletonResource(entity);
 		JsonNode analysis = atlasService.execute(entity.getOrigin(), requestFunc);
 		((ObjectNode)analysis).put("packageName", packageName);
 		try {
 			List<MultipartFile> files = new ArrayList<>();
 			String filename = AnalysisArchiveUtils.getArchiveFileName(entity.getAnalysisType(), AnalysisArchiveUtils.getAnalysisName(analysis));
-			byte[] data =atlasService.hydrateAnalysis(analysis, packageName, skeletonResource);
+			byte[] data =atlasService.hydrateAnalysis(analysis, packageName);
 			String description = analysisInfoBuilder.generatePredictionAnalysisDescription(analysis);
 			MultipartFile file = new MockMultipartFile(filename, filename, MediaType.APPLICATION_OCTET_STREAM_VALUE, data);
 			files.add(file);
@@ -75,10 +74,5 @@ public abstract class BaseAtlas2_7Mapper<T extends BaseAtlasEntity> implements E
 		} catch (IOException e) {
 			throw new ArachneSystemRuntimeException("Failed to build analysis data", e);
 		}
-	}
-
-	protected String getSkeletonResource(CommonEntity entity){
-
-		return StringUtils.EMPTY;
 	}
 }
