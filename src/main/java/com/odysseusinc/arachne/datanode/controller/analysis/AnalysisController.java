@@ -138,7 +138,11 @@ public class AnalysisController {
             IOUtils.write(analysis.getStdout(), writer);
         }
 
-        final Path archive = Files.createTempFile("results", ".zip");
+        StringBuilder filenameBuilder = new StringBuilder(analysis.getType().getCode());
+        filenameBuilder.append("-a");
+        filenameBuilder.append(analysis.getId());
+        filenameBuilder.append("-results");
+        final Path archive = Files.createTempFile(filenameBuilder.toString(), ".zip");
 
         for (final AnalysisFile analysisFile: resultFiles) {
             try {
