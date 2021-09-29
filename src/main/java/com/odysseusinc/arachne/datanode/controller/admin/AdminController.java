@@ -26,6 +26,7 @@ import com.odysseusinc.arachne.datanode.repository.AnalysisRepository;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
+import com.odysseusinc.arachne.datanode.service.ExecutionEngineIntegrationService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,8 +39,10 @@ public class AdminController extends BaseAdminController {
                            AtlasService atlasService,
                            AnalysisRepository analysisRepository,
                            AnalysisService analysisService,
-                           DataNodeService dataNodeService) {
+                           DataNodeService dataNodeService,
+                           ExecutionEngineIntegrationService executionEngineIntegrationService) {
 
-        super(userService, conversionService, atlasService, analysisRepository, analysisService, dataNodeService);
+        super(userService, conversionService, atlasService, analysisRepository, analysisService, dataNodeService,
+                executionEngineIntegrationService);
     }
 }
