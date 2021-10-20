@@ -58,7 +58,7 @@ exportResults(
                          "person" = TRUE,
                          "dataCompleteness" = TRUE,
                          "dashboard" = TRUE,
-                         "heraclesHeel" = TRUE,
+                         "heraclesHeel" = FALSE,
                          "entropy" = TRUE,
                          "conditionTreemap" = TRUE,
                          "drugEraTreemap" = TRUE,
