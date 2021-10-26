@@ -30,6 +30,7 @@ import static org.testinfected.hamcrest.validation.ViolationMatchers.succeeds;
 import static org.testinfected.hamcrest.validation.ViolationMatchers.violates;
 import static org.testinfected.hamcrest.validation.ViolationMatchers.violation;
 
+import com.odysseusinc.arachne.TestContainersInitializer;
 import com.odysseusinc.arachne.commons.types.DBMSType;
 import com.odysseusinc.arachne.datanode.dto.datasource.CreateDataSourceDTO;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
@@ -43,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
@@ -53,6 +55,7 @@ import org.testinfected.hamcrest.validation.ViolationMatchers;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestExecutionListeners({DependencyInjectionTestExecutionListener.class})
+@ContextConfiguration(initializers = TestContainersInitializer.class)
 public class ValidatorTest {
 
     @Autowired
