@@ -27,7 +27,7 @@
         <java.version>1.8</java.version>
         <jjwt.version>0.10.8</jjwt.version>
         <postgresql.version>42.2.15</postgresql.version>
-        <javaDockerVersion>3.2.7</javaDockerVersion>
+        <javaDockerVersion>3.2.11</javaDockerVersion>
         <springRetryVersion>1.2.4.RELEASE</springRetryVersion>
         <build.number>${BUILD_NUMBER}</build.number>
         <build.id>${BUILD_TIMESTAMP}</build.id>
@@ -310,6 +310,24 @@
             <groupId>com.google.auth</groupId>
             <artifactId>google-auth-library-oauth2-http</artifactId>
             <version>0.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>1.16.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>1.16.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>1.16.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
