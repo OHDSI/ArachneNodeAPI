@@ -110,7 +110,7 @@ executionEngine:
   analysisUri: /api/v1/analyze
   token:
   status:
-    period: 60
+    period: 60000
 docker:
   host: tcp://localhost:2375
   tls-verify: false
