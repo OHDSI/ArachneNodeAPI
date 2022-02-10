@@ -19,7 +19,9 @@ library(DatabaseConnector)
 library({{packageName}})
 
 tryCatch({
-        maxCores <- parallel::detectCores()
+        ## It's limited to a single core since parallel running tries to share connectionDetails
+        ## between multiple threads. One could be a cause of the analysis execution fail.
+        maxCores <- 1 # parallel::detectCores()
 
         dataSourceName <- (function(name) if (name == "") "default" else name)( Sys.getenv("DATA_SOURCE_NAME") )
         dbms <- Sys.getenv("DBMS_TYPE")
