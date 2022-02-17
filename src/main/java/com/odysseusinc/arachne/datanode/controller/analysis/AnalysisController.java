@@ -38,6 +38,7 @@ import com.odysseusinc.arachne.datanode.service.AnalysisResultsService;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -48,6 +49,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.Principal;
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -63,8 +65,10 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -138,11 +142,8 @@ public class AnalysisController {
             IOUtils.write(analysis.getStdout(), writer);
         }
 
-        StringBuilder filenameBuilder = new StringBuilder(analysis.getType().getCode());
-        filenameBuilder.append("-a");
-        filenameBuilder.append(analysis.getId());
-        filenameBuilder.append("-results");
-        final Path archive = Files.createTempFile(filenameBuilder.toString(), ".zip");
+        String filename = MessageFormat.format("{0}-a{1}-results", analysis.getType().getCode(), analysis.getId());
+        final Path archive = Files.createTempFile(filename, ".zip");
 
         for (final AnalysisFile analysisFile: resultFiles) {
             try {
@@ -158,14 +159,14 @@ public class AnalysisController {
         }
 
         // add stdout to archive
-        new ZipFile(archive.toFile()).addFiles(Collections.singletonList(stdoutFile.toFile()));
-
-        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        response.setHeader("Content-disposition", "attachment; filename=" + archive.toFile().getName());
-        try(InputStream in = new FileInputStream(archive.toFile())) {
+        File file = archive.toFile();
+        new ZipFile(file).addFiles(Collections.singletonList(stdoutFile.toFile()));
+        response.setContentType(MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE);
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + ".zip\"");
+        try (InputStream in = new FileInputStream(file)) {
             IOUtils.copy(in, response.getOutputStream());
         } finally {
-            FileUtils.deleteQuietly(archive.toFile());
+            FileUtils.deleteQuietly(file);
             FileUtils.deleteQuietly(stdoutDir.toFile());
         }
     }
