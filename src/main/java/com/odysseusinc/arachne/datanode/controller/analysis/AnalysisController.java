@@ -53,6 +53,7 @@ import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletResponse;
@@ -100,7 +101,7 @@ public class AnalysisController {
     }
 
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity executeAnalysis(
+    public ResponseEntity<?> executeAnalysis(
             @RequestPart("file") List<MultipartFile> archive,
             @RequestPart("analysis") @Valid AnalysisRequestDTO analysisRequestDTO,
             Principal principal
@@ -117,6 +118,10 @@ public class AnalysisController {
             }
             analysisService.saveAnalysisFiles(analysis, archive);
             analysisService.persist(analysis);
+            String email = Optional.ofNullable(user).map(User::getEmail).orElse(null);
+            logger.info("Request [{}] ({}) sending to engine for DS [{}] (manual upload by [{}])",
+                    analysis.getId(), analysis.getCentralId(), analysis.getDataSource().getId(), email
+            );
             analysisService.sendToEngine(analysis);
 
             return ResponseEntity.ok().build();
@@ -142,7 +147,7 @@ public class AnalysisController {
             IOUtils.write(analysis.getStdout(), writer);
         }
 
-        String filename = MessageFormat.format("{0}-a{1}-results", analysis.getType().getCode(), analysis.getId());
+        String filename = MessageFormat.format("{0}-a{1,number,#}-results", analysis.getType().getCode(), analysis.getId());
         final Path archive = Files.createTempFile(filename, ".zip");
 
         for (final AnalysisFile analysisFile: resultFiles) {
