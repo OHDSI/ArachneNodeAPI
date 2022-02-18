@@ -23,7 +23,9 @@
 package com.odysseusinc.arachne.datanode.controller;
 
 import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.NO_ERROR;
+import static com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult.ErrorCode.UNAUTHORIZED;
 import static com.odysseusinc.arachne.datanode.util.RestUtils.requireNetworkMode;
+import static io.netty.handler.codec.http.cookie.CookieHeaderNames.SameSite;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.ArachnePasswordInfoDTO;
@@ -39,9 +41,7 @@ import com.odysseusinc.arachne.commons.api.v1.dto.CommonUserRegistrationDTO;
 import com.odysseusinc.arachne.commons.api.v1.dto.util.JsonResult;
 import com.odysseusinc.arachne.datanode.dto.user.RemindPasswordDTO;
 import com.odysseusinc.arachne.datanode.dto.user.UserInfoDTO;
-import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.exception.BadRequestException;
-import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
@@ -51,6 +51,7 @@ import io.swagger.annotations.ApiOperation;
 import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
@@ -64,7 +65,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -133,7 +138,7 @@ public class AuthController {
 
     @ApiOperation(value = "Sign in user. Returns JWT token.")
     @RequestMapping(value = "${api.loginEnteryPoint}", method = RequestMethod.POST)
-    public JsonResult<CommonAuthenticationResponse> login(
+    public ResponseEntity<JsonResult<?>> login(
             @Valid @RequestBody CommonAuthenticationRequest request) {
 
         UserInfo userInfo = authenticator.authenticate(
@@ -143,29 +148,31 @@ public class AuthController {
         User centralUser = conversionService.convert(userInfo, User.class);
         userRegisterStrategy.registerUser(centralUser);
 
-        if (userInfo == null || userInfo.getToken() == null) {
-            throw new AuthenticationServiceException("Cannot refresh token user info is either null or does not contain token");
-        }
-        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, new CommonAuthenticationResponse(userInfo.getToken()));
+        return Optional.ofNullable(userInfo).map(UserInfo::getToken).map(token ->
+                ok(new CommonAuthenticationResponse(token), authCookie(token, -1))
+        ).orElseGet(() ->
+                unauthorized("Cannot refresh token user info is either null or does not contain token")
+        );
     }
 
     @ApiOperation("Refresh session token.")
     @RequestMapping(value = "/api/v1/auth/refresh", method = RequestMethod.POST)
-    public JsonResult<String> refresh(HttpServletRequest request) {
+    public ResponseEntity<JsonResult<?>> refresh(HttpServletRequest request) {
 
         String accessToken = request.getHeader(accessTokenResolver.getTokenHeaderName());
         UserInfo userInfo = authenticator.refreshToken(accessToken);
-        userService.findByUsername(userInfo.getUsername())
-                .orElseThrow(() -> new AuthException("User is not registered"));
-
-        return new JsonResult<>(JsonResult.ErrorCode.NO_ERROR, userInfo.getToken());
+        return userService.findByUsername(userInfo.getUsername()).map(user ->
+                ok(userInfo.getToken(), authCookie(userInfo.getToken(), -1))
+        ).orElseGet(() ->
+                unauthorized("User is not registered")
+        );
     }
 
     @ApiOperation("Get current principal")
     @RequestMapping(value = "/api/v1/auth/me", method = GET)
-    public JsonResult principal(Principal principal) {
+    public JsonResult<UserInfoDTO> principal(Principal principal) {
 
-        JsonResult result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
+        JsonResult<UserInfoDTO> result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
 
         userService
                 .findByUsername(principal.getName())
@@ -185,23 +192,20 @@ public class AuthController {
 
     @ApiOperation("Logout")
     @RequestMapping(value = "/api/v1/auth/logout", method = RequestMethod.POST)
-    public JsonResult logout(HttpServletRequest request) {
+    public ResponseEntity<JsonResult<?>> logout(HttpServletRequest request) {
 
-        JsonResult result;
         try {
             String accessToken = request.getHeader(accessTokenResolver.getTokenHeaderName());
             if (StringUtils.isNotEmpty(accessToken)) {
                 authenticator.invalidateToken(accessToken);
             }
-            result = new JsonResult<>(JsonResult.ErrorCode.NO_ERROR);
-            result.setResult(true);
+            return ok(true, authCookie("", 0));
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
-            result = new JsonResult<>(JsonResult.ErrorCode.SYSTEM_ERROR);
-            result.setResult(false);
+            JsonResult<Boolean> result = new JsonResult<>(JsonResult.ErrorCode.SYSTEM_ERROR, false);
             result.setErrorMessage(ex.getMessage());
+            return ResponseEntity.ok(result);
         }
-        return result;
     }
 
     @ApiOperation(value = "Get professional types list")
@@ -254,12 +258,38 @@ public class AuthController {
         return integrationService.getPasswordInfo();
     }
 
+    private <T> ResponseEntity<JsonResult<?>> ok(T body, String s) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, s)
+                .body(new JsonResult<>(NO_ERROR, body));
+    }
+
+    private ResponseEntity<JsonResult<?>> unauthorized(String errorMessage) {
+        JsonResult<String> result = new JsonResult<>(UNAUTHORIZED);
+        result.setErrorMessage(errorMessage);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.SET_COOKIE, authCookie("", 0))
+                .body(result);
+    }
+
+    private String authCookie(String token, int expiry) {
+        return ResponseCookie.from(accessTokenResolver.getTokenHeaderName(), token)
+                .path("/")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite(SameSite.Strict.name())
+                .maxAge(expiry)
+                .build().toString();
+    }
+
+
     @ApiOperation("Remind Password")
     @PostMapping(value = "/api/v1/auth/remind-password")
-    public JsonResult remindPassword(@Valid @RequestBody RemindPasswordDTO remindPasswordDTO) {
+    public JsonResult<?> remindPassword(@Valid @RequestBody RemindPasswordDTO remindPasswordDTO) {
 
         requireNetworkMode(dataNodeService.getDataNodeMode());
         integrationService.remindPassword(remindPasswordDTO);
-        return new JsonResult(NO_ERROR);
+        return new JsonResult<>(NO_ERROR);
     }
 }
