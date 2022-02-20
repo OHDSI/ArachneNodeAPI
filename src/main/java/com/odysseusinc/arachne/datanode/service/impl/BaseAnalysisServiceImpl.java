@@ -81,7 +81,6 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
     protected final AnalysisRepository analysisRepository;
     protected final AnalysisStateJournalRepository analysisStateJournalRepository;
     private final ExecutionEngineIntegrationService engineIntegrationService;
-    private final AnalysisFileRepository analysisFileRepository;
     @Value("${datanode.arachneCentral.host}")
     protected String centralHost;
     @Value("${datanode.arachneCentral.port}")
@@ -104,7 +103,6 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
                                    ExecutionEngineIntegrationService engineIntegrationService) {
 
         this.analysisRepository = analysisRepository;
-        this.analysisFileRepository = analysisFileRepository;
         this.analysisStateJournalRepository = analysisStateJournalRepository;
         this.conversionService = conversionService;
         this.engineIntegrationService = engineIntegrationService;
@@ -146,19 +144,17 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
         File analysisFolder = new File(analysis.getAnalysisFolder());
         AnalysisState state;
         String reason;
-        AnalysisRequestStatusDTO exchange;
+        Long id = analysis.getId();
         try {
-            exchange = engineIntegrationService.sendAnalysisRequest(analysisRequestDTO, analysisFolder, true);
-            reason = String.format(Constants.AnalysisMessages.SEND_REQUEST_TO_ENGINE_SUCCESS_REASON,
-                    analysis.getId(),
-                    exchange.getType());
-            LOGGER.info(reason);
+            AnalysisRequestStatusDTO exchange = engineIntegrationService.sendAnalysisRequest(analysisRequestDTO, analysisFolder, true);
+            LOGGER.info("Request [{}] of type [{}] sent successfully", id, exchange.getType());
+            reason = String.format(Constants.AnalysisMessages.SEND_REQUEST_TO_ENGINE_SUCCESS_REASON, id, exchange.getType());
             state = AnalysisState.EXECUTING;
         } catch (RestClientException | ArachneSystemRuntimeException e) {
             reason = String.format(Constants.AnalysisMessages.SEND_REQUEST_TO_ENGINE_FAILED_REASON,
-                    analysis.getId(),
+                    id,
                     e.getMessage());
-            LOGGER.warn(reason);
+            LOGGER.info("Request [{}] failed with [{}]: {}", id, e.getClass(), e.getMessage());
             state = AnalysisState.EXECUTION_FAILURE;
         }
         updateState(analysis, state, reason);

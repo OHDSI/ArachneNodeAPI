@@ -87,6 +87,7 @@ public class ExecutionEngineIntegrationServiceImpl implements ExecutionEngineInt
 
             try (InputStream in = new FileInputStream(archive)) {
                 MultipartFile file = new MockMultipartFile(archive.getName(), archive.getName(), MediaType.APPLICATION_OCTET_STREAM_VALUE, in);
+                logger.info("Request [{}} with files for [{}], sending now", requestDTO.getId(), analysisFolder.getName());
                 return engineClient.sendAnalysisRequest(requestDTO, file,
                         compressedResult, healthCheck);
             }
