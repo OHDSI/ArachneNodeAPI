@@ -21,4 +21,10 @@ public interface EngineClient {
                                                  @Param("file") MultipartFile file,
                                                  @Param("compressed") Boolean compressedResult,
                                                  @Param("healthCheck") Boolean healthCheck);
+
+    @RequestLine("GET /api/v1/metrics")
+    @Headers({
+            "Content-Type: " + MediaType.TEXT_PLAIN_VALUE
+    })
+    String checkStatus();
 }

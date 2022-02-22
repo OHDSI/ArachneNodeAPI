@@ -13,25 +13,20 @@ user <- Sys.getenv("DBMS_USERNAME")
 pw <- Sys.getenv("DBMS_PASSWORD")
 cdmDatabaseSchema <- Sys.getenv("DBMS_SCHEMA")  # may be null if not defined in datasource's metadata
 resultsDatabaseSchema <- Sys.getenv("RESULT_SCHEMA")  # may be null if not defined in datasource's metadata
-
+driversPath <- (function(path) if (path == "") NULL else path)( Sys.getenv("JDBC_DRIVER_PATH") )
 
 
 if ("impala" == dbms) {
-  driverPath <- Sys.getenv("IMPALA_DRIVER_PATH")
+  driversPath <- Sys.getenv("IMPALA_DRIVER_PATH")
   if (missing(driverPath) || is.null(driverPath) || driverPath == ''){
-    driverPath <- "/impala"
+    driversPath <- "/impala"
   }
-  connectionDetails <- createConnectionDetails(dbms=dbms,
-                                               connectionString=connStr,
-                                               user=user,
-                                               password=pw,
-                                               pathToDriver=driverPath)
-} else {
-  connectionDetails <- createConnectionDetails(dbms=dbms,
-                                               connectionString=connStr,
-                                               user=user,
-                                               password=pw)
 }
+connectionDetails <- createConnectionDetails(dbms=dbms,
+                                             connectionString=connStr,
+                                             user=user,
+                                             password=pw,
+                                             pathToDriver=driversPath)
 print(connectionDetails)
 
 start.time <- Sys.time()
@@ -58,7 +53,7 @@ exportResults(
                          "person" = TRUE,
                          "dataCompleteness" = TRUE,
                          "dashboard" = TRUE,
-                         "heraclesHeel" = TRUE,
+                         "heraclesHeel" = FALSE,
                          "entropy" = TRUE,
                          "conditionTreemap" = TRUE,
                          "drugEraTreemap" = TRUE,

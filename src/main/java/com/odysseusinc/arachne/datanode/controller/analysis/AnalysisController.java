@@ -37,6 +37,8 @@ import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.AnalysisResultsService;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.UserService;
+
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -45,21 +47,29 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.Principal;
+import java.text.MessageFormat;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -79,25 +89,25 @@ public class AnalysisController {
 
     private final GenericConversionService conversionService;
 
-	public AnalysisController(AnalysisService analysisService,
+    public AnalysisController(AnalysisService analysisService,
                               AnalysisResultsService analysisResultsService,
                               UserService userService,
                               GenericConversionService conversionService) {
 
-		this.analysisService = analysisService;
-		this.analysisResultsService = analysisResultsService;
+        this.analysisService = analysisService;
+        this.analysisResultsService = analysisResultsService;
         this.userService = userService;
         this.conversionService = conversionService;
     }
 
-	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity executeAnalysis(
+    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> executeAnalysis(
             @RequestPart("file") List<MultipartFile> archive,
             @RequestPart("analysis") @Valid AnalysisRequestDTO analysisRequestDTO,
             Principal principal
-            ) throws PermissionDeniedException {
+    ) throws PermissionDeniedException {
 
-	    try {
+        try {
             Analysis analysis = conversionService.convert(analysisRequestDTO, Analysis.class);
 
             analysis.setOrigin(AnalysisOrigin.DIRECT_UPLOAD);
@@ -108,12 +118,16 @@ public class AnalysisController {
             }
             analysisService.saveAnalysisFiles(analysis, archive);
             analysisService.persist(analysis);
+            String email = Optional.ofNullable(user).map(User::getEmail).orElse(null);
+            logger.info("Request [{}] ({}) sending to engine for DS [{}] (manual upload by [{}])",
+                    analysis.getId(), analysis.getCentralId(), analysis.getDataSource().getId(), email
+            );
             analysisService.sendToEngine(analysis);
 
             return ResponseEntity.ok().build();
         } catch (IOException e) {
-	        logger.error(ERROR_MESSAGE, e);
-	        throw new IllegalOperationException(ERROR_MESSAGE);
+            logger.error(ERROR_MESSAGE, e);
+            throw new IllegalOperationException(ERROR_MESSAGE);
         }
     }
 
@@ -124,30 +138,40 @@ public class AnalysisController {
     )
     public void downloadResults(@PathVariable("id") Long analysisId, HttpServletResponse response) throws IOException {
 
-	    Analysis analysis = analysisService.findAnalysis(analysisId)
+        Analysis analysis = analysisService.findAnalysis(analysisId)
                 .orElseThrow(() -> new NotExistException(Analysis.class));
-	    List<AnalysisFile> resultFiles = analysisResultsService.getAnalysisResults(analysis);
-	    Path stdoutDir = Files.createTempDirectory("node_analysis");
-	    Path stdoutFile = stdoutDir.resolve("stdout.txt");
-	    try(Writer writer = new FileWriter(stdoutFile.toFile())) {
-	        IOUtils.write(analysis.getStdout(), writer);
+        List<AnalysisFile> resultFiles = analysisResultsService.getAnalysisResults(analysis);
+        Path stdoutDir = Files.createTempDirectory("node_analysis");
+        Path stdoutFile = stdoutDir.resolve("stdout.txt");
+        try(Writer writer = new FileWriter(stdoutFile.toFile())) {
+            IOUtils.write(analysis.getStdout(), writer);
         }
 
-        List<Path> files = Stream.concat(
-                resultFiles.stream()
-                .map(AnalysisFile::getLink)
-                .map(f -> Paths.get(f)),
-                Stream.of(stdoutFile))
-                .collect(Collectors.toList());
-        Path archive = Files.createTempFile("results", ".zip");
-        ZipUtils.zipFiles(archive, files);
+        String filename = MessageFormat.format("{0}-a{1,number,#}-results", analysis.getType().getCode(), analysis.getId());
+        final Path archive = Files.createTempFile(filename, ".zip");
 
-        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        response.setHeader("Content-disposition", "attachment; filename=" + archive.getFileName().toString());
-        try(InputStream in = new FileInputStream(archive.toFile())) {
+        for (final AnalysisFile analysisFile: resultFiles) {
+            try {
+                final ZipFile file = new ZipFile(analysisFile.getLink());
+                if (file.isSplitArchive()) {
+                    mergeSplitArchive(file, archive);
+                } else if (file.isValidZipFile()) { // in case of single archive file
+                    Files.copy(Paths.get(analysisFile.getLink()), archive, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } catch (final ZipException ze) {
+                //ignore: isSplitArchive() throws this, if the file is not zip
+            }
+        }
+
+        // add stdout to archive
+        File file = archive.toFile();
+        new ZipFile(file).addFiles(Collections.singletonList(stdoutFile.toFile()));
+        response.setContentType(MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE);
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + ".zip\"");
+        try (InputStream in = new FileInputStream(file)) {
             IOUtils.copy(in, response.getOutputStream());
         } finally {
-            FileUtils.deleteQuietly(archive.toFile());
+            FileUtils.deleteQuietly(file);
             FileUtils.deleteQuietly(stdoutDir.toFile());
         }
     }
@@ -159,9 +183,20 @@ public class AnalysisController {
     )
     public List<OptionDTO> getTypes() {
 
-	    return Stream.of(CommonAnalysisType.values())
+        return Stream.of(CommonAnalysisType.values())
                 .map(type -> new OptionDTO(type.name(), type.getTitle()))
                 .collect(Collectors.toList());
     }
 
+    private void mergeSplitArchive(final ZipFile splitArchive, final Path to) throws IOException {
+        // repack split archive files.
+        // unfortunately, ZipFile.mergeSplitFiles() creates a broken archive in some cases
+        final Path tempdir = Files.createTempDirectory("results");
+        try {
+            splitArchive.extractAll(tempdir.toString());
+            ZipUtils.zipDirectory(to, tempdir);
+        } finally {
+            FileUtils.deleteQuietly(tempdir.toFile());
+        }
+    }
 }
