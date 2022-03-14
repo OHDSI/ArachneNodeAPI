@@ -77,14 +77,14 @@ public class CohortServiceTest {
     public void createPostgresSQLTest() {
 
         final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, POSTGRESQL, SESSION_ID, TEMP_SCHEMA, options);
-        Assert.assertEquals(POSTGRES_SQL_RESULT, sql);
+        assertSqlEquals(POSTGRES_SQL_RESULT, sql);
     }
 
     @Test
     public void createRedshiftSQLTest(){
 
         final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, REDSHIFT, SESSION_ID, TEMP_SCHEMA,options);
-        Assert.assertEquals(REDSHIFT_SQL_RESULT, sql);
+        assertSqlEquals(REDSHIFT_SQL_RESULT, sql);
     }
 
     @Ignore("unexpected temp schema names")
@@ -92,14 +92,14 @@ public class CohortServiceTest {
     public void createOracleSQLTest() {
 
         final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, ORACLE, SESSION_ID, TEMP_SCHEMA,options);
-        Assert.assertEquals(ORACLE_SQL_RESULT, sql);
+        assertSqlEquals(ORACLE_SQL_RESULT, sql);
     }
 
     @Test
     public void createMSSQLTest(){
 
         final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, MS_SQL_SERVER, SESSION_ID, TEMP_SCHEMA,options);
-        Assert.assertEquals(MS_SQL_SQL_RESULT, sql);
+        assertSqlEquals(MS_SQL_SQL_RESULT, sql);
     }
 
     private static final String POSTGRES_SQL_RESULT = "CREATE TEMP TABLE Codesets  (codeset_id int NOT NULL,\n" +
@@ -600,4 +600,12 @@ public class CohortServiceTest {
             "\n" +
             "TRUNCATE TABLE #Codesets;\n" +
             "DROP TABLE #Codesets";
+
+    private static void assertSqlEquals(String expected, String actual) {
+        Assert.assertEquals(removeEmptyLines(expected), removeEmptyLines(actual));
+    }
+
+    private static String removeEmptyLines(String sql) {
+        return sql.replaceAll("(?m)^[ \t]*\r?\n", "");
+    }
 }
