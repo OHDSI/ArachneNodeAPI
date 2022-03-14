@@ -38,6 +38,9 @@
         <feign.version>10.7.4</feign.version>
         <assertj.version>3.18.1</assertj.version>
         <bcprov-jdk15on.version>1.67</bcprov-jdk15on.version>
+        
+        <!-- Referencing https://github.com/OHDSI/ArachneUI -->
+        <node-resources.version>1.19.1</node-resources.version>
     </properties>
 
     <dependencies>
@@ -393,7 +396,7 @@
                                 <artifactItem>
                                     <groupId>com.odysseusinc.arachne</groupId>
                                     <artifactId>node-resources</artifactId>
-                                    <version>${project.version}</version>
+                                    <version>${node-resources.version}</version>
                                     <type>zip</type>
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.basedir}/src/main/resources/public/</outputDirectory>
