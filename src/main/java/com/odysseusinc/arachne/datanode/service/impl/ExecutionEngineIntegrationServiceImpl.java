@@ -25,6 +25,7 @@ package com.odysseusinc.arachne.datanode.service.impl;
 import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.service.ExecutionEngineIntegrationService;
+import com.odysseusinc.arachne.datanode.service.ExecutionEngineStatus;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
@@ -35,24 +36,36 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.multipart.MultipartFile;
 
+import static com.odysseusinc.arachne.datanode.service.ExecutionEngineStatus.OFFLINE;
+import static com.odysseusinc.arachne.datanode.service.ExecutionEngineStatus.ONLINE;
+
 @Service
 public class ExecutionEngineIntegrationServiceImpl implements ExecutionEngineIntegrationService {
+    private static final Logger logger = LoggerFactory.getLogger(ExecutionEngineIntegrationServiceImpl.class);
 
     private final EngineClient engineClient;
+    private final EngineClient engineStatusClient;
+    
+    private volatile ExecutionEngineStatus executionEngineStatus = OFFLINE;
 
     @Autowired
-    public ExecutionEngineIntegrationServiceImpl(EngineClient engineClient) {
+    public ExecutionEngineIntegrationServiceImpl(EngineClient engineClient, 
+                                                 @Qualifier("engineStatusClient") EngineClient engineStatusClient) {
 
         this.engineClient = engineClient;
+        this.engineStatusClient = engineStatusClient;
     }
 
     @Override
@@ -74,6 +87,7 @@ public class ExecutionEngineIntegrationServiceImpl implements ExecutionEngineInt
 
             try (InputStream in = new FileInputStream(archive)) {
                 MultipartFile file = new MockMultipartFile(archive.getName(), archive.getName(), MediaType.APPLICATION_OCTET_STREAM_VALUE, in);
+                logger.info("Request [{}} with files for [{}], sending now", requestDTO.getId(), analysisFolder.getName());
                 return engineClient.sendAnalysisRequest(requestDTO, file,
                         compressedResult, healthCheck);
             }
@@ -93,5 +107,27 @@ public class ExecutionEngineIntegrationServiceImpl implements ExecutionEngineInt
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    @Scheduled(fixedDelayString = "${executionEngine.status.period}")
+    public void checkStatus() {
+        try {
+            engineStatusClient.checkStatus();
+            
+            if (OFFLINE.equals(this.executionEngineStatus)) {
+                logger.info("Execution engine is online");
+            }
+            executionEngineStatus = ONLINE;
+        } catch (Exception e) {
+            if (ONLINE.equals(this.executionEngineStatus)) {
+                logger.info("Execution engine is offline");
+            }
+            executionEngineStatus = OFFLINE;
+        }
+    }
+
+    @Override
+    public ExecutionEngineStatus getExecutionEngineStatus() {
+        return this.executionEngineStatus;
     }
 }

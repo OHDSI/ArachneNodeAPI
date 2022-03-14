@@ -37,6 +37,8 @@ import com.odysseusinc.arachne.datanode.repository.AnalysisRepository;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.AtlasService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
+import com.odysseusinc.arachne.datanode.service.ExecutionEngineIntegrationService;
+import com.odysseusinc.arachne.datanode.service.ExecutionEngineStatus;
 import com.odysseusinc.arachne.datanode.service.UserService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +74,7 @@ public abstract class BaseAdminController extends BaseController {
     protected AnalysisRepository analysisRepository;
     protected AnalysisService analysisService;
     protected DataNodeService dataNodeService;
+    protected ExecutionEngineIntegrationService executionEngineIntegrationService;
 
     @Autowired
     public BaseAdminController(
@@ -80,7 +83,8 @@ public abstract class BaseAdminController extends BaseController {
             AtlasService atlasService,
             AnalysisRepository analysisRepository,
             AnalysisService analysisService,
-            DataNodeService dataNodeService
+            DataNodeService dataNodeService,
+            ExecutionEngineIntegrationService executionEngineIntegrationService
     ) {
         super(userService);
         this.conversionService = conversionService;
@@ -88,6 +92,7 @@ public abstract class BaseAdminController extends BaseController {
         this.analysisRepository = analysisRepository;
         this.analysisService = analysisService;
         this.dataNodeService = dataNodeService;
+        this.executionEngineIntegrationService = executionEngineIntegrationService;
         initProps();
     }
 
@@ -203,6 +208,12 @@ public abstract class BaseAdminController extends BaseController {
         return analyses.map(analysis -> conversionService.convert(analysis, SubmissionDTO.class));
     }
 
+    @ApiOperation(value = "get execution engine status")
+    @GetMapping("/api/v1/admin/execution-engine/status")
+    public EngineStatusResponse getExecutionEngineStatus() {
+        return new EngineStatusResponse(executionEngineIntegrationService.getExecutionEngineStatus());
+    }
+
     protected Pageable buildPageRequest(Pageable pageable) {
 
         if (pageable.getSort() == null) {
@@ -272,5 +283,12 @@ public abstract class BaseAdminController extends BaseController {
         propertiesMap.put("analysis", p -> p.add("title"));
         propertiesMap.put("study", p -> p.add("studyTitle"));
         propertiesMap.put("status", p -> p.add("journal.state"));
+    }
+    
+    private class EngineStatusResponse {
+        public EngineStatusResponse(final ExecutionEngineStatus status) {
+            this.status = status;
+        }
+        public ExecutionEngineStatus status;
     }
 }

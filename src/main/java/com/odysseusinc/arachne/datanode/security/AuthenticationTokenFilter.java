@@ -25,10 +25,13 @@ package com.odysseusinc.arachne.datanode.security;
 import com.odysseusinc.arachne.datanode.exception.AuthException;
 import com.odysseusinc.arachne.datanode.service.AuthenticationService;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Optional;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -63,7 +66,11 @@ public class AuthenticationTokenFilter extends GenericFilterBean {
 
 
         HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String accessToken = httpRequest.getHeader(accessTokenResolver.getTokenHeaderName());
+        String headerName = accessTokenResolver.getTokenHeaderName();
+        String accessToken = getTokenFromCookie(headerName, httpRequest).orElseGet(() ->
+                httpRequest.getHeader(headerName)
+        );
+
         if (StringUtils.isNotEmpty(accessToken)){
             try {
                 authenticationService.authenticate(accessToken, httpRequest);
@@ -79,6 +86,16 @@ public class AuthenticationTokenFilter extends GenericFilterBean {
             return;
         }
         log.debug("Authentication failed", ex);
+    }
+
+    private static Optional<String> getTokenFromCookie(String cookieName, HttpServletRequest httpRequest) {
+        return Optional.ofNullable(httpRequest.getCookies()).flatMap(cookies ->
+                Arrays.stream(cookies).filter(cookie ->
+                        StringUtils.isNotEmpty(cookie.getName())
+                ).filter(cookie ->
+                        cookie.getName().equalsIgnoreCase(cookieName)
+                ).map(Cookie::getValue).filter(StringUtils::isNotEmpty).findAny()
+        );
     }
 
 }
