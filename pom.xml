@@ -6,7 +6,7 @@
 
     <artifactId>datanode</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.19.0</version>
+    <version>1.19.1</version>
     <packaging>jar</packaging>
 
 
@@ -29,8 +29,8 @@
         <postgresql.version>42.2.25</postgresql.version>
         <javaDockerVersion>3.2.11</javaDockerVersion>
         <springRetryVersion>1.2.4.RELEASE</springRetryVersion>
-        <build.number>${BUILD_NUMBER}</build.number>
-        <build.id>${BUILD_TIMESTAMP}</build.id>
+        <commons.version>1.19.0</commons.version>
+        <build.number>dev</build.number>
         <dockerImagePrefix>hub.odysseusinc.com</dockerImagePrefix>
         <jackson.version>2.10.5.20201202</jackson.version>
         <!-- Overrides SpringBoot defaults to conform Hydra -->
@@ -47,34 +47,34 @@
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-commons</artifactId>
-            <version>${project.version}</version>
+            <version>${commons.version}</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-common-types</artifactId>
-            <version>${project.version}</version>
+            <version>${commons.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-common-utils</artifactId>
-            <version>${project.version}</version>
+            <version>${commons.version}</version>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>arachne-no-handler-found-exception-util</artifactId>
-            <version>${project.version}</version>
+            <version>${commons.version}</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>com.odysseusinc.arachne</groupId>
             <artifactId>execution-engine-commons</artifactId>
-            <version>${project.version}</version>
+            <version>${commons.version}</version>
         </dependency>
         <dependency>
             <artifactId>arachne-sys-settings</artifactId>
             <groupId>com.odysseusinc.arachne</groupId>
-            <version>${project.version}</version>
+            <version>${commons.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.jms</groupId>
@@ -355,6 +355,10 @@
                     <include>application-${env}.yml</include>
                 </includes>
             </resource>
+            <resource>
+                <directory>target/meta</directory>
+                <targetPath>META-INF</targetPath>
+            </resource>
         </resources>
         <plugins>
             <plugin>
@@ -379,6 +383,33 @@
                         </fileset>
                     </filesets>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>ru.yaal.maven</groupId>
+                <artifactId>write-text-files-maven-plugin</artifactId>
+                <version>1.1</version>
+                <executions>
+                    <execution>
+                        <id>write-text-files</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>write-text-files</goal>
+                        </goals>
+                        <configuration>
+                            <charset>UTF-8</charset>
+                            <files>
+                                <file>
+                                    <path>target/meta/version.properties</path>
+                                    <lines>
+                                        <line>buildNumber: ${build.number}</line>
+                                        <line>buildId: ${maven.build.timestamp}</line>
+                                        <line>version: ${project.version}</line>
+                                    </lines>
+                                </file>
+                            </files>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
