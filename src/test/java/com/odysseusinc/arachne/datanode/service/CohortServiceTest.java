@@ -27,6 +27,7 @@ import static com.odysseusinc.arachne.commons.types.DBMSType.MS_SQL_SERVER;
 import static com.odysseusinc.arachne.commons.types.DBMSType.ORACLE;
 import static com.odysseusinc.arachne.commons.types.DBMSType.POSTGRESQL;
 import static com.odysseusinc.arachne.commons.types.DBMSType.REDSHIFT;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
@@ -34,18 +35,17 @@ import com.odysseusinc.arachne.datanode.service.impl.CohortServiceImpl;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.ohdsi.sql.SqlTranslate;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.io.ClassPathResource;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CohortServiceTest {
 
     private static final String TEMP_SCHEMA = "tempSchema";
@@ -87,7 +87,7 @@ public class CohortServiceTest {
         assertSqlEquals(REDSHIFT_SQL_RESULT, sql);
     }
 
-    @Ignore("unexpected temp schema names")
+    @Disabled("unexpected temp schema names")
     @Test
     public void createOracleSQLTest() {
 
@@ -602,7 +602,7 @@ public class CohortServiceTest {
             "DROP TABLE #Codesets";
 
     private static void assertSqlEquals(String expected, String actual) {
-        Assert.assertEquals(removeEmptyLines(expected), removeEmptyLines(actual));
+        assertEquals(removeEmptyLines(expected), removeEmptyLines(actual));
     }
 
     private static String removeEmptyLines(String sql) {
