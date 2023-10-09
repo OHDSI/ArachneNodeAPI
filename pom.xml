@@ -35,7 +35,8 @@
         <jackson.version>2.10.5.20201202</jackson.version>
         <!-- Overrides SpringBoot defaults to conform Hydra -->
         <json.version>20170516</json.version>
-        <feign.version>10.7.4</feign.version>
+        <feign.version>12.5</feign.version>
+        <okhttp3.version>4.11.0</okhttp3.version>
         <assertj.version>3.18.1</assertj.version>
         <bcprov-jdk15on.version>1.67</bcprov-jdk15on.version>
         
