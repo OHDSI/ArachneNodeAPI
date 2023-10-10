@@ -27,6 +27,7 @@ import static com.odysseusinc.arachne.commons.types.DBMSType.MS_SQL_SERVER;
 import static com.odysseusinc.arachne.commons.types.DBMSType.ORACLE;
 import static com.odysseusinc.arachne.commons.types.DBMSType.POSTGRESQL;
 import static com.odysseusinc.arachne.commons.types.DBMSType.REDSHIFT;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.odysseusinc.arachne.datanode.repository.AtlasRepository;
 import com.odysseusinc.arachne.datanode.service.client.portal.CentralSystemClient;
@@ -34,18 +35,17 @@ import com.odysseusinc.arachne.datanode.service.impl.CohortServiceImpl;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.ohdsi.sql.SqlTranslate;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.io.ClassPathResource;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CohortServiceTest {
 
     private static final String TEMP_SCHEMA = "tempSchema";
@@ -77,29 +77,29 @@ public class CohortServiceTest {
     public void createPostgresSQLTest() {
 
         final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, POSTGRESQL, SESSION_ID, TEMP_SCHEMA, options);
-        Assert.assertEquals(POSTGRES_SQL_RESULT, sql);
+        assertSqlEquals(POSTGRES_SQL_RESULT, sql);
     }
 
     @Test
     public void createRedshiftSQLTest(){
 
         final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, REDSHIFT, SESSION_ID, TEMP_SCHEMA,options);
-        Assert.assertEquals(REDSHIFT_SQL_RESULT, sql);
+        assertSqlEquals(REDSHIFT_SQL_RESULT, sql);
     }
 
-    @Ignore("unexpected temp schema names")
+    @Disabled("unexpected temp schema names")
     @Test
     public void createOracleSQLTest() {
 
         final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, ORACLE, SESSION_ID, TEMP_SCHEMA,options);
-        Assert.assertEquals(ORACLE_SQL_RESULT, sql);
+        assertSqlEquals(ORACLE_SQL_RESULT, sql);
     }
 
     @Test
     public void createMSSQLTest(){
 
         final String sql = cohortService.translateSQL(MS_SQL_SQL_RESULT, null, MS_SQL_SERVER, SESSION_ID, TEMP_SCHEMA,options);
-        Assert.assertEquals(MS_SQL_SQL_RESULT, sql);
+        assertSqlEquals(MS_SQL_SQL_RESULT, sql);
     }
 
     private static final String POSTGRES_SQL_RESULT = "CREATE TEMP TABLE Codesets  (codeset_id int NOT NULL,\n" +
@@ -600,4 +600,12 @@ public class CohortServiceTest {
             "\n" +
             "TRUNCATE TABLE #Codesets;\n" +
             "DROP TABLE #Codesets";
+
+    private static void assertSqlEquals(String expected, String actual) {
+        assertEquals(removeEmptyLines(expected), removeEmptyLines(actual));
+    }
+
+    private static String removeEmptyLines(String sql) {
+        return sql.replaceAll("(?m)^[ \t]*\r?\n", "");
+    }
 }

@@ -12,15 +12,15 @@ import com.odysseusinc.arachne.datanode.service.DataSourceHelper;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.support.GenericConversionService;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DataSourceHelperImplTest {
 
     public static final String CALLBACK_PASSWORD = "callbackPassword";
@@ -38,23 +38,22 @@ public class DataSourceHelperImplTest {
     private DataSource dataSource;
 
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    public void setUp() {
+        dataSourceHelper = spy(new DataSourceHelperImpl(conversionService, cohortService, DATABASE_URL, DATANODE_PORT));
+    }
 
+    @Test
+    public void getAnalysisRequestDTO() throws Exception {
         AnalysisRequestDTO requestDTO = new AnalysisRequestDTO();
         requestDTO.setCallbackPassword(CALLBACK_PASSWORD);
         requestDTO.setUpdateStatusCallback(UPDATE_STATUS_CALLBACK);
         requestDTO.setResultCallback(RESULT_CALLBACK);
 
-        dataSourceHelper = spy(new DataSourceHelperImpl(conversionService, cohortService, DATABASE_URL, DATANODE_PORT));
         when(conversionService.convert(any(), any(Class.class)))
                 .thenReturn(requestDTO);
 
         when(dataSource.getType()).thenReturn(DBMSType.POSTGRESQL);
-    }
-
-    @Test
-    public void getAnalysisRequestDTO() throws Exception {
 
         String path = "/somepath";
         Path tempDirectory = Files.createTempDirectory("data-source-helper-test");
@@ -67,25 +66,28 @@ public class DataSourceHelperImplTest {
         assertEquals(1, tempDirectory.toFile().list().length);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void getAnalysisRequestDTO_dataSourceIsNull() throws Exception {
 
         Path tempDirectory = Files.createTempDirectory("data-source-helper-test");
-        dataSourceHelper.prepareRequest(null, tempDirectory, 123L, "/somepath");
+        assertThrows(IllegalStateException.class,
+                () -> dataSourceHelper.prepareRequest(null, tempDirectory, 123L, "/somepath"));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void getAnalysisRequestDTO_tempDirectoryIsNull() throws Exception {
 
         Path tempDirectory = Files.createTempDirectory("data-source-helper-test");
-        dataSourceHelper.prepareRequest(dataSource, null, 123L, "/somepath");
+        assertThrows(IllegalStateException.class,
+                () -> dataSourceHelper.prepareRequest(dataSource, null, 123L, "/somepath"));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void getAnalysisRequestDTO_PathIsEmpty() throws Exception {
 
         Path tempDirectory = Files.createTempDirectory("data-source-helper-test");
-        dataSourceHelper.prepareRequest(dataSource, tempDirectory, 123L, "");
+        assertThrows(IllegalStateException.class,
+                () -> dataSourceHelper.prepareRequest(dataSource, tempDirectory, 123L, ""));
     }
 
 }

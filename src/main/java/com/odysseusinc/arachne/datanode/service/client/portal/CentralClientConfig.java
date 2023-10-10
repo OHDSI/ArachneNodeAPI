@@ -23,8 +23,8 @@
 package com.odysseusinc.arachne.datanode.service.client.portal;
 
 import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
+import com.odysseusinc.arachne.datanode.service.client.FeignSpringFormEncoder;
 import com.odysseusinc.arachne.datanode.service.client.atlas.AtlasClient;
-import com.odysseusinc.arachne.execution_engine_common.client.FeignSpringFormEncoder;
 import feign.Feign;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;

@@ -7,12 +7,12 @@ import com.odysseusinc.arachne.datanode.model.user.Role;
 import com.odysseusinc.arachne.datanode.model.user.User;
 import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.service.UserService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.validation.BindingResult;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DataSourceControllerTest {
 
     @Mock
@@ -57,17 +57,6 @@ public class DataSourceControllerTest {
 
     private final Long dataSourceId = 1000L;
     private final FieldError fieldError = new FieldError("object", "fieldName", "field error message");
-
-    @Before
-    public void setUp() {
-
-        when(userService.getUser(principal)).thenReturn(user);
-
-        Role adminRole = new Role();
-        adminRole.setName("ROLE_ADMIN");
-        when(user.getRoles()).thenReturn(Arrays.asList(adminRole));
-        when(conversionService.convert(createDataSourceDTO, DataSource.class)).thenReturn(dataSource);
-    }
 
     @Test
     public void shouldFailValidationAndReturnFieldValidationError() {
@@ -97,6 +86,12 @@ public class DataSourceControllerTest {
 
     @Test
     public void shouldPassValidationAndSaveNewDatasource() {
+        when(userService.getUser(principal)).thenReturn(user);
+
+        Role adminRole = new Role();
+        adminRole.setName("ROLE_ADMIN");
+        when(user.getRoles()).thenReturn(Arrays.asList(adminRole));
+        when(conversionService.convert(createDataSourceDTO, DataSource.class)).thenReturn(dataSource);
 
         when(bindingResult.hasErrors()).thenReturn(false);
         when(dataSourceService.isDatasourceNameUnique(any(), any())).thenReturn(true);
@@ -109,6 +104,12 @@ public class DataSourceControllerTest {
 
     @Test
     public void shouldPassValidationAndUpdateDatasource() {
+        when(userService.getUser(principal)).thenReturn(user);
+
+        Role adminRole = new Role();
+        adminRole.setName("ROLE_ADMIN");
+        when(user.getRoles()).thenReturn(Arrays.asList(adminRole));
+        when(conversionService.convert(createDataSourceDTO, DataSource.class)).thenReturn(dataSource);
 
         when(bindingResult.hasErrors()).thenReturn(false);
         when(dataSourceService.isDatasourceNameUnique(any(), any())).thenReturn(true);
