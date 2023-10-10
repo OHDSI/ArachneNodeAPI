@@ -1,8 +1,8 @@
 package com.odysseusinc.arachne.datanode.service.client.engine;
 
 import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
+import com.odysseusinc.arachne.datanode.service.client.FeignSpringFormEncoder;
 import com.odysseusinc.arachne.datanode.util.RestUtils;
-import com.odysseusinc.arachne.execution_engine_common.client.FeignSpringFormEncoder;
 import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.StringDecoder;

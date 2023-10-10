@@ -6,7 +6,7 @@
 
     <artifactId>datanode</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.19.1</version>
+    <version>1.19.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
 
@@ -29,7 +29,7 @@
         <postgresql.version>42.2.25</postgresql.version>
         <javaDockerVersion>3.2.11</javaDockerVersion>
         <springRetryVersion>1.2.4.RELEASE</springRetryVersion>
-        <commons.version>1.19.2-SNAPSHOT</commons.version>
+        <commons.version>1.20.1</commons.version>
         <build.number>dev</build.number>
         <dockerImagePrefix>hub.odysseusinc.com</dockerImagePrefix>
         <jackson.version>2.10.5.20201202</jackson.version>
