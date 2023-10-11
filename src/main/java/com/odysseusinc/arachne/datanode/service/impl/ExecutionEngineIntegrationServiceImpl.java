@@ -26,6 +26,7 @@ import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.exception.ValidationException;
 import com.odysseusinc.arachne.datanode.service.ExecutionEngineIntegrationService;
 import com.odysseusinc.arachne.datanode.service.ExecutionEngineStatus;
+import com.odysseusinc.arachne.datanode.service.client.engine.ExecutionEngineClient;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
@@ -55,16 +56,14 @@ import static com.odysseusinc.arachne.datanode.service.ExecutionEngineStatus.ONL
 public class ExecutionEngineIntegrationServiceImpl implements ExecutionEngineIntegrationService {
     private static final Logger logger = LoggerFactory.getLogger(ExecutionEngineIntegrationServiceImpl.class);
 
-    private final EngineClient engineClient;
+    @Autowired
+    private ExecutionEngineClient engineClient;
     private final EngineClient engineStatusClient;
-    
+
     private volatile ExecutionEngineStatus executionEngineStatus = OFFLINE;
 
     @Autowired
-    public ExecutionEngineIntegrationServiceImpl(EngineClient engineClient, 
-                                                 @Qualifier("engineStatusClient") EngineClient engineStatusClient) {
-
-        this.engineClient = engineClient;
+    public ExecutionEngineIntegrationServiceImpl(@Qualifier("engineStatusClient") EngineClient engineStatusClient) {
         this.engineStatusClient = engineStatusClient;
     }
 
@@ -84,13 +83,8 @@ public class ExecutionEngineIntegrationServiceImpl implements ExecutionEngineInt
         try {
             final File archive = new File(analysisTempDir.toString(), "request.zip");
             CommonFileUtils.compressAndSplit(analysisFolder, archive, null);
-
-            try (InputStream in = new FileInputStream(archive)) {
-                MultipartFile file = new MockMultipartFile(archive.getName(), archive.getName(), MediaType.APPLICATION_OCTET_STREAM_VALUE, in);
-                logger.info("Request [{}} with files for [{}], sending now", requestDTO.getId(), analysisFolder.getName());
-                return engineClient.sendAnalysisRequest(requestDTO, file,
-                        compressedResult, healthCheck);
-            }
+            logger.info("Request [{}} with files for [{}], sending now", requestDTO.getId(), analysisFolder.getName());
+            return engineClient.sendAnalysisRequest(requestDTO, archive, compressedResult, healthCheck);
         } catch (ResourceAccessException exception) {
             throw new ValidationException("Cannot establish connection to the execution engine");
         } catch (IOException zipException) {
