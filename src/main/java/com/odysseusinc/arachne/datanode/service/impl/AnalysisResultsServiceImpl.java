@@ -169,7 +169,7 @@ public class AnalysisResultsServiceImpl implements AnalysisResultsService {
             try {
                 dto.setContentType(Files.probeContentType(Paths.get(filename)));
             } catch (IOException e) {
-                log.warn("Failed to probe content type for file [{}]", filename, e);
+                log.warn("Failed to probe content type for file [{}]", filename);
             }
             return dto;
         };
