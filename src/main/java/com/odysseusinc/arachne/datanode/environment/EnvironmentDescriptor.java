@@ -1,5 +1,6 @@
 package com.odysseusinc.arachne.datanode.environment;
 
+import java.time.Instant;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -14,7 +15,7 @@ import lombok.Setter;
 @Table(name = "environment_descriptor")
 @Getter
 @Setter
-public class EnvionmentDescriptor {
+public class EnvironmentDescriptor {
     @SequenceGenerator(name = "descriptor_id_seq", sequenceName = "descriptor_id_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "descriptor_id_seq")
     @Id
@@ -32,4 +33,7 @@ public class EnvionmentDescriptor {
 
     @Column(name = "base")
     private boolean base;
+
+    @Column(name = "terminated")
+    private Instant terminated;
 }

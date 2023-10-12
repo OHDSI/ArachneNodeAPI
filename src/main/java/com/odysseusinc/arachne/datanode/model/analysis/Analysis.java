@@ -1,6 +1,7 @@
 package com.odysseusinc.arachne.datanode.model.analysis;
 
 import com.odysseusinc.arachne.commons.api.v1.dto.CommonAnalysisType;
+import com.odysseusinc.arachne.datanode.environment.EnvironmentDescriptor;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.PostLoad;
@@ -26,7 +28,11 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "analyses")
 public class Analysis {
@@ -91,6 +97,10 @@ public class Analysis {
     private List<AnalysisCodeFile> analysisCodeFiles = new ArrayList<>();
     @Column(name = "inner_executable_filename")
     private String innerExecutableFilename;
+    @ManyToOne
+    @JoinColumn(name = "environment_id")
+    private EnvironmentDescriptor environment;
+
 
     public Long getId() {
 
