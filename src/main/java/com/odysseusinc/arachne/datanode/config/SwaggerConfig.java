@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.config;
 
 import com.odysseusinc.arachne.commons.config.DocketWrapper;
+import com.odysseusinc.arachne.datanode.controller.BuildNumberController;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -36,11 +37,14 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @ConditionalOnProperty(prefix = "swagger", name = "enable")
 public class SwaggerConfig {
 
-    @Value("${project.version}")
-    private String projectVersion;
+    private final String projectVersion;
 
     @Value("${arachne.token.header}")
     private String arachneTokenHeader;
+
+    public SwaggerConfig(BuildNumberController buildNumberController) {
+        projectVersion = buildNumberController.getProjectVersion();
+    }
 
     @Bean
     public Docket docket(DocketWrapper docketWrapper) {

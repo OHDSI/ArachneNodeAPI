@@ -1,9 +1,6 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/datanode
-build:
-  number: no_build_number
-  id: no_build_id
 datanode:
   arachneCentral:
     host: https://localhost

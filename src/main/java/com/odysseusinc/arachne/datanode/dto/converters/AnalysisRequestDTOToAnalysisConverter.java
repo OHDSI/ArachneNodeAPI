@@ -26,6 +26,9 @@ package com.odysseusinc.arachne.datanode.dto.converters;
 import com.odysseusinc.arachne.commons.utils.UUIDGenerator;
 import com.odysseusinc.arachne.datanode.controller.analysis.BaseCallbackAnalysisController;
 import com.odysseusinc.arachne.datanode.dto.analysis.AnalysisRequestDTO;
+import com.odysseusinc.arachne.datanode.environment.EnvironmentDescriptor;
+import com.odysseusinc.arachne.datanode.environment.EnvironmentDescriptorService;
+import com.odysseusinc.arachne.datanode.exception.BadRequestException;
 import com.odysseusinc.arachne.datanode.exception.NotExistException;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisState;
@@ -35,9 +38,11 @@ import com.odysseusinc.arachne.datanode.service.DataSourceService;
 import com.odysseusinc.arachne.datanode.util.AnalysisUtils;
 import java.util.Date;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -55,12 +60,12 @@ public class AnalysisRequestDTOToAnalysisConverter implements Converter<Analysis
     @Value("${files.store.path}")
     private String filesStorePath;
 
-    private final DataSourceService dataSourceService;
+    @Autowired
+    private DataSourceService dataSourceService;
+    @Autowired
+    private EnvironmentDescriptorService descriptorService;
 
-    public AnalysisRequestDTOToAnalysisConverter(GenericConversionService conversionService,
-                                                 DataSourceService dataSourceService) {
-
-        this.dataSourceService = dataSourceService;
+    public AnalysisRequestDTOToAnalysisConverter(GenericConversionService conversionService) {
         conversionService.addConverter(this);
     }
 
@@ -80,6 +85,7 @@ public class AnalysisRequestDTOToAnalysisConverter implements Converter<Analysis
 
         analysis.setType(dto.getType());
 
+        analysis.setEnvironment(Optional.ofNullable(dto.getEnvironmentId()).map(this::findEnvironment).orElse(null));
         DataSource dataSource = dataSourceService.getById(dto.getDatasourceId());
         if (Objects.isNull(dataSource)) {
             logger.error("Cannot find datasource with id: {}", dto.getDatasourceId());
@@ -110,5 +116,16 @@ public class AnalysisRequestDTOToAnalysisConverter implements Converter<Analysis
         analysis.setResultCallback(resultCallback);
 
         return analysis;
+    }
+
+    private EnvironmentDescriptor findEnvironment(Long descriptorId) {
+        EnvironmentDescriptor descriptor = Optional.ofNullable(descriptorService.byId(descriptorId)).orElseThrow(() ->
+                new BadRequestException("Invalid environment id: " + descriptorId)
+        );
+        if (descriptor.getTerminated() != null) {
+            throw new BadRequestException("Invalid environment id: " + descriptorId);
+        } else {
+            return descriptor;
+        }
     }
 }

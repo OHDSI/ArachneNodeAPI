@@ -67,11 +67,6 @@ spring:
   activemq:
     packages:
       trust-all: true
-build:
-  number: @build.number@
-  id: @build.id@
-project:
-  version: @project.version@
 #ms
 files:
   store:

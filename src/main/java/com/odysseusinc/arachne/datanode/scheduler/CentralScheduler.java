@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.scheduler;
 
 import com.odysseusinc.arachne.datanode.model.datanode.DataNode;
+import com.odysseusinc.arachne.datanode.model.datanode.FunctionalMode;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.service.CentralIntegrationService;
 import com.odysseusinc.arachne.datanode.service.DataNodeService;
@@ -66,8 +67,9 @@ public class CentralScheduler {
 
     @PostConstruct
     public void checkRunMode() {
-
-        switch (dataNodeService.getDataNodeMode()) {
+        FunctionalMode mode = dataNodeService.getDataNodeMode();
+        log.info("Running in [{}] mode", mode.name());
+        switch (mode) {
             case STANDALONE:
                 warnUserRegistration(); break;
             case NETWORK:
@@ -81,10 +83,10 @@ public class CentralScheduler {
         if (currentDataNode != null  && !userService.findStandaloneUsers().isEmpty()) {
             centralIntegrationService.relinkUsersToDataNodeOnCentral(currentDataNode, userService.findStandaloneUsers());
         }
-        List<DataSource> dataSources = dataSourceService.findStandaloneSources();
-        if (dataSources.size() > 0) {
-            throw new BeanInitializationException("Cannot switch mode from Standalone to Network - there are some data sources not linked to the Central.");
-        }
+//        List<DataSource> dataSources = dataSourceService.findStandaloneSources();
+//        if (dataSources.size() > 0) {
+//            throw new BeanInitializationException("Cannot switch mode from Standalone to Network - there are some data sources not linked to the Central.");
+//        }
 
         if (currentDataNode != null && StringUtils.isEmpty(currentDataNode.getToken())) {
             throw new BeanInitializationException("Cannot switch mode from Standalone to Network - Data node is not linked to the Central.");
@@ -96,7 +98,6 @@ public class CentralScheduler {
         if (UserRegistrationStrategy.CREATE_IF_FIRST.equals(userRegistrationStrategy)) {
             StringBuilder sb = new StringBuilder("\n");
             sb.append(StringUtils.repeat("*", LINE_WIDTH)).append("\n");
-            sb.append("\t\t").append("Running on the ").append(colorize("STAND-ALONE")).append(" mode").append("\n");
             sb.append("\t\t").append("UserRegistrationStrategy is set to ").append(colorize(userRegistrationStrategy)).append("\n");
             sb.append("\t\t").append("Please, ensure you are not using external Authenticator").append("\n");
             sb.append(StringUtils.repeat("*", LINE_WIDTH)).append("\n");

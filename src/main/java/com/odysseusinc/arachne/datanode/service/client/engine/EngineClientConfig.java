@@ -1,31 +1,35 @@
 package com.odysseusinc.arachne.datanode.service.client.engine;
 
 import com.odysseusinc.arachne.datanode.service.client.ArachneHttpClientBuilder;
+import com.odysseusinc.arachne.datanode.service.client.FeignSpringFormEncoder;
 import com.odysseusinc.arachne.datanode.util.RestUtils;
-import com.odysseusinc.arachne.execution_engine_common.client.FeignSpringFormEncoder;
 import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.StringDecoder;
 import feign.jackson.JacksonDecoder;
 import feign.slf4j.Slf4jLogger;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+@Getter
 @Configuration
 public class EngineClientConfig {
 
     @Value("${executionEngine.protocol}")
-    private String executionEngineProtocol;
+    private String protocol;
     @Value("${executionEngine.host}")
-    private String executionEngineHost;
+    private String host;
     @Value("${executionEngine.port}")
-    private String executionEnginePort;
+    private String port;
     @Value("${executionEngine.analysisUri}")
-    private String executionEngineAnalysisUri;
+    private String analysisUri;
+    @Value("${executionEngine.descriptorsUri}")
+    private String descriptorsUri;
     @Value("${executionEngine.token}")
-    private String executionEngineToken;
+    private String token;
     @Value("${proxy.enabledForEngine}")
     private Boolean proxyEnabledForEngine;
 
@@ -46,18 +50,14 @@ public class EngineClientConfig {
     public EngineClient engineStatusClient(){
         return getEngineClient(new StringDecoder());
     }
-    
+
     private EngineClient getEngineClient(Decoder decoder) {
-        String url = String.format("%s://%s:%s",
-                executionEngineProtocol,
-                executionEngineHost,
-                executionEnginePort
-        );
+        String url = String.format("%s://%s:%s", protocol, host, port);
         return Feign.builder()
                 .client(arachneHttpClientBuilder.build(proxyEnabledForEngine))
                 .encoder(new FeignSpringFormEncoder())
                 .decoder(decoder)
-                .requestInterceptor(rt -> rt.header("Authorization", RestUtils.checkCredentials(executionEngineToken)))
+                .requestInterceptor(rt -> rt.header("Authorization", RestUtils.checkCredentials(token)))
                 .logger(new Slf4jLogger(EngineClient.class))
                 .logLevel(feign.Logger.Level.FULL)
                 .target(EngineClient.class, url);
