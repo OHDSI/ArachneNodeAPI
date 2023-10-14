@@ -30,7 +30,7 @@
         <javaDockerVersion>3.2.11</javaDockerVersion>
         <springRetryVersion>1.2.4.RELEASE</springRetryVersion>
         <commons.version>1.20.3-SNAPSHOT</commons.version>
-        <build.number>dev</build.number>
+        <build.number>qa</build.number>
         <dockerImagePrefix>hub.odysseusinc.com</dockerImagePrefix>
         <jackson.version>2.10.5.20201202</jackson.version>
         <!-- Overrides SpringBoot defaults to conform Hydra -->
