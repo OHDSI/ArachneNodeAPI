@@ -45,13 +45,13 @@ public class EnvironmentDescriptorService {
     public void updateDescriptors() {
         fetchDescriptors.ifPresent(supplier -> {
             RuntimeEnvironmentDescriptorsDTO descriptorsDTO = supplier.get();
-            Map<String, EnvionmentDescriptor> index = getAll().collect(
-                    Collectors.toMap(EnvionmentDescriptor::getDescriptorId, Function.identity())
+            Map<String, EnvironmentDescriptor> index = getAll().collect(
+                    Collectors.toMap(EnvironmentDescriptor::getDescriptorId, Function.identity())
             );
 
             List<String> updated = descriptorsDTO.getDescriptors().stream().map(dto ->
                     Optional.ofNullable(index.get(dto.getId())).map(updateFrom(dto)).orElseGet(create(dto))
-            ).map(EnvionmentDescriptor::getDescriptorId).collect(Collectors.toList());
+            ).map(EnvironmentDescriptor::getDescriptorId).collect(Collectors.toList());
             log.debug("Processed {} descriptors", updated.size());
             index.forEach((id, desc) -> {
                 if (!updated.contains(id)) {
@@ -68,20 +68,20 @@ public class EnvironmentDescriptorService {
         });
     }
 
-    private Stream<EnvionmentDescriptor> getAll() {
-        return JpaSugar.selectAll(em, EnvionmentDescriptor.class).getResultStream();
+    private Stream<EnvironmentDescriptor> getAll() {
+        return JpaSugar.selectAll(em, EnvironmentDescriptor.class).getResultStream();
     }
 
-    private Supplier<EnvionmentDescriptor> create(RuntimeEnvironmentDescriptorDTO dto) {
+    private Supplier<EnvironmentDescriptor> create(RuntimeEnvironmentDescriptorDTO dto) {
         return () -> {
             log.info("Created descriptor [{}] - [{}], bundle name [{}]", dto.getId(), dto.getLabel(), dto.getBundleName());
-            EnvionmentDescriptor entity = updateFrom(dto).apply(new EnvionmentDescriptor());
+            EnvironmentDescriptor entity = updateFrom(dto).apply(new EnvironmentDescriptor());
             em.persist(entity);
             return entity;
         };
     }
 
-    private UnaryOperator<EnvionmentDescriptor> updateFrom(RuntimeEnvironmentDescriptorDTO dto) {
+    private UnaryOperator<EnvironmentDescriptor> updateFrom(RuntimeEnvironmentDescriptorDTO dto) {
         return entity -> {
             entity.setDescriptorId(dto.getId());
             entity.setBase(dto.getId().toLowerCase().startsWith("default"));

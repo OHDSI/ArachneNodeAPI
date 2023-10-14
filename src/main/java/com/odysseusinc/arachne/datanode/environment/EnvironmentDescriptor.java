@@ -14,7 +14,7 @@ import lombok.Setter;
 @Table(name = "environment_descriptor")
 @Getter
 @Setter
-public class EnvionmentDescriptor {
+public class EnvironmentDescriptor {
     @SequenceGenerator(name = "descriptor_id_seq", sequenceName = "descriptor_id_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "descriptor_id_seq")
     @Id
