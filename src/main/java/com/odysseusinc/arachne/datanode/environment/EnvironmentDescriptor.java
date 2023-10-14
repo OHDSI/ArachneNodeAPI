@@ -1,5 +1,6 @@
 package com.odysseusinc.arachne.datanode.environment;
 
+import java.time.Instant;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -32,4 +33,7 @@ public class EnvironmentDescriptor {
 
     @Column(name = "base")
     private boolean base;
+
+    @Column(name = "terminated")
+    private Instant terminated;
 }

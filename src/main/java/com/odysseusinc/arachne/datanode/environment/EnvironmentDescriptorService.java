@@ -6,19 +6,17 @@ import com.odysseusinc.arachne.datanode.util.JpaSugar;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.RuntimeEnvironmentDescriptorDTO;
 import com.odysseusinc.arachne.execution_engine_common.descriptor.dto.RuntimeEnvironmentDescriptorsDTO;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -32,6 +30,7 @@ public class EnvironmentDescriptorService {
     volatile boolean firstFetch = true;
 
     private final Optional<Supplier<RuntimeEnvironmentDescriptorsDTO>> fetchDescriptors;
+    private final Clock clock = Clock.systemUTC();
 
     @PersistenceContext
     private EntityManager em;
@@ -45,19 +44,30 @@ public class EnvironmentDescriptorService {
     public void updateDescriptors() {
         fetchDescriptors.ifPresent(supplier -> {
             RuntimeEnvironmentDescriptorsDTO descriptorsDTO = supplier.get();
-            Map<String, EnvironmentDescriptor> index = getAll().collect(
-                    Collectors.toMap(EnvironmentDescriptor::getDescriptorId, Function.identity())
-            );
 
-            List<String> updated = descriptorsDTO.getDescriptors().stream().map(dto ->
-                    Optional.ofNullable(index.get(dto.getId())).map(updateFrom(dto)).orElseGet(create(dto))
-            ).map(EnvironmentDescriptor::getDescriptorId).collect(Collectors.toList());
+            Map<String, List<EnvironmentDescriptor>> index = getAll().collect(
+                    Collectors.groupingBy(EnvironmentDescriptor::getDescriptorId)
+            );
+            Instant now = clock.instant();
+
+            List<Long> updated = descriptorsDTO.getDescriptors().stream().map(dto -> {
+                String json = SerializationUtils.serialize(dto);
+                return Optional.ofNullable(index.get(dto.getId())).flatMap(entities -> {
+                    Map<Boolean, List<EnvironmentDescriptor>> matches = entities.stream().collect(Collectors.partitioningBy(entity ->
+                            Objects.equals(entity.getJson(), json)
+                    ));
+                    return matches.get(true).stream().findFirst().map(descriptor -> {
+                         descriptor.setTerminated(null);
+                         return descriptor;
+                    });
+                }).orElseGet(create(dto, SerializationUtils.serialize(dto)));
+            }).map(EnvironmentDescriptor::getId).collect(Collectors.toList());
             log.debug("Processed {} descriptors", updated.size());
-            index.forEach((id, desc) -> {
-                if (!updated.contains(id)) {
-                    log.info("Removed descriptor [{}]", id);
-                    em.remove(desc);
-                }
+            getActive().filter(descriptor ->
+                    !updated.contains(descriptor.getId())
+            ).forEach(desc -> {
+                log.info("Terminated descriptor {} [{}]", desc.getId(), desc.getDescriptorId());
+                desc.setTerminated(now);
             });
             if (firstFetch) {
                 firstFetch = false;
@@ -68,25 +78,37 @@ public class EnvironmentDescriptorService {
         });
     }
 
+    @Transactional
+    public EnvironmentDescriptor byId(Long id) {
+        return em.find(EnvironmentDescriptor.class, id);
+    }
+
+    @Transactional
+    public List<EnvironmentDescriptorDto> listActive() {
+        return getActive().map(entity ->
+                EnvironmentDescriptorDto.of(entity.getId(), entity.getDescriptorId(), entity.getLabel(), entity.getJson())
+        ).collect(Collectors.toList());
+    }
+
+    private Stream<EnvironmentDescriptor> getActive() {
+        return getAll().filter(descriptor ->
+                descriptor.getTerminated() == null
+        );
+    }
+
     private Stream<EnvironmentDescriptor> getAll() {
         return JpaSugar.selectAll(em, EnvironmentDescriptor.class).getResultStream();
     }
 
-    private Supplier<EnvironmentDescriptor> create(RuntimeEnvironmentDescriptorDTO dto) {
+    private Supplier<EnvironmentDescriptor> create(RuntimeEnvironmentDescriptorDTO dto, String json) {
         return () -> {
             log.info("Created descriptor [{}] - [{}], bundle name [{}]", dto.getId(), dto.getLabel(), dto.getBundleName());
-            EnvironmentDescriptor entity = updateFrom(dto).apply(new EnvironmentDescriptor());
-            em.persist(entity);
-            return entity;
-        };
-    }
-
-    private UnaryOperator<EnvironmentDescriptor> updateFrom(RuntimeEnvironmentDescriptorDTO dto) {
-        return entity -> {
+            EnvironmentDescriptor entity = new EnvironmentDescriptor();
             entity.setDescriptorId(dto.getId());
             entity.setBase(dto.getId().toLowerCase().startsWith("default"));
             entity.setLabel(dto.getLabel());
-            entity.setJson(SerializationUtils.serialize(dto));
+            entity.setJson(json);
+            em.persist(entity);
             return entity;
         };
     }
