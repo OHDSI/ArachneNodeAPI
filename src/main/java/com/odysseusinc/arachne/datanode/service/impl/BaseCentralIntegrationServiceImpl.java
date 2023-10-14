@@ -256,7 +256,8 @@ public abstract class BaseCentralIntegrationServiceImpl<DS extends DataSource, D
                 unlinkedUser.setSync(true);
                 log.info("linking user {} to the Central", unlinkedUser.getUsername());
             } catch (Exception ex) {
-                log.warn("Cannot link user to the Central {}, disabling the account", unlinkedUser.getUsername());
+                log.warn("Disabling user [{}] as it can't be linked to central due to error: [{}]", unlinkedUser.getUsername(), ex.getMessage());
+                log.info(ex.getClass().getName(), ex);
                 unlinkedUser.setEnabled(false);
             }
         }

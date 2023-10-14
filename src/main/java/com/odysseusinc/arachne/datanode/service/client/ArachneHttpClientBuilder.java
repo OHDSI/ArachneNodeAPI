@@ -84,7 +84,7 @@ public class ArachneHttpClientBuilder {
         return sc.getSocketFactory();
     }
 
-    protected OkHttpClient buildOkHttpClient(boolean proxyEnabled) {
+    public OkHttpClient buildOkHttpClient(boolean proxyEnabled) {
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         if (proxyEnabled) {

@@ -35,7 +35,8 @@
         <jackson.version>2.10.5.20201202</jackson.version>
         <!-- Overrides SpringBoot defaults to conform Hydra -->
         <json.version>20170516</json.version>
-        <feign.version>10.7.4</feign.version>
+        <feign.version>12.5</feign.version>
+        <okhttp3.version>4.11.0</okhttp3.version>
         <assertj.version>3.18.1</assertj.version>
         <bcprov-jdk15on.version>1.67</bcprov-jdk15on.version>
         <!-- Referencing https://github.com/OHDSI/ArachneUI -->
@@ -193,6 +194,30 @@
             <version>${springRetryVersion}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jetbrains</groupId>
+                    <artifactId>annotations</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>dev.failsafe</groupId>
+            <artifactId>failsafe</artifactId>
+            <version>3.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.failsafe</groupId>
+            <artifactId>failsafe-okhttp</artifactId>
+            <version>3.2.4</version>
+        </dependency>
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-okhttp</artifactId>
