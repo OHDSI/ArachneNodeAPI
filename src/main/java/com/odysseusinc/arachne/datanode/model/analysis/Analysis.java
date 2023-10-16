@@ -100,6 +100,9 @@ public class Analysis {
     @ManyToOne
     @JoinColumn(name = "environment_id")
     private EnvironmentDescriptor environment;
+    @ManyToOne
+    @JoinColumn(name = "actual_environment_id")
+    private EnvironmentDescriptor actualEnvironment;
 
 
     public Long getId() {
