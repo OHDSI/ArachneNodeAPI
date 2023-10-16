@@ -62,6 +62,7 @@ public class AnalysisToAnalysisRequestDTOConverter
         analysisRequestDTO.setDataSource(dataSourceDTO);
         analysisRequestDTO.setId(analysis.getId());
         analysisRequestDTO.setExecutableFileName(analysis.getExecutableFileName());
+        analysisRequestDTO.setRequestedDescriptorId(analysis.getEnvironment().getDescriptorId());
         analysisRequestDTO.setUpdateStatusCallback(analysis.getUpdateStatusCallback());
         analysisRequestDTO.setResultCallback(analysis.getResultCallback());
         analysisRequestDTO.setCallbackPassword(analysis.getCallbackPassword());
