@@ -103,6 +103,7 @@ executionEngine:
   protocol: https
   port: 8888
   analysisUri: /api/v1/analyze
+  descriptorsUri: /api/v1/descriptors
   token:
   status:
     period: 60000

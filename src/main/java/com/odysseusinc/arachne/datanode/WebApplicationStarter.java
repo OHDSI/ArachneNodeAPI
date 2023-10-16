@@ -28,6 +28,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -48,10 +49,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 @ComponentScan(basePackages = {"com.odysseusinc.arachne.*", "org.ohdsi.authenticator.*"})
 public class WebApplicationStarter {
 
-    public static void main(String... argc) {
+    private static volatile ConfigurableApplicationContext context;
+    private static String[] args;
 
+    public static void main(String... argc) {
         SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
-        SpringApplication.run(WebApplicationStarter.class, argc);
+        args = argc;
+        context = SpringApplication.run(WebApplicationStarter.class, args);
+    }
+
+    public static void restart() {
+        SpringApplication.exit(context);
+        context = SpringApplication.run(WebApplicationStarter.class, args);
     }
 
     public Jackson2ObjectMapperBuilderCustomizer objectMapperBuilderCustomizer() {
