@@ -6,15 +6,13 @@
 
     <artifactId>datanode</artifactId>
     <groupId>com.odysseusinc.arachne</groupId>
-    <version>1.20.0-QA</version>
+    <version>${revision}</version>
     <packaging>jar</packaging>
-
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.5.14</version>
-        <relativePath/>
     </parent>
 
     <scm>
@@ -22,6 +20,7 @@
     </scm>
 
     <properties>
+        <revision>1.20-SNAPSHOT</revision>
         <start-class>com.odysseusinc.arachne.datanode.WebApplicationStarter</start-class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
@@ -40,7 +39,7 @@
         <assertj.version>3.18.1</assertj.version>
         <bcprov-jdk15on.version>1.67</bcprov-jdk15on.version>
         <!-- Referencing https://github.com/OHDSI/ArachneUI -->
-        <node-resources.version>1.20.0-QA</node-resources.version>
+        <node-resources.version>${project.version}</node-resources.version>
     </properties>
 
     <dependencies>
