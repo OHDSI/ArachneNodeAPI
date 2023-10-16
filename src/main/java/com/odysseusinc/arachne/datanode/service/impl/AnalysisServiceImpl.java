@@ -42,7 +42,6 @@ public class AnalysisServiceImpl extends BaseAnalysisServiceImpl {
 		super(conversionService,
                 preprocessorService,
 				analysisRepository,
-				analysisFileRepository,
 				analysisStateJournalRepository,
 				engineIntegrationService);
 	}

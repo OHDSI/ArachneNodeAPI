@@ -23,6 +23,7 @@
 package com.odysseusinc.arachne.datanode.service.impl;
 
 import com.odysseusinc.arachne.datanode.Constants;
+import com.odysseusinc.arachne.datanode.environment.EnvironmentDescriptorService;
 import com.odysseusinc.arachne.datanode.exception.ArachneSystemRuntimeException;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFile;
@@ -31,7 +32,6 @@ import com.odysseusinc.arachne.datanode.model.analysis.AnalysisFileType;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisState;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisStateEntry;
 import com.odysseusinc.arachne.datanode.model.user.User;
-import com.odysseusinc.arachne.datanode.repository.AnalysisFileRepository;
 import com.odysseusinc.arachne.datanode.repository.AnalysisRepository;
 import com.odysseusinc.arachne.datanode.repository.AnalysisStateJournalRepository;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
@@ -40,17 +40,6 @@ import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisReques
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisRequestStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.api.v1.dto.AnalysisResultStatusDTO;
 import com.odysseusinc.arachne.execution_engine_common.util.CommonFileUtils;
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -63,6 +52,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.multipart.MultipartFile;
 
 public abstract class BaseAnalysisServiceImpl implements AnalysisService {
 
@@ -81,6 +80,8 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
     protected final AnalysisRepository analysisRepository;
     protected final AnalysisStateJournalRepository analysisStateJournalRepository;
     private final ExecutionEngineIntegrationService engineIntegrationService;
+    @Autowired
+    private EnvironmentDescriptorService environmentService;
     @Value("${datanode.arachneCentral.host}")
     protected String centralHost;
     @Value("${datanode.arachneCentral.port}")
@@ -98,7 +99,6 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
     public BaseAnalysisServiceImpl(GenericConversionService conversionService,
                                    AnalysisPreprocessorService preprocessorService,
                                    AnalysisRepository analysisRepository,
-                                   AnalysisFileRepository analysisFileRepository,
                                    AnalysisStateJournalRepository analysisStateJournalRepository,
                                    ExecutionEngineIntegrationService engineIntegrationService) {
 
@@ -136,6 +136,7 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
 	}
 
     @Async
+    @Transactional
     public void sendToEngine(Analysis analysis) {
 
         preprocessorService.runPreprocessor(analysis);
@@ -148,6 +149,9 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
         try {
             AnalysisRequestStatusDTO exchange = engineIntegrationService.sendAnalysisRequest(analysisRequestDTO, analysisFolder, true);
             LOGGER.info("Request [{}] of type [{}] sent successfully", id, exchange.getType());
+            String descriptorId = exchange.getActualDescriptorId();
+            LOGGER.info("Request [{}] of type [{}] sent successfully, descriptor in use [{}]", id, exchange.getType(), descriptorId);
+            analysis.setActualEnvironment(Optional.ofNullable(descriptorId).flatMap(environmentService::byDescriptorId).orElse(null));
             reason = String.format(Constants.AnalysisMessages.SEND_REQUEST_TO_ENGINE_SUCCESS_REASON, id, exchange.getType());
             state = AnalysisState.EXECUTING;
         } catch (RestClientException | ArachneSystemRuntimeException e) {

@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -81,6 +83,17 @@ public class EnvironmentDescriptorService {
     @Transactional
     public EnvironmentDescriptor byId(Long id) {
         return em.find(EnvironmentDescriptor.class, id);
+    }
+
+    @Transactional
+    public Optional<EnvironmentDescriptor> byDescriptorId(String descriptorId) {
+        CriteriaQuery<EnvironmentDescriptor> cq = JpaSugar.query(em, EnvironmentDescriptor.class, (cb, query) -> {
+            Root<EnvironmentDescriptor> root = query.from(EnvironmentDescriptor.class);
+            return query.select(root).where(
+                    cb.equal(root.get(EnvironmentDescriptor_.descriptorId), descriptorId)
+            );
+        });
+        return em.createQuery(cq).getResultStream().findFirst();
     }
 
     @Transactional
