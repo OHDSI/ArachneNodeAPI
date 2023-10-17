@@ -23,10 +23,12 @@
 package com.odysseusinc.arachne.datanode.dto.converters;
 
 import com.odysseusinc.arachne.datanode.dto.datasource.DataSourceDTO;
+import com.odysseusinc.arachne.datanode.environment.EnvironmentDescriptor;
 import com.odysseusinc.arachne.datanode.model.datasource.DataSource;
 import com.odysseusinc.arachne.datanode.dto.submission.SubmissionDTO;
 import com.odysseusinc.arachne.datanode.model.analysis.Analysis;
 import com.odysseusinc.arachne.datanode.model.analysis.AnalysisState;
+import java.util.Optional;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
@@ -68,7 +70,8 @@ public class AnalysisToSubmissionDTOConverter implements Converter<Analysis, Sub
         }
         dto.setSubmitted(analysis.getSubmitted());
         dto.setFinished(analysis.getFinished());
-
+        EnvironmentDescriptor environment = Optional.ofNullable(analysis.getActualEnvironment()).orElseGet(analysis::getEnvironment);
+        dto.setEnvironment(Optional.ofNullable(environment).map(EnvironmentDescriptor::getLabel).orElse(null));
         return dto;
     }
 }
