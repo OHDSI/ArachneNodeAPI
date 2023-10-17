@@ -40,7 +40,7 @@
         <assertj.version>3.18.1</assertj.version>
         <bcprov-jdk15on.version>1.67</bcprov-jdk15on.version>
         <!-- Referencing https://github.com/OHDSI/ArachneUI -->
-        <node-resources.version>1.20.0-QA</node-resources.version>
+        <node-resources.version>1.20.0-SNAPSHOT</node-resources.version>
     </properties>
 
     <dependencies>

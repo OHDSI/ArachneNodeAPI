@@ -148,7 +148,6 @@ public abstract class BaseAnalysisServiceImpl implements AnalysisService {
         Long id = analysis.getId();
         try {
             AnalysisRequestStatusDTO exchange = engineIntegrationService.sendAnalysisRequest(analysisRequestDTO, analysisFolder, true);
-            LOGGER.info("Request [{}] of type [{}] sent successfully", id, exchange.getType());
             String descriptorId = exchange.getActualDescriptorId();
             LOGGER.info("Request [{}] of type [{}] sent successfully, descriptor in use [{}]", id, exchange.getType(), descriptorId);
             analysis.setActualEnvironment(Optional.ofNullable(descriptorId).flatMap(environmentService::byDescriptorId).orElse(null));
