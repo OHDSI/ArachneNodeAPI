@@ -191,12 +191,8 @@ public class AnalysisResultsServiceImpl implements AnalysisResultsService {
     }
 
     private boolean isValidZipOrSplit(net.lingala.zip4j.ZipFile file) {
-        try {
-            return file.isValidZipFile() || file.isSplitArchive();
-        } catch (ZipException e) {
-            log.error("Failed to detect ZIP file [{}]", file.getFile(), e);
-            throw new IllegalOperationException(MessageFormat.format("Failed to detect ZIP file [{0}]: {1}", file.getFile(), e.getMessage()));
-        }
+        File fileOnDisk = file.getFile();
+        return fileOnDisk.exists() && fileOnDisk.getName().matches(".*\\.z.+");
     }
 
     @Override
