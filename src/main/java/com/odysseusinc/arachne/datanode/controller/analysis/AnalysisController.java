@@ -38,6 +38,7 @@ import com.odysseusinc.arachne.datanode.service.AnalysisResultsService;
 import com.odysseusinc.arachne.datanode.service.AnalysisService;
 import com.odysseusinc.arachne.datanode.service.UserService;
 
+import com.odysseusinc.arachne.datanode.service.impl.AnalysisResultsServiceImpl;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -150,25 +151,27 @@ public class AnalysisController {
         String filename = MessageFormat.format("{0}-a{1,number,#}-results", analysis.getType().getCode(), analysis.getId());
         final Path archive = Files.createTempFile(filename, ".zip");
 
-        for (final AnalysisFile analysisFile: resultFiles) {
-            try {
-                final ZipFile file = new ZipFile(analysisFile.getLink());
-                if (file.isSplitArchive()) {
-                    mergeSplitArchive(file, archive);
-                } else if (file.isValidZipFile()) { // in case of single archive file
-                    Files.copy(Paths.get(analysisFile.getLink()), archive, StandardCopyOption.REPLACE_EXISTING);
-                }
-            } catch (final ZipException ze) {
-                //ignore: isSplitArchive() throws this, if the file is not zip
+        if (AnalysisResultsServiceImpl.isListOfArchive(resultFiles)) {
+            AnalysisFile headFile = resultFiles.stream().filter(f -> f.getLink().matches(".*\\.zip")).findFirst().orElseThrow(() -> {
+                logger.error("Head file not found in multi-volume archive for results [{}]", analysisId);
+                return new IllegalOperationException(MessageFormat.format("No head file of multi-volume archvie for results [{0}]", analysisId));
+            });
+            try(ZipFile zip = new ZipFile(headFile.getLink())) {
+                zip.extractAll(stdoutDir.toString());
+            }
+        } else {
+            for(AnalysisFile f : resultFiles) {
+                Files.copy(Paths.get(f.getLink()), stdoutDir);
             }
         }
 
+        ZipUtils.zipDirectory(archive, stdoutDir);
+
         // add stdout to archive
         File file = archive.toFile();
-        new ZipFile(file).addFiles(Collections.singletonList(stdoutFile.toFile()));
         response.setContentType(MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE);
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + ".zip\"");
-        try (InputStream in = new FileInputStream(file)) {
+        try (InputStream in = Files.newInputStream(file.toPath())) {
             IOUtils.copy(in, response.getOutputStream());
         } finally {
             FileUtils.deleteQuietly(file);
@@ -188,15 +191,4 @@ public class AnalysisController {
                 .collect(Collectors.toList());
     }
 
-    private void mergeSplitArchive(final ZipFile splitArchive, final Path to) throws IOException {
-        // repack split archive files.
-        // unfortunately, ZipFile.mergeSplitFiles() creates a broken archive in some cases
-        final Path tempdir = Files.createTempDirectory("results");
-        try {
-            splitArchive.extractAll(tempdir.toString());
-            ZipUtils.zipDirectory(to, tempdir);
-        } finally {
-            FileUtils.deleteQuietly(tempdir.toFile());
-        }
-    }
 }

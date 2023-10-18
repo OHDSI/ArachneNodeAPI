@@ -184,13 +184,13 @@ public class AnalysisResultsServiceImpl implements AnalysisResultsService {
         };
     }
 
-    private boolean isListOfArchive(List<AnalysisFile> files) {
+    public static boolean isListOfArchive(List<AnalysisFile> files) {
         return files.stream()
                 .map(f -> new net.lingala.zip4j.ZipFile(f.getLink()))
-                .allMatch(this::isValidZipOrSplit);
+                .allMatch(AnalysisResultsServiceImpl::isValidZipOrSplit);
     }
 
-    private boolean isValidZipOrSplit(net.lingala.zip4j.ZipFile file) {
+    private static boolean isValidZipOrSplit(net.lingala.zip4j.ZipFile file) {
         File fileOnDisk = file.getFile();
         return fileOnDisk.exists() && fileOnDisk.getName().matches(".*\\.z.+");
     }
