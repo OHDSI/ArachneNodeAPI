@@ -2,11 +2,13 @@ package com.odysseusinc.arachne.datanode.controller.analysis;
 
 import com.odysseusinc.arachne.datanode.dto.analysis.AnalysisFileDTO;
 import com.odysseusinc.arachne.datanode.service.AnalysisResultsService;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import org.springframework.web.servlet.HandlerMapping;
 
 @RestController
 @RequestMapping(path = "/api/v1/analysis/{parentId}/results")
@@ -28,17 +31,24 @@ public class AnalysisResultsController {
         return analysisResultsService.getAnalysisResults(parentId);
     }
 
-    @GetMapping("/list/{filename}")
+    @GetMapping("/list/**")
     public ResponseEntity<Resource> getResultFile(
             @PathVariable("parentId") Long parentId,
-            @PathVariable("filename") String filename
+            HttpServletRequest request
     ) throws IOException {
+        String filename = extractFilename(request);
         Resource resource = analysisResultsService.getAnalysisResultFile(parentId, filename);
         ContentDisposition disposition = ContentDisposition.attachment().filename(filename).build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
                 .header(HttpHeaders.CONTENT_TYPE, Files.probeContentType(Paths.get(resource.toString())))
                 .body(resource);
+    }
+
+    private String extractFilename(HttpServletRequest request) {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        String bestMatchPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        return new AntPathMatcher().extractPathWithinPattern(bestMatchPattern, path);
     }
 
 }
