@@ -232,17 +232,22 @@ public class AchillesServiceImpl implements AchillesService {
         try {
             workDir = Files.createTempDirectory("achilles_");
             Path results = runAchilles(dataSource, job, workDir);
-            if (Objects.equals(FunctionalMode.NETWORK, dataNodeService.getDataNodeMode())) {
-                retryTemplate.execute((RetryCallback<Void, Exception>) retryContext -> {
-
-                    sendResultToCentral(dataSource, results);
-                    return null;
-                });
+            updateJob(job, SUCCESSFUL);
+            System.out.println("Achilles generation finished");
+            try{
+                AchillesJob importAchillesJob = createAchillesImportJob(dataSource);
+                if (importAchillesJob != null) {
+                    pullAchillesData(importAchillesJob);
+                }
+                updateJob(importAchillesJob, SUCCESSFUL);
+            }catch(Exception ex){
+                System.out.println("Coulnd't import achilles results: "+ex);
             }
 
-            updateJob(job, SUCCESSFUL);
+
+
         } catch (Exception e) {
-            LOGGER.error("Achilles failed to execute", e);
+            System.out.println(" Achilles failed to execute "+ e);
             updateJob(job, FAILED);
         } finally {
             if (workDir != null && !LOGGER.isDebugEnabled()) {
